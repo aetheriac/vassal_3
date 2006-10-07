@@ -34,10 +34,10 @@ public class ExtensionFileFilter extends FileFilter {
     * @param desc The description of this filter.
     * @param types A list of the extensions accepted by this filter.
     */
-   public ExtensionFileFilter(String desc, String [] types) {
+   public ExtensionFileFilter(String desc, String[] types) {
       super();
       this.desc = desc;
-      System.arraycopy(types, 0, this.types, 0, types.length);
+      this.types = types.clone();
    }
 
    /**
