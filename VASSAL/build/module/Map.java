@@ -180,6 +180,7 @@ public class Map extends AbstractConfigurable implements GameComponent, FocusLis
 	protected PieceCollection pieces = new DefaultPieceCollection();
 	protected java.util.Map globalProperties = new HashMap();
 	protected Highlighter highlighter = new ColoredBorder();
+  protected ArrayList highlighters = new ArrayList();
 	private boolean clearFirst = false; // Whether to clear the display before
 	// drawing the map
 	private boolean hideCounters = false;// Option to hide counters to see
@@ -1233,6 +1234,18 @@ public class Map extends AbstractConfigurable implements GameComponent, FocusLis
 	public void setHighlighter(Highlighter h) {
 		highlighter = h;
 	}
+  
+  public void addHighlighter(Highlighter h) {
+    highlighters.add(h);
+  }
+  
+  public void removeHighlighter(Highlighter h) {
+    highlighters.remove(h);
+  }
+  
+  public Iterator getHighlighters() {
+    return highlighters.iterator();
+  }
 
 	/**
    * @return an Enumeration of all {@link Board}s on the map
@@ -1259,6 +1272,9 @@ public class Map extends AbstractConfigurable implements GameComponent, FocusLis
 			r.translate(pos.x, pos.y);
 			if (Boolean.TRUE.equals(p.getProperty(Properties.SELECTED))) {
 				r = r.union(highlighter.boundingBox(p));
+        for (Iterator i = getHighlighters(); i.hasNext();) {
+          r = r.union(((Highlighter) i).boundingBox(p));
+        }
 			}
 			if (p.getParent() != null) {
 				Point pt = getStackMetrics().relativePosition(p.getParent(), p);

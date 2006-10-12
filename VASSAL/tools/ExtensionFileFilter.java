@@ -37,7 +37,8 @@ public class ExtensionFileFilter extends FileFilter {
    public ExtensionFileFilter(String desc, String[] types) {
       super();
       this.desc = desc;
-      this.types = (String[]) types.clone();
+		this.types = new String[types.length];
+      System.arraycopy(types, 0, this.types, 0, types.length);
    }
 
    /**
