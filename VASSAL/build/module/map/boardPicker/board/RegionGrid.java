@@ -470,6 +470,7 @@ public class RegionGrid extends AbstractConfigurable implements MapGrid {
       public View(Board b, RegionGrid grid) {
         myBoard = b;
         this.grid = grid;
+        setFocusTraversalKeysEnabled(true);
       }
 
       public void paint(Graphics g) {
@@ -481,10 +482,6 @@ public class RegionGrid extends AbstractConfigurable implements MapGrid {
       public void update(Graphics g) {
         // To avoid flicker, don't clear the display first *
         paint(g);
-      }
-
-      public boolean isManagingFocus() {
-        return true;
       }
 
       public Dimension getPreferredSize() {
