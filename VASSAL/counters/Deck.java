@@ -45,7 +45,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
@@ -62,6 +61,7 @@ import VASSAL.command.NullCommand;
 import VASSAL.configure.ColorConfigurer;
 import VASSAL.tools.FormattedString;
 import VASSAL.tools.KeyStrokeListener;
+import VASSAL.tools.ScrollPane;
 import VASSAL.tools.SequenceEncoder;
 
 /**
@@ -750,7 +750,7 @@ public class Deck extends Stack {
     }
     final JList list = new JList(pieces);
     list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-    d.getContentPane().add(new JScrollPane(list));
+    d.getContentPane().add(new ScrollPane(list));
     d.getContentPane().add(new JLabel("Select cards to draw"));
     d.getContentPane().add(new JLabel("Then click and drag from the deck."));
     Box box = Box.createHorizontalBox();
