@@ -1558,6 +1558,7 @@ public class Map extends AbstractConfigurable implements GameComponent, FocusLis
 			}
 		}
 		launchButton.setEnabled(show);
+    launchButton.setVisible(useLaunchButton);
 	}
 
 	public void appendToTitle(String s) {
@@ -2028,7 +2029,7 @@ public class Map extends AbstractConfigurable implements GameComponent, FocusLis
 		protected Map map;
 
 		public View(Map m) {
-         setFocusTraversalKeysEnabled(true);
+      setFocusTraversalKeysEnabled(false);
 			map = m;
 		}
 

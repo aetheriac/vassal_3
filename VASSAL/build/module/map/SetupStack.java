@@ -685,7 +685,7 @@ public class SetupStack extends AbstractConfigurable implements GameComponent, U
         new DropTarget(this, DnDConstants.ACTION_MOVE, this);
         ds.createDefaultDragGestureRecognizer(this,
           DnDConstants.ACTION_MOVE, this);
-        setFocusTraversalKeysEnabled(true);
+        setFocusTraversalKeysEnabled(false);
       }
 
       public void paint(Graphics g) {

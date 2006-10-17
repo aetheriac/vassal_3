@@ -91,7 +91,7 @@ public class Chatter extends JPanel implements CommandEncoder, Buildable {
       }
     });
     input = new JTextField(60); 
-    input.setFocusTraversalKeysEnabled(true);
+    input.setFocusTraversalKeysEnabled(false);
     input.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         send(formatChat(e.getActionCommand()));

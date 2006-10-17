@@ -83,7 +83,7 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
 
     public Panel() {
       super();
-      setFocusTraversalKeysEnabled(true); 
+      setFocusTraversalKeysEnabled(false); 
     }
 
     public void paint(Graphics g) {

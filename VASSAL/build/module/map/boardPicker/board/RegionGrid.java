@@ -470,7 +470,7 @@ public class RegionGrid extends AbstractConfigurable implements MapGrid {
       public View(Board b, RegionGrid grid) {
         myBoard = b;
         this.grid = grid;
-        setFocusTraversalKeysEnabled(true);
+        setFocusTraversalKeysEnabled(false);
       }
 
       public void paint(Graphics g) {

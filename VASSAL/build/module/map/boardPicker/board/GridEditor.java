@@ -432,7 +432,7 @@ public abstract class GridEditor extends JDialog implements MouseListener, KeyLi
 
     public GridPanel() {
       super();
-      setFocusTraversalKeysEnabled(true);
+      setFocusTraversalKeysEnabled(false);
     }
     
     public GridPanel(Board b) {
