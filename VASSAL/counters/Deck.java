@@ -33,9 +33,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
-
 import javax.swing.Action;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -48,7 +48,6 @@ import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
-
 import VASSAL.build.GameModule;
 import VASSAL.build.module.Chatter;
 import VASSAL.build.module.Map;
@@ -399,6 +398,9 @@ public class Deck extends Stack {
     Iterator it;
     if (nextDraw != null) {
       it = nextDraw.iterator();
+    }
+    else if (getPieceCount() == 0) {
+      it = Collections.EMPTY_LIST.iterator();
     }
     else {
       int count = Math.max(dragCount, Math.min(1, getPieceCount()));
