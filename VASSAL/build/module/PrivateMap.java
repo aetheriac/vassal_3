@@ -41,7 +41,6 @@ import java.util.Vector;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 import javax.swing.WindowConstants;
 
@@ -209,19 +208,6 @@ public class PrivateMap extends Map {
       edgeBuffer = surrogate.getEdgeBuffer();
     }
     super.setBoards(boardList);
-  }
-
-  public JComponent getView() {
-    if (theMap == null) {
-      theMap = new View(this);
-      scroll =
-          new JScrollPane(theMap,
-                          JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-                          JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-      scroll.unregisterKeyboardAction(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0));
-      scroll.unregisterKeyboardAction(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, 0));
-    }
-    return theMap;
   }
 
   public static String getConfigureTypeName() {
