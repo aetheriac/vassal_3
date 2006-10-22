@@ -2035,7 +2035,7 @@ public class Map extends AbstractConfigurable implements GameComponent, FocusLis
 		protected Map map;
 
 		public View(Map m) {
-      setFocusTraversalKeysEnabled(false);
+         setFocusTraversalKeysEnabled(false);
 			map = m;
 		}
 

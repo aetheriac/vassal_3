@@ -18,6 +18,11 @@
  */
 package VASSAL.command;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+
 import VASSAL.build.GameModule;
 
 /**
@@ -32,14 +37,18 @@ import VASSAL.build.GameModule;
  *
  * @see CommandEncoder */
 public abstract class Command {
-  private Command seq[] = new Command[0];
+//  private Command seq[] = new Command[0];
+  private LinkedList seq = new LinkedList();
   private Command undo;
 
   public Command() {
   }
 
+//  public List getSubCommands() {
   public Command[] getSubCommands() {
-    return seq;
+    Command[] c = new Command[seq.size()];
+    return (Command[]) seq.toArray(c);
+//    return seq;
   }
 
   /**
@@ -50,17 +59,18 @@ public abstract class Command {
       executeCommand();
     }
     catch (Exception ex) {
-      Command[] oldSeq = seq;
+      LinkedList oldSeq = seq;
       stripSubCommands();
       reportException(this, ex);
       seq = oldSeq;
     }
-    for (int i = 0; i < seq.length; ++i) {
+    for (Iterator i = seq.iterator(); i.hasNext(); ) {
+      Command c = (Command) i.next();
       try {
-        seq[i].execute();
+        c.execute();
       }
       catch (Exception ex) {
-        reportException(seq[i], ex);
+        reportException(c, ex);
       }
     }
   }
@@ -87,7 +97,7 @@ public abstract class Command {
    * Remove all subcommands.
    */
   public void stripSubCommands() {
-    seq = new Command[0];
+    seq = new LinkedList();
   }
 
   /**
@@ -105,10 +115,22 @@ public abstract class Command {
     return !isNull();
   }
 
+  protected boolean hasNonnullSubcommands() {
+    for (Iterator i = seq.iterator(); i.hasNext(); ) {
+      if (!((Command) i.next()).isNull()) {
+         return true;
+      }
+    }
+    return false;
+  }
+
+  /*
+   * @deprecated Use {@link #hasNonnullSubcommands()}.
+   */
   protected boolean hasNullSubcommands() {
-    for (int i = 0; i < seq.length; ++i) {
-      if (!seq[i].isNull()) {
-        return false;
+    for (Iterator i = seq.iterator(); i.hasNext(); ) {
+      if (!((Command) i.next()).isNull()) {
+         return false;
       }
     }
     return true;
@@ -121,8 +143,8 @@ public abstract class Command {
     if (details != null) {
       s += "[" + details+"]";
     }
-    for (int i = 0; i < seq.length; ++i) {
-      s += "+" + seq[i].toString();
+    for (Iterator i = seq.iterator(); i.hasNext(); ) {
+      s += "+" + i.next().toString();
     }
     return s;
   }
@@ -141,10 +163,7 @@ public abstract class Command {
       if (isNull()) {
         retval = c;
       }
-      Command[] oldSeq = seq;
-      seq = new Command[seq.length + 1];
-      System.arraycopy(oldSeq, 0, seq, 0, seq.length - 1);
-      seq[seq.length - 1] = c;
+      seq.add(c);
     }
     return retval;
   }
@@ -155,8 +174,8 @@ public abstract class Command {
   public Command getUndoCommand() {
     if (undo == null) {
       undo = new NullCommand();
-      for (int i = seq.length - 1; i >= 0; --i) {
-        undo = undo.append(seq[i].getUndoCommand());
+      for (ListIterator i = seq.listIterator(seq.size()); i.hasPrevious(); ) {
+        undo = undo.append(((Command) i.previous()).getUndoCommand());
       }
       undo = undo.append(myUndoCommand());
     }
