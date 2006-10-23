@@ -37,18 +37,15 @@ import VASSAL.build.GameModule;
  *
  * @see CommandEncoder */
 public abstract class Command {
-//  private Command seq[] = new Command[0];
   private LinkedList seq = new LinkedList();
   private Command undo;
 
   public Command() {
   }
 
-//  public List getSubCommands() {
   public Command[] getSubCommands() {
     Command[] c = new Command[seq.size()];
     return (Command[]) seq.toArray(c);
-//    return seq;
   }
 
   /**
@@ -124,8 +121,9 @@ public abstract class Command {
     return false;
   }
 
-  /*
-   * @deprecated Use {@link #hasNonnullSubcommands()}.
+  /**
+   * @deprecated Use {@link #hasNonnullSubcommands()} and reverse the sense
+   *   of your test}.
    */
   protected boolean hasNullSubcommands() {
     for (Iterator i = seq.iterator(); i.hasNext(); ) {
