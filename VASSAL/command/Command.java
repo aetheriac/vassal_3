@@ -20,22 +20,18 @@ package VASSAL.command;
 
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.ListIterator;
-
 import VASSAL.build.GameModule;
 
 /**
- * Command is an abstract class that does something.  Any action that
- * takes place during a game should be encapsulated in a Command
- * object.  When performing actions during a game, corresponding
- * Commands will be logged in the current logfile and/or sent to other
- * players on the server.
- *
- * Commands can be strung together into compound commands with the
- * {@link #append} method.
- *
- * @see CommandEncoder */
+ * Command is an abstract class that does something. Any action that takes place during a game should be encapsulated in
+ * a Command object. When performing actions during a game, corresponding Commands will be logged in the current logfile
+ * and/or sent to other players on the server.
+ * 
+ * Commands can be strung together into compound commands with the {@link #append} method.
+ * 
+ * @see CommandEncoder
+ */
 public abstract class Command {
   private LinkedList seq = new LinkedList();
   private Command undo;
@@ -49,8 +45,9 @@ public abstract class Command {
   }
 
   /**
-   * Execute this command by first invoking {@link #executeCommand},
-   * then invoking {@link #execute} recursively on all subcommands.  */
+   * Execute this command by first invoking {@link #executeCommand}, then invoking {@link #execute} recursively on all
+   * subcommands.
+   */
   public void execute() {
     try {
       executeCommand();
@@ -61,7 +58,7 @@ public abstract class Command {
       reportException(this, ex);
       seq = oldSeq;
     }
-    for (Iterator i = seq.iterator(); i.hasNext(); ) {
+    for (Iterator i = seq.iterator(); i.hasNext();) {
       Command c = (Command) i.next();
       try {
         c.execute();
@@ -73,8 +70,7 @@ public abstract class Command {
   }
 
   private void reportException(Command c, Exception ex) {
-    String s = GameModule.getGameModule() == null ?
-      c.toString() : GameModule.getGameModule().encode(c);
+    String s = GameModule.getGameModule() == null ? c.toString() : GameModule.getGameModule().encode(c);
     System.err.println("Unable to execute " + s);
     ex.printStackTrace();
   }
@@ -85,9 +81,9 @@ public abstract class Command {
   protected abstract void executeCommand();
 
   /**
-   * If the action can be undone, return a Command that performs the
-   * inverse action.  The Command returned should only undo {@link
-   * #executeCommand}, not the actions of subcommands */
+   * If the action can be undone, return a Command that performs the inverse action. The Command returned should only
+   * undo {@link #executeCommand}, not the actions of subcommands
+   */
   protected abstract Command myUndoCommand();
 
   /**
@@ -105,30 +101,29 @@ public abstract class Command {
   }
 
   /**
-   *
+   * 
    * @return true if this command should be stored in a logfile
    */
   public boolean isLoggable() {
     return !isNull();
   }
 
-  protected boolean hasNonnullSubcommands() {
-    for (Iterator i = seq.iterator(); i.hasNext(); ) {
-      if (!((Command) i.next()).isNull()) {
-         return true;
-      }
-    }
-    return false;
+  /**
+   * @deprecated Use {@link #isAtomic()}
+   */
+  protected boolean hasNullSubcommands() {
+    return isAtomic();
   }
 
   /**
-   * @deprecated Use {@link #hasNonnullSubcommands()} and reverse the sense
-   *   of your test}.
+   * Return true if this command has no sub-commands attached to it (other than null commands)
+   * 
+   * @return
    */
-  protected boolean hasNullSubcommands() {
-    for (Iterator i = seq.iterator(); i.hasNext(); ) {
+  protected boolean isAtomic() {
+    for (Iterator i = seq.iterator(); i.hasNext();) {
       if (!((Command) i.next()).isNull()) {
-         return false;
+        return false;
       }
     }
     return true;
@@ -139,14 +134,14 @@ public abstract class Command {
     s = s.substring(s.lastIndexOf(".") + 1);
     String details = getDetails();
     if (details != null) {
-      s += "[" + details+"]";
+      s += "[" + details + "]";
     }
-    for (Iterator i = seq.iterator(); i.hasNext(); ) {
+    for (Iterator i = seq.iterator(); i.hasNext();) {
       s += "+" + i.next().toString();
     }
     return s;
   }
-  
+
   /** Detailed information for toString() */
   public String getDetails() {
     return null;
@@ -167,12 +162,12 @@ public abstract class Command {
   }
 
   /**
-   * @return a Command that undoes not only this Command's action,
-   * but also the actions of all its subcommands.  */
+   * @return a Command that undoes not only this Command's action, but also the actions of all its subcommands.
+   */
   public Command getUndoCommand() {
     if (undo == null) {
       undo = new NullCommand();
-      for (ListIterator i = seq.listIterator(seq.size()); i.hasPrevious(); ) {
+      for (ListIterator i = seq.listIterator(seq.size()); i.hasPrevious();) {
         undo = undo.append(((Command) i.previous()).getUndoCommand());
       }
       undo = undo.append(myUndoCommand());

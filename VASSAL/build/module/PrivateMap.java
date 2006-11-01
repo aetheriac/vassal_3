@@ -28,17 +28,14 @@ package VASSAL.build.module;
 
 import java.awt.Window;
 import java.awt.dnd.DropTarget;
-import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Vector;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.KeyStroke;
 import javax.swing.WindowConstants;
 import VASSAL.Info;
 import VASSAL.build.Buildable;
