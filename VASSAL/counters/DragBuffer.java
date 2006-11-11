@@ -30,7 +30,6 @@ import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.JFrame;
 import VASSAL.build.module.Map;
-import VASSAL.tools.Sort;
 
 public class DragBuffer {
   private static DragBuffer theBuffer;
@@ -209,7 +208,7 @@ public class DragBuffer {
   /**
    * @deprecated Use {@link #sort(Comparator)} instead.
    */ 
-  public void sort(Sort.Comparator comp) {
+  public void sort(VASSAL.tools.Sort.Comparator comp) {
     sort((Comparator) comp);
   }
 }
