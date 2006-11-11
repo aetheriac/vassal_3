@@ -24,6 +24,8 @@ import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.JFrame;
@@ -196,8 +198,19 @@ public class DragBuffer {
     return c;
   }
 
+  public void sort(Comparator comp) {
+    try {
+      Collections.sort(pieces, comp);
+    }
+    catch (Exception e) {
+    }
+  }
+
+  /**
+   * @deprecated Use {@link #sort(Comparator)} instead.
+   */ 
   public void sort(Sort.Comparator comp) {
-    Sort.quicksort(pieces, comp);
+    sort((Comparator) comp);
   }
 }
 
