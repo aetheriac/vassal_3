@@ -28,14 +28,19 @@ package VASSAL.build.module;
 
 import java.awt.Window;
 import java.awt.dnd.DropTarget;
+import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Vector;
+
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.KeyStroke;
 import javax.swing.WindowConstants;
 import VASSAL.Info;
 import VASSAL.build.Buildable;
@@ -45,6 +50,7 @@ import VASSAL.configure.ConfigureTree;
 import VASSAL.configure.StringArrayConfigurer;
 import VASSAL.configure.ValidationReport;
 import VASSAL.configure.ValidityChecker;
+import VASSAL.tools.AdjustableSpeedScrollPane;
 
 /**
  * A Map that may be configured to be visible only a particular side.
@@ -130,6 +136,21 @@ public class PrivateMap extends Map {
       return super.getAttributeValueString(key);
     }
   }
+  
+  public JComponent getView() {
+    if (theMap == null) {
+      theMap = new View(this);
+      scroll = new AdjustableSpeedScrollPane(
+            theMap,
+            JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+            JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+      scroll.unregisterKeyboardAction(KeyStroke.getKeyStroke(
+            KeyEvent.VK_PAGE_DOWN, 0));
+      scroll.unregisterKeyboardAction(KeyStroke.getKeyStroke(
+            KeyEvent.VK_PAGE_UP, 0));
+    }
+    return theMap;
+  }
 
   protected Window createParentFrame() {
     if (GlobalOptions.getInstance().isUseSingleWindow()) {
@@ -160,12 +181,9 @@ public class PrivateMap extends Map {
 
   public void sideChanged(String oldSide, String newSide) {
     super.sideChanged(oldSide, newSide);
-    setup(true);
+    ((View)getView()).disableListeners();
     if (isAccessibleTo(newSide)) {
       ((View)getView()).enableListeners();
-    }
-    else {
-      ((View)getView()).disableListeners();
     }
   }
 

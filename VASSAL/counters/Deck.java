@@ -215,7 +215,7 @@ public class Deck extends Stack {
   public boolean isDrawFaceUp() {
     return drawFaceUp;
   }
-
+  
   public void setDrawFaceUp(boolean drawFaceUp) {
     this.drawFaceUp = drawFaceUp;
   }
@@ -410,7 +410,7 @@ public class Deck extends Stack {
         for (int i = 0; i < getPieceCount(); ++i) {
           indices.add(new Integer(i));
         }
-        while (count-- > 0) {
+        while (count-- > 0 && indices.size() > 0) {
           int i = GameModule.getGameModule().getRNG().nextInt(indices.size());
           int index = ((Integer) indices.get(i)).intValue();
           indices.remove(i);
@@ -534,6 +534,16 @@ public class Deck extends Stack {
 
   public boolean isFaceDown() {
     return faceDown;
+  }
+  
+  public Command pieceAdded(GamePiece p) {
+    return null;
+  }
+
+  public Command pieceRemoved(GamePiece p) {
+    ChangeTracker tracker = new ChangeTracker(p);
+    p.setProperty(Properties.OBSCURED_BY, isFaceDown() && !isDrawFaceUp() ? GameModule.getUserId() : null);
+    return tracker.getChangeCommand();
   }
 
   public void setFaceDown(boolean faceDown) {
