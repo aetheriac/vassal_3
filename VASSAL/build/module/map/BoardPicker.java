@@ -26,14 +26,12 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 import javax.swing.BoxLayout;
@@ -143,7 +141,13 @@ public class BoardPicker extends JDialog
     pp.add(controls);
     getContentPane().add("West", pp);
     getContentPane().add("Center", new ScrollPane(slotPanel));
+
     setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+    addWindowListener(new WindowAdapter() {
+      public void windowClosing(WindowEvent we) {
+         cancel();
+      }
+    });
 
     reset();
     setLocation(Toolkit.getDefaultToolkit().getScreenSize().width / 2
@@ -172,9 +176,6 @@ public class BoardPicker extends JDialog
   public void addTo(Buildable b) {
     map = (Map) b;
     map.setBoardPicker(this);
-    for (Enumeration e = possibleBoards.elements(); e.hasMoreElements();) {
-      ((Board) e.nextElement()).setMap(map);
-    }
   }
 
   public void build(Element e) {
@@ -322,19 +323,19 @@ public class BoardPicker extends JDialog
 
   public void setBoards(Enumeration bdEnum) {
     reset();
-    List l = new ArrayList();
+    Vector v = new Vector();
     while (bdEnum.hasMoreElements()) {
-      l.add(bdEnum.nextElement());
+      v.addElement(bdEnum.nextElement());
     }
-    for (Iterator e = l.iterator(); e.hasNext();) {
-      Board b = (Board) e.next();
+    for (Enumeration e = v.elements(); e.hasMoreElements();) {
+      Board b = (Board) e.nextElement();
       if (b.relativePosition().x > nx - 1)
         addColumn();
       if (b.relativePosition().y > ny - 1)
         addRow();
     }
-    for (Iterator e = l.iterator(); e.hasNext();) {
-      Board b = (Board) e.next();
+    for (Enumeration e = v.elements(); e.hasMoreElements();) {
+      Board b = (Board) e.nextElement();
       getSlot(b.relativePosition().x + nx * b.relativePosition().y).setBoard(b);
     }
     pack();
@@ -372,7 +373,7 @@ public class BoardPicker extends JDialog
    * the user via the dialog or from reading a savefile
    */
   public Enumeration getCurrentBoards() {
-    return currentBoards == null ? Collections.enumeration(Collections.EMPTY_LIST)
+    return currentBoards == null ? new Vector().elements()
       : currentBoards.elements();
   }
 
@@ -483,29 +484,21 @@ public class BoardPicker extends JDialog
       reset();
     }
     else if (okButton == e.getSource()) {
-      currentBoards = new Vector(getBoardsFromControls());
+      currentBoards = pickBoards();
       setVisible(false);
     }
     else if (cancelButton == e.getSource()) {
-      GameModule.getGameModule().getGameState().setup(false);
-      setVisible(false);
+      cancel();
     }
   }
 
-  /**
-   * @deprecated use {@link #getBoardsFromControls()}
-   * @return
-   */
-  public Vector pickBoards() {
-    return new Vector(getBoardsFromControls());
+  protected void cancel() {
+    GameModule.getGameModule().getGameState().setup(false);
+    setVisible(false);
   }
-  
-  /**
-   * Return the list of boards as specified in the current controls
-   * @return
-   */
-  public List getBoardsFromControls() {
-    List boardList = new ArrayList();
+
+  public Vector pickBoards() {
+    Vector v = new Vector();
     if (controls != null) {
       // Adjust the bounds of each board according to its relative position
       for (int i = 0; i < nx; ++i) {
@@ -513,12 +506,12 @@ public class BoardPicker extends JDialog
           Board b = getSlot(i + nx * j).getBoard();
           if (b != null) {
             b.relativePosition().move(i, j);
-            boardList.add(b);
+            v.addElement(b);
           }
         }
       }
     }
-    return boardList;
+    return v;
   }
 
   public void reset() {
@@ -648,12 +641,8 @@ public class BoardPicker extends JDialog
         Point p = new Point(st.nextInt(0),st.nextInt(0));
         Board b = getBoard(name);
         if (b != null) {
-          if (bds.contains(b)) {
-            b = b.copy();
-          }
           b.setReversed(reversed);
           b.relativePosition().move(p.x, p.y);
-          b.fixImage(GameModule.getGameModule().getFrame());
           bds.addElement(b);
         }
       }
