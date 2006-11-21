@@ -19,7 +19,8 @@
 package VASSAL.tools;
 
 import java.io.File;
-import javax.swing.filechooser.FileFilter;
+
+import VASSAL.tools.FileFilter;
 
 /**
  * A generic by-extension FileFilter.
@@ -59,32 +60,4 @@ public class ExtensionFileFilter extends FileFilter {
    public String getDescription() {
       return desc;
    }
-   
-   /**
-    * A FileFilter for GIF, JPEG, PNG, and SVG images. Used by file choosers
-    * to filter out files which aren't images.
-    */
-   public static class ImageFileFilter extends ExtensionFileFilter {
-      public static final String[] types = {
-         ".gif", ".jpg", ".jpeg", ".png", ".svg"
-      };
-
-      public ImageFileFilter() {
-         super("Image files", types);
-      }
-   }
-
-   /**
-    * A FileFilter for AIFF, AU, and WAV files. Used by file choosers to
-    * filter out files which aren't audio files.
-    */
-   public static class AudioFileFilter extends ExtensionFileFilter {
-      public static final String[] types = {
-         ".aiff", ".au", ".wav"
-      };
-
-      public AudioFileFilter() {
-         super("Audio files", types);
-      }
-   }  
 }
