@@ -32,7 +32,7 @@ public class ImageConfigurer extends FileConfigurer {
    private static final FileChooser fc;
 
    static {
-      fc = new FileChooser(null);
+      fc = FileChooser.createFileChooser(null);
       fc.setCurrentDirectory(Documentation.getDocumentationBaseDir());
       fc.setFileFilter(new ImageFileFilter());
    }

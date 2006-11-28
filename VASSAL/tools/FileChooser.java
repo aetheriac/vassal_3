@@ -1,4 +1,21 @@
-
+/*
+ * $Id$
+ *
+ * Copyright (c) 2006 by Joel Uckelman
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License (LGPL) as published by the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, copies are available
+ * at http://www.opensource.org.
+ */
 package VASSAL.tools;
 
 import java.awt.Component;
@@ -10,13 +27,14 @@ import javax.swing.SwingUtilities;
 
 import VASSAL.tools.FileFilter;
 
-public class FileChooser {
-   protected JFileChooser fc;
-
-   protected File fd_cur;
-   protected String fd_title;
-   protected FileFilter fd_filter;
-
+/**
+ *  FileChooser provides a wrapper for {@link javax.swing.JFileChooser}
+ *  and {@link java.awt.FileDialog}, selecting whichever is preferred
+ *  on the user's OS. FileChooser's methods mirror those of JFileChooser.
+ * 
+ * @author Joel Uckelman
+ */
+public abstract class FileChooser {
    protected Component parent;
 
    public final static int APPROVE_OPTION = JFileChooser.APPROVE_OPTION;
@@ -27,54 +45,50 @@ public class FileChooser {
    public final static int DIRECTORIES_ONLY = JFileChooser.DIRECTORIES_ONLY;
    public final static int FILES_AND_DIRECTORIES =
                                          JFileChooser.FILES_AND_DIRECTORIES;
-   
-   public FileChooser(Component parent) {
-      // determine what OS this is
-      String os = System.getProperty("os.name");
-      if (os == null) {
-         // should not happen!
-         fc = new JFileChooser();
-      }
-      else if (os.startsWith("Windows") ||
-               os.startsWith("Mac OS")) {
-         // use a native file chooser on Windows and Mac OS
-         fc = null;
-      }
-      else {
-         // use a Swing file chooser anywhere without a good native one
-         fc = new JFileChooser();
-      }
-   
+
+   private FileChooser(Component parent) {
       this.parent = parent;
    }
 
-   public File getCurrentDirectory() {
-      if (fc != null) return fc.getCurrentDirectory();
-      else if (fd_cur == null) return null;
-      else if (fd_cur.isDirectory()) return fd_cur;
-      else return fd_cur.getParentFile();
+   /**
+    * Creates a FileChooser appropriate for the user's OS.
+    *
+    * @param parent The Component over which the FileChooser should appear.
+    */
+   public static FileChooser createFileChooser(Component parent) {
+      // determine what OS this is
+      String os = System.getProperty("os.name");
+      if (os != null && (os.startsWith("Windows") ||
+                         os.startsWith("Mac OS"))) {
+         // use a native file chooser on Windows and Mac OS
+         return new NativeFileChooser(parent);
+      }
+      else {
+         // use a Swing file chooser anywhere without a good native one
+         return new SwingFileChooser(parent);
+      }
    }
 
-   public void setCurrentDirectory(File dir) {
-      if (fc != null) fc.setCurrentDirectory(dir);
-      else fd_cur = dir;
-   }
-
-   public void rescanCurrentDirectory() {
-      if (fc != null) fc.rescanCurrentDirectory();
-   }
-
-   public File getSelectedFile() {
-      if (fc != null) return fc.getSelectedFile();
-      else if (fd_cur.isFile()) return fd_cur;
-      else return null;
-   }
-
-   public void setSelectedFile(File file) {
-      if (fc != null) fc.setSelectedFile(file);
-      else fd_cur = file;
-   }
-
+   public abstract File getCurrentDirectory();
+   public abstract void setCurrentDirectory(File dir);
+   public abstract void rescanCurrentDirectory();
+   public abstract File getSelectedFile();
+   public abstract void setSelectedFile(File file);
+   public abstract int getFileSelectionMode();
+   public abstract void setFileSelectionMode(int mode);
+   public abstract String getDialogTitle();
+   public abstract void setDialogTitle(String title);
+   public abstract int showOpenDialog(Component parent);
+   public abstract int showSaveDialog(Component parent);
+   public abstract FileFilter getFileFilter();
+   public abstract void setFileFilter(FileFilter filter);
+   public abstract void addChoosableFileFilter(FileFilter filter);
+   public abstract boolean removeChoosableFileFilter(FileFilter filter);
+   public abstract void resetChoosableFileFilters();
+  
+   /**
+    * Selects <tt>filename.sav</tt> if <tt>filename.foo</tt> is selected.
+    */
    public void selectDotSavFile() {
       File file = getSelectedFile();
       if (file != null) {
@@ -89,101 +103,198 @@ public class FileChooser {
       }
    }
 
-   public int getFileSelectionMode() {
-      return fc != null ? fc.getFileSelectionMode() : FILES_ONLY;
-   }
-
-   public void setFileSelectionMode(int mode) {
-      if (fc != null) fc.setFileSelectionMode(mode);
-   }
-
-   public String getDialogTitle() {
-      return fc != null ? fc.getDialogTitle() : fd_title;
-   }
-
-   public void setDialogTitle(String title) {
-      if (fc != null) fc.setDialogTitle(title);
-      else fd_title = title;
-   }
-
-   protected FileDialog awt_file_dialog_init(Component parent) {
-      Frame frame = parent instanceof Frame ? (Frame) parent
-         : (Frame) SwingUtilities.getAncestorOfClass(Frame.class, parent);
-      FileDialog fd = new FileDialog(frame, fd_title);
-      fd.setModal(true);
-      fd.setFilenameFilter(fd_filter);
-
-      if (fd_cur != null) {
-         if (fd_cur.isDirectory()) fd.setDirectory(fd_cur.getPath());
-         else {
-            fd.setDirectory(fd_cur.getParent());
-            fd.setFile(fd_cur.getName());
-         }
-      }
-      
-      return fd;
-   }
-
+   /**  
+    * Same as {@link #showOpenDialog(Component)}, but uses the <tt>parent</tt>
+    * set on creation of this FileDialog.
+    */
    public int showOpenDialog() {
       return showOpenDialog(parent);
    }
 
-   public int showOpenDialog(Component parent) {
-      if (fc != null) return fc.showOpenDialog(parent);
-      else {
+   /**  
+    * Same as {@link #showSaveDialog(Component)}, but uses the <tt>parent</tt>
+    * set on creation of this FileDialog.
+    */
+   public int showSaveDialog() {
+      return showSaveDialog(parent);
+   }
+
+   private static class SwingFileChooser extends FileChooser {
+      private JFileChooser fc = new JFileChooser();
+
+      public SwingFileChooser(Component parent) {
+         super(parent);
+      }
+
+      public File getCurrentDirectory() {
+         return fc.getCurrentDirectory();
+      }
+
+      public void setCurrentDirectory(File dir) {
+         fc.setCurrentDirectory(dir);
+      }
+
+      public void rescanCurrentDirectory() {
+         fc.rescanCurrentDirectory();
+      }
+      
+      public File getSelectedFile() {
+         return fc.getSelectedFile();
+      }
+
+      public void setSelectedFile(File file) {
+         fc.setSelectedFile(file);
+      }
+   
+      public int getFileSelectionMode() {
+         return fc.getFileSelectionMode();
+      }
+
+      public void setFileSelectionMode(int mode) {
+         fc.setFileSelectionMode(mode);
+      }
+
+      public String getDialogTitle() {
+         return fc.getDialogTitle();
+      }
+   
+      public void setDialogTitle(String title) {
+         fc.setDialogTitle(title);
+      }
+   
+      public int showOpenDialog(Component parent) {
+         return fc.showOpenDialog(parent);
+      }
+
+      public int showSaveDialog(Component parent) {
+         return fc.showSaveDialog(parent);
+      }
+   
+      public FileFilter getFileFilter() {
+         javax.swing.filechooser.FileFilter ff = fc.getFileFilter();
+         return ff instanceof FileFilter ? (FileFilter) ff : null;
+      }
+
+      public void setFileFilter(FileFilter filter) {
+         fc.setFileFilter(filter);
+      }
+
+      public void addChoosableFileFilter(FileFilter filter) {
+         fc.addChoosableFileFilter(filter);
+      }
+
+      public boolean removeChoosableFileFilter(FileFilter filter) {
+         return fc.removeChoosableFileFilter(filter);
+      }
+
+      public void resetChoosableFileFilters() {
+         fc.resetChoosableFileFilters();
+      }
+   }
+
+   private static class NativeFileChooser extends FileChooser {
+      private File cur;
+      private String title;
+      private FileFilter filter;
+
+      public NativeFileChooser(Component parent) {
+         super(parent);
+      }
+
+      public File getCurrentDirectory() {
+         if (cur == null) return null;
+         else if (cur.isDirectory()) return cur;
+         else return cur.getParentFile();
+      }
+
+      public void setCurrentDirectory(File dir) {
+         cur = dir;
+      }
+
+      public void rescanCurrentDirectory() {
+      }
+
+      public File getSelectedFile() {
+         return cur != null && cur.isFile() ? cur : null;
+      }
+
+      public void setSelectedFile(File file) {
+         cur = file;
+      }
+
+      public int getFileSelectionMode() {
+         return FILES_ONLY;
+      }
+
+      public void setFileSelectionMode(int mode) {
+      }
+
+      public String getDialogTitle() {
+         return title;
+      }
+
+      public void setDialogTitle(String title) {
+         this.title = title;
+      }
+
+      protected FileDialog awt_file_dialog_init(Component parent) {
+         Frame frame = parent instanceof Frame ? (Frame) parent
+            : (Frame) SwingUtilities.getAncestorOfClass(Frame.class, parent);
+         FileDialog fd = new FileDialog(frame, title);
+         fd.setModal(true);
+         fd.setFilenameFilter(filter);
+
+         if (cur != null) {
+            if (cur.isDirectory()) fd.setDirectory(cur.getPath());
+            else {
+               fd.setDirectory(cur.getParent());
+               fd.setFile(cur.getName());
+            }
+         }
+      
+         return fd;
+      }
+
+      public int showOpenDialog(Component parent) {
          FileDialog fd = awt_file_dialog_init(parent);
          fd.setMode(FileDialog.LOAD);
          fd.setVisible(true);
          
          if (fd.getFile() != null) {
-            fd_cur = new File(fd.getDirectory(), fd.getFile());
+            cur = new File(fd.getDirectory(), fd.getFile());
             return FileChooser.APPROVE_OPTION;
          }
          else return FileChooser.CANCEL_OPTION;
       }
-   }
-   
-   public int showSaveDialog() {
-      return showSaveDialog(parent);
-   }
-
-   public int showSaveDialog(Component parent) {
-      if (fc != null) return fc.showSaveDialog(parent);
-      else {
+  
+      public int showSaveDialog(Component parent) {
          FileDialog fd = awt_file_dialog_init(parent);
          fd.setMode(FileDialog.SAVE);
          fd.setVisible(true);
 
          if (fd.getFile() != null) {
-            fd_cur = new File(fd.getDirectory(), fd.getFile());
+            cur = new File(fd.getDirectory(), fd.getFile());
             return FileChooser.APPROVE_OPTION;
          }
          else return FileChooser.CANCEL_OPTION;
       }
-   }
 
-   public FileFilter getFileFilter() {
-      if (fc != null) {
-         javax.swing.filechooser.FileFilter ff = fc.getFileFilter();
-         return ff instanceof FileFilter ? (FileFilter) ff : null;
+      public FileFilter getFileFilter() {
+         return filter;
       }
-      else return fd_filter;
-   }
 
-   public void setFileFilter(FileFilter filter) {
-      if (fc != null) fc.setFileFilter(filter);
-      else fd_filter = filter;
-   }
+      public void setFileFilter(FileFilter filter) {
+         this.filter = filter;
+      }
 
-   public void addChoosableFileFilter(FileFilter filter) {
-      if (fc != null) fc.addChoosableFileFilter(filter);
-   }
+      public void addChoosableFileFilter(FileFilter filter) {
+      }
 
-   public boolean removeChoosableFileFilter(FileFilter filter) {
-      return fc != null ? fc.removeChoosableFileFilter(filter) : false;
-   }
+      public boolean removeChoosableFileFilter(FileFilter filter) {
+         return false;
+      }
 
-   public void resetChoosableFileFilters() {
-      if (fc != null) fc.resetChoosableFileFilters();
+      public void resetChoosableFileFilters() {
+      }
    }
 }

@@ -50,8 +50,9 @@ public class FileConfigurer extends Configurer {
 
   protected FileChooser initFileChooser() {
     if (globalFileChooser == null) {
-      globalFileChooser = new FileChooser(null);
-      globalFileChooser.setCurrentDirectory(Documentation.getDocumentationBaseDir());
+      globalFileChooser = FileChooser.createFileChooser(null);
+      globalFileChooser.setCurrentDirectory(
+         Documentation.getDocumentationBaseDir());
     }
     return globalFileChooser;
   }

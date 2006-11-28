@@ -192,7 +192,7 @@ public class ArchiveWriter extends DataArchive {
    */
   public void write() throws IOException {
     if (archiveName == null) {
-      FileChooser fc = new FileChooser(null);
+      FileChooser fc = FileChooser.createFileChooser(null);
       fc.setCurrentDirectory(Documentation.getDocumentationBaseDir());
       if (fc.showSaveDialog() != FileChooser.APPROVE_OPTION) return;
       archiveName = fc.getSelectedFile().getPath();

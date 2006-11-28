@@ -30,7 +30,7 @@ public class DirectoryConfigurer extends FileConfigurer {
   private static final FileChooser fc;
 
   static {
-    fc = new FileChooser(null);
+    fc = FileChooser.createFileChooser(null);
     fc.setFileFilter(new DirectoryFileFilter());
     fc.setFileSelectionMode(FileChooser.DIRECTORIES_ONLY);
   }

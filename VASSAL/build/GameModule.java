@@ -496,7 +496,7 @@ public abstract class GameModule extends AbstractConfigurable implements Command
   public FileChooser getFileChooser() {
     if (fileChooser == null) {
       getPrefs().addOption(null, new DirectoryConfigurer(SAVE_DIR, null));
-      fileChooser = new FileChooser(getFrame());
+      fileChooser = FileChooser.createFileChooser(getFrame());
       File f = (File) getPrefs().getValue(SAVE_DIR);
       if (f != null) {
         fileChooser.setCurrentDirectory(f);
