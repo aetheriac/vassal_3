@@ -34,7 +34,6 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import VASSAL.build.module.Documentation;
-import VASSAL.tools.FileChooser;
 
 /**
  * An ArchiveWriter is a writeable DataArchive. New files may be added with the
@@ -192,9 +191,9 @@ public class ArchiveWriter extends DataArchive {
    */
   public void write() throws IOException {
     if (archiveName == null) {
-      FileChooser fc = FileChooser.createFileChooser(null);
-      fc.setCurrentDirectory(Documentation.getDocumentationBaseDir());
-      if (fc.showSaveDialog() != FileChooser.APPROVE_OPTION) return;
+      javax.swing.JFileChooser fc = new javax.swing.JFileChooser(Documentation.getDocumentationBaseDir());
+      if (fc.showSaveDialog(null) == javax.swing.JFileChooser.CANCEL_OPTION)
+        return;
       archiveName = fc.getSelectedFile().getPath();
     }
 

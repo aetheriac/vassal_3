@@ -26,8 +26,6 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -145,13 +143,7 @@ public class BoardPicker extends JDialog
     pp.add(controls);
     getContentPane().add("West", pp);
     getContentPane().add("Center", new ScrollPane(slotPanel));
-
     setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-    addWindowListener(new WindowAdapter() {
-      public void windowClosing(WindowEvent we) {
-         cancel();
-      }
-    });
 
     reset();
     setLocation(Toolkit.getDefaultToolkit().getScreenSize().width / 2
@@ -495,13 +487,9 @@ public class BoardPicker extends JDialog
       setVisible(false);
     }
     else if (cancelButton == e.getSource()) {
-      cancel();
+      GameModule.getGameModule().getGameState().setup(false);
+      setVisible(false);
     }
-  }
-
-  protected void cancel() {
-    GameModule.getGameModule().getGameState().setup(false);
-    setVisible(false);
   }
 
   /**
@@ -665,6 +653,7 @@ public class BoardPicker extends JDialog
           }
           b.setReversed(reversed);
           b.relativePosition().move(p.x, p.y);
+          b.fixImage(GameModule.getGameModule().getFrame());
           bds.addElement(b);
         }
       }

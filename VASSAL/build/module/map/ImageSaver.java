@@ -34,6 +34,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import javax.imageio.ImageIO;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JWindow;
@@ -51,7 +52,6 @@ import VASSAL.configure.Configurer;
 import VASSAL.configure.ConfigurerFactory;
 import VASSAL.configure.IconConfigurer;
 import VASSAL.tools.BackgroundTask;
-import VASSAL.tools.FileChooser;
 import VASSAL.tools.LaunchButton;
 
 /**
@@ -143,13 +143,9 @@ public class ImageSaver extends AbstractConfigurable {
       catch (NumberFormatException ex) {
       }
     }
-
-    FileChooser fc = GameModule.getGameModule().getFileChooser();
-    fc.setSelectedFile(
-      new File(fc.getCurrentDirectory(),
-               GameModule.getGameModule().getGameName() + "Map.png"));
-    
-    if (fc.showSaveDialog(map.getView()) == FileChooser.APPROVE_OPTION) {
+    JFileChooser fc = GameModule.getGameModule().getFileChooser();
+    fc.setSelectedFile(new File(fc.getCurrentDirectory(), GameModule.getGameModule().getGameName() + "Map.png"));
+    if (fc.showSaveDialog(null) != JFileChooser.CANCEL_OPTION) {
       final int sectionCount = sections;
       final String fileName = fc.getSelectedFile().getPath();
       final JWindow w = new JWindow((Frame) SwingUtilities.getAncestorOfClass(Frame.class, map.getView()));

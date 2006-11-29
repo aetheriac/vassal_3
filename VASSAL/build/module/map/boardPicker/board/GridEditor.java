@@ -12,8 +12,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -97,11 +95,6 @@ public abstract class GridEditor extends JDialog implements MouseListener, KeyLi
   
   protected void initComponents() {
     setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-    addWindowListener(new WindowAdapter() {
-      public void windowClosing(WindowEvent we) {
-         cancel();
-      }
-    });
 
     view = new GridPanel(board);
 
@@ -137,7 +130,11 @@ public abstract class GridEditor extends JDialog implements MouseListener, KeyLi
     JButton canButton = new JButton(CANCEL);
     canButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        cancel();
+        cancelSetMode();
+        grid.setDx(saveDx);
+        grid.setDy(saveDy);
+        grid.setOrigin(saveOrigin);
+        setVisible(false);
       }
     });
     buttonPanel.add(canButton);
@@ -182,15 +179,7 @@ public abstract class GridEditor extends JDialog implements MouseListener, KeyLi
     pack();
     repaint();
   }
- 
-  protected void cancel() {
-    cancelSetMode();
-    grid.setDx(saveDx);
-    grid.setDy(saveDy);
-    grid.setOrigin(saveOrigin);
-    setVisible(false);
-  }
- 
+  
   protected void cancelSetMode() {
     canSetButton.setVisible(false);
     setButton.setVisible(true);

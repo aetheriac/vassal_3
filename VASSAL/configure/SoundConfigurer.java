@@ -30,13 +30,12 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import VASSAL.build.GameModule;
 import VASSAL.build.module.documentation.HelpFile;
-import VASSAL.tools.AudioFileFilter;
-import VASSAL.tools.FileChooser;
 
 /**
  * Configurer for specifying an AudioClip. This class is intended to allow
@@ -163,15 +162,13 @@ public class SoundConfigurer extends Configurer {
   }
 
   public void chooseClip() {
-    // FIXME: add a file filter here?
-    FileChooser fc = GameModule.getGameModule().getFileChooser();
-    fc.setFileFilter(new AudioFileFilter());    
-
-    if (fc.showOpenDialog(getControls()) != FileChooser.APPROVE_OPTION) {
+    JFileChooser fc = GameModule.getGameModule().getFileChooser();
+    fc.showOpenDialog(GameModule.getGameModule().getFrame());
+    File f = fc.getSelectedFile();
+    if (f == null) {
       setValue(NO_VALUE);
     }
     else {
-      File f = fc.getSelectedFile();
       setValue(f.getName());
     }
   }

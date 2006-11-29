@@ -42,7 +42,6 @@ import java.security.AllPermission;
 import java.security.CodeSource;
 import java.security.PermissionCollection;
 import java.security.SecureClassLoader;
-import java.security.cert.Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -534,7 +533,7 @@ public class DataArchive extends SecureClassLoader {
 
   protected Class findClass(String name) throws ClassNotFoundException {
     if (cs == null) {
-      cs = new CodeSource((URL) null, (Certificate[]) null);
+      cs = new CodeSource(null, null);
     }
     try {
       String slashname = name.replace('.', '/');
