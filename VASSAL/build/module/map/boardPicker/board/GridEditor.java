@@ -6,6 +6,7 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -461,6 +462,8 @@ public abstract class GridEditor extends JDialog implements MouseListener, KeyLi
 
     public void paint(Graphics g) {
       if (board != null) {
+        Rectangle b = getVisibleRect();
+        g.clearRect(b.x, b.y, b.width, b.height);
         board.draw(g, 0, 0, 1.0, this);
         if (setMode) {
           highlight(g, hp1);
