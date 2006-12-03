@@ -78,7 +78,7 @@ public class HexGrid extends AbstractConfigurable implements GeometricGrid, Grid
   public static final String SIDEWAYS = "sideways";
   public static final String COLOR = "color";
 
-  public static final double sqrt3_2 = Math.sqrt(3) / 2.;
+  protected static final double sqrt3_2 = Math.sqrt(3) / 2.;
 
   public String[] getAttributeNames() {
     String s[] = {SIDEWAYS, X0, Y0, DY, DX, EDGES, CORNERS, VISIBLE, DOTS_VISIBLE, COLOR};
