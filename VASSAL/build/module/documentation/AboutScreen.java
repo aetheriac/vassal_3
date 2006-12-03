@@ -69,9 +69,12 @@ public class AboutScreen extends AbstractConfigurable {
   }
 
   public void launch() {
+    if (image == null) return;
+
     if (window == null) {
       initComponents();
     }
+
     window.setVisible(true);
     window.toFront();
   }
