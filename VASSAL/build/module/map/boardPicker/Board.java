@@ -228,6 +228,7 @@ public class Board extends AbstractConfigurable implements GridContainer {
 
   public void draw(java.awt.Graphics g,
                    int x, int y, double zoom, Component obs) {
+    if (boardImage == null) fixImage(obs);
     drawRegion(g, new Point(x, y),
       new Rectangle(x, y, Math.round((float) zoom * boundaries.width),
                           Math.round((float) zoom * boundaries.height)),
@@ -236,6 +237,7 @@ public class Board extends AbstractConfigurable implements GridContainer {
 
   public void drawRegion(final Graphics g, final Point location,
    Rectangle visibleRect, final double zoom, final Component obs) {
+    if (boardImage == null) fixImage(obs);
     Rectangle bounds = new Rectangle(location.x, location.y,
       Math.round(boundaries.width  * (float) zoom),
       Math.round(boundaries.height * (float) zoom));
