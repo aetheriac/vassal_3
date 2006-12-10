@@ -30,7 +30,7 @@ import java.util.StringTokenizer;
  * Class for storing release-related information
  */
 public final class Info {
-  private static final String VERSION = "2.9.5";
+  private static final String VERSION = "2.9.6";
   private static Boolean is2dEnabled;
   private static Boolean isDndEnabled;
   /** This class should not be instantiated */
@@ -48,6 +48,7 @@ public final class Info {
   /**
    *
    * @return true if this platform supports Swing Drag and Drop
+   * @deprecated Check is no longer necessary since Java 1.4+ is required
    */
   public static boolean isDndEnabled() {
     if (isDndEnabled == null) {
@@ -63,20 +64,15 @@ public final class Info {
   }
 
   /**
-   * If running JRE 1.4, we can take into account the screen insets (i.e. Windows taskbar)
+   * Get size of screen accounting for the screen insets (i.e. Windows taskbar)
    * @return
    */
   public static Rectangle getScreenBounds(Component c) {
     Rectangle bounds =  new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
-    try {
-      GraphicsConfiguration config = c.getGraphicsConfiguration();
-      Insets insets = (Insets) Toolkit.class.getMethod("getScreenInsets",new Class[]{GraphicsConfiguration.class})
-        .invoke(Toolkit.getDefaultToolkit(),new Object[]{config});
-      bounds.translate(insets.left,insets.top);
-      bounds.setSize(bounds.width-insets.left-insets.right,bounds.height-insets.top-insets.bottom);
-    }
-    catch (Throwable t) {
-    }
+    GraphicsConfiguration config = c.getGraphicsConfiguration();
+    Insets insets = Toolkit.getDefaultToolkit().getScreenInsets(config);
+    bounds.translate(insets.left,insets.top);
+    bounds.setSize(bounds.width-insets.left-insets.right,bounds.height-insets.top-insets.bottom);
     return bounds;
   }
 
