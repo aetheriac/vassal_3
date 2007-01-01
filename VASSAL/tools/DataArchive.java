@@ -286,6 +286,12 @@ public class DataArchive extends SecureClassLoader {
     return Toolkit.getDefaultToolkit().createImage(prod);
   }
 
+  /**
+   * Get the size of an image without loading and decoding it.
+   *
+   * @param name filename of the image
+   * @return the size of the image
+   */
   public Dimension getImageSize(String name) throws IOException {
     String path = IMAGE_DIR + name;
     String gifPath = path + ".gif";
