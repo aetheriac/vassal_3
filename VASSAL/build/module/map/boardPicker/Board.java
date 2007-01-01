@@ -408,7 +408,7 @@ public class Board extends AbstractConfigurable implements GridContainer {
     if (imageFile == null || boardImage != null) return;
 
     try {
-      boundaries = new Rectangle(GameModule.getGameModule()
+      boundaries.setSize(GameModule.getGameModule()
                               .getDataArchive().getImageSize(imageFile));
       fixedBoundaries = true;
     }
