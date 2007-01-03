@@ -500,7 +500,8 @@ public class Zone extends AbstractConfigurable implements GridContainer, GlobalP
         public void actionPerformed(ActionEvent e) {
           setValue((Object) getValueString());
           frame.setVisible(false);
-          GameModule.getGameModule().getDataArchive().clearScaledImageCache();
+          GameModule.getGameModule()
+                    .getDataArchive().clearTransformedImageCache();
         }
       });
       buttonPanel.add(closeButton);
