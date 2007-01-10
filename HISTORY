@@ -1,0 +1,15 @@
+2006.12.22 v2.9.8
+
+* Fixed bug in FileChooser.
+* Maps now show scroll bars only when needed.
+
+2006.12.09 v2.9.7
+ 
+* Fixed map positioning bug.
+
+2006.12.08 v2.9.6
+
+* Restored native file dialogs on Windows, MacOS X.
+* Improved drag-and-drop on MacOS X.
+* Added sorting of Inventory window contents.
+

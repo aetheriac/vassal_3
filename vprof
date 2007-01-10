@@ -1,0 +1,8 @@
+#!/bin/bash
+
+#java -Xmx256M -classpath lib/VASSAL.jar:lib/cryptix32.jar:../batik-1.6/batik.jar:classes:Vengine.jar -Dswing.defaultlaf=com.sun.java.swing.plaf.gtk.GTKLookAndFeel -Dswing.gtkthemefile=/home/uckelman/.gtkrc -Dswing.aatext=true org.vassalengine.Main
+#java -Xmx256M -classpath lib/VASSAL.jar:lib/cryptix32.jar:../batik-1.6/batik.jar:classes:Vengine.jar:../shiftone-jrat.jar -Djrat.factory=org.shiftone.jrat.provider.tree.TreeMethodHandlerFactory -Dswing.defaultlaf=javax.swing.plaf.metal.MetalLookAndFeel -Dswing.boldMetal=false -Dswing.aatext=true org.vassalengine.Main
+#java -Xmx256M -classpath lib/VASSAL.jar:lib/cryptix32.jar:../batik-1.6/batik.jar:classes:Vengine.jar -Dswing.defaultlaf=javax.swing.plaf.metal.MetalLookAndFeel -Dswing.boldMetal=false -Dswing.aatext=true org.vassalengine.Main
+#java -javaagent:../profiler4j-1.0-beta2/agent.jar -Xms256M -Xmx256M -classpath lib/VASSAL.jar:lib/cryptix32.jar:../batik-1.6/batik.jar:classes:Vengine.jar -Dswing.defaultlaf=javax.swing.plaf.metal.MetalLookAndFeel -Dswing.boldMetal=false -Dswing.aatext=true org.vassalengine.Main
+
+LD_LIBRARY_PATH=/home/uckelman/projects/VASSAL/yjp-5.5.6/bin/linux-x86-32 java -agentlib:yjpagent -Xms256M -Xmx512M -classpath ../VASSAL-lib/VASSAL.jar:../VASSAL-lib/cryptix32.jar:../VASSAL-lib/batik.jar:../VASSAL-lib/smack.jar:../VASSAL-lib/smackx.jar:../VASSAL-lib/smackx-debug.jar:classes:Vengine.jar -Dswing.defaultlaf=javax.swing.plaf.metal.MetalLookAndFeel -Dswing.boldMetal=false -Dswing.aatext=true org.vassalengine.Main
