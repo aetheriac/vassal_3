@@ -1,0 +1,24 @@
+[1609:
+* Partial addition of fixBounds().
+]
+
+1627:
+
+* Get image size without loading image.
+
+1633:
+
+* SVG support.
+
+1634:
+
+* Don't clobber Board boundaries in fixBounds().
+
+1638:
+
+* Call DataArchive.clearTransformedImageCache() instead of deprecated
+  DataArchive.clearScaledImageCache().
+
+1647:
+
+* show() is deprecated in Java 1.5. Use setVisible(true) instead.
