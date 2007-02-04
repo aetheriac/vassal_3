@@ -70,10 +70,13 @@ import VASSAL.build.module.GameComponent;
 import VASSAL.build.module.GlobalOptions;
 import VASSAL.build.module.Map;
 import VASSAL.build.module.map.boardPicker.Board;
+import VASSAL.build.module.map.boardPicker.board.mapgrid.Zone;
 import VASSAL.command.ChangeTracker;
 import VASSAL.command.Command;
 import VASSAL.command.NullCommand;
 import VASSAL.configure.BooleanConfigurer;
+import VASSAL.counters.BasicPiece;
+import VASSAL.counters.BoundsTracker;
 import VASSAL.counters.Deck;
 import VASSAL.counters.DeckVisitor;
 import VASSAL.counters.DeckVisitorDispatcher;
@@ -168,11 +171,8 @@ public class PieceMover extends AbstractBuildable implements MouseListener, Game
         GamePiece selected = null;
         if (this.map.getStackMetrics().isStackingEnabled() && this.map.getPieceCollection().canMerge(dragging, s) && !DragBuffer.getBuffer().contains(s)
             && s.topPiece() != null) {
-          if (!s.isExpanded() && this.map.isLocationRestricted(pt)) {
-            pt = this.map.snapTo(pt);
-            if (s.getPosition().equals(pt) && s.topPiece() != null) {
-              selected = s;
-            }
+          if (this.map.isLocationRestricted(pt) && s.getPosition().equals(this.map.snapTo(pt))) {
+            selected = s;
           }
           else {
             selected = (GamePiece) super.visitStack(s);
@@ -358,6 +358,7 @@ public class PieceMover extends AbstractBuildable implements MouseListener, Game
 
   /** Invoked just before a piece is moved */
   protected Command movedPiece(GamePiece p, Point loc) {
+    setOldLocation(p);
     Command c = null;
     if (!loc.equals(p.getPosition())) {
       c = markMoved(p, true);
@@ -367,6 +368,45 @@ public class PieceMover extends AbstractBuildable implements MouseListener, Game
       c = c == null ? removedCommand : c.append(removedCommand);
     }
     return c;
+  }
+
+  protected void setOldLocation(GamePiece p) {
+    if (p instanceof Stack) {
+      for (int i = 0; i < ((Stack) p).getPieceCount(); i++) {
+        setOld(((Stack) p).getPieceAt(i));
+      }
+    }
+    else setOld(p);
+  }
+  
+  private void setOld(GamePiece p) {
+    String mapName = "";
+    String boardName = "";
+    String zoneName = "";
+    String locationName = "";
+    Map m = p.getMap();
+    Point pos = p.getPosition();
+    
+    if (m != null) {
+      mapName = m.getConfigureName();
+      Board b = m.findBoard(pos);
+      if (b != null) {
+        boardName = b.getName();
+      }
+      Zone z = m.findZone(pos);
+      if (z != null) {
+        zoneName = z.getName();
+      }
+      locationName = m.locationName(pos);
+    }
+    
+    p.setProperty(BasicPiece.OLD_X, pos.x+"");
+    p.setProperty(BasicPiece.OLD_Y, pos.y+"");
+    p.setProperty(BasicPiece.OLD_MAP, mapName);
+    p.setProperty(BasicPiece.OLD_BOARD, boardName);
+    p.setProperty(BasicPiece.OLD_ZONE, zoneName);
+    p.setProperty(BasicPiece.OLD_LOCATION_NAME, locationName);
+    
   }
 
   public Command markMoved(GamePiece p, boolean hasMoved) {
@@ -419,11 +459,13 @@ public class PieceMover extends AbstractBuildable implements MouseListener, Game
     }
     Point offset = null;
     Command comm = new NullCommand();
+    BoundsTracker tracker = new BoundsTracker();
     // Map of Point->List<GamePiece> of pieces to merge with at a given location
     // There is potentially one piece for each Game Piece Layer
     HashMap mergeTargets = new HashMap();
     while (it.hasMoreElements()) {
       dragging = it.nextPiece();
+      tracker.addPiece(dragging);
       /*
        * Take a copy of the pieces in dragging. If it is a stack, it is cleared by the merging process
        */
@@ -487,12 +529,14 @@ public class PieceMover extends AbstractBuildable implements MouseListener, Game
       if (map.getMoveKey() != null) {
         applyKeyAfterMove(draggedPieces, comm, map.getMoveKey());
       }
+      tracker.addPiece(dragging);
     }
     if (GlobalOptions.getInstance().autoReportEnabled()) {
       Command report = createMovementReporter(comm).getReportCommand();
       report.execute();
       comm = comm.append(report);
     }
+    tracker.repaint();
     return comm;
   }
 
@@ -728,6 +772,9 @@ public class PieceMover extends AbstractBuildable implements MouseListener, Game
         // remove cursor from old window
         if (dragCursor.getParent() != null) {
           dragCursor.getParent().remove(dragCursor);
+        }
+        if (drawWin != null) {
+          drawWin.repaint(dragCursor.getBounds());
         }
         drawWin = newDrawWin;
         calcDrawOffset();

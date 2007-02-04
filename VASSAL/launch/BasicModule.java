@@ -21,9 +21,16 @@ import VASSAL.build.module.Map;
 import VASSAL.build.module.PieceWindow;
 import VASSAL.build.module.PlayerRoster;
 import VASSAL.build.module.PrototypesContainer;
-import VASSAL.build.module.ServerConnection;
 import VASSAL.build.module.gamepieceimage.GamePieceImageDefinitions;
 import VASSAL.build.module.properties.GlobalProperties;
+import VASSAL.chat.ChatServerFactory;
+import VASSAL.chat.DynamicClientFactory;
+import VASSAL.chat.HybridClient;
+import VASSAL.chat.ServerConfigurer;
+import VASSAL.chat.jabber.JabberClientFactory;
+import VASSAL.chat.node.NodeClientFactory;
+import VASSAL.chat.peer2peer.P2PClientFactory;
+import VASSAL.chat.ui.ChatServerControls;
 import VASSAL.command.Command;
 import VASSAL.preferences.PositionOption;
 import VASSAL.preferences.Prefs;
@@ -35,6 +42,7 @@ public class BasicModule extends GameModule {
 
   protected BasicModule(DataArchive archive, Prefs globalPrefs) {
     super(archive);
+    setGlobalPrefs(globalPrefs);
   }
 
   protected void build() throws IOException {
@@ -71,8 +79,42 @@ public class BasicModule extends GameModule {
     getFileMenu().add(q);
   }
 
-  // TODO server initialization
+  public void build(org.w3c.dom.Element e) {
+    /*
+     * We determine the name of the module at the very beginning, so we know which preferences to read
+     */
+    if (e != null) {
+      gameName = e.getAttribute(MODULE_NAME);
+      if (e.getAttribute(VASSAL_VERSION_CREATED).length() > 0) {
+        vassalVersionCreated = e.getAttribute(VASSAL_VERSION_CREATED);
+      }
+    }
+    initGameState();
+    initLogger();
+    initServer();
+    if (e != null) {
+      super.build(e);
+      ensureComponent(GamePieceImageDefinitions.class);
+      ensureComponent(GlobalProperties.class);
+    }
+    else {
+      buildDefaultComponents();
+    }
+    initFrame();
+  }
+
   protected void initServer() {
+    DynamicClientFactory dynamicClientFactory = new DynamicClientFactory();
+    ChatServerFactory.register(ChatServerFactory.DEFAULT_TYPE, dynamicClientFactory);
+    ChatServerFactory.register(NodeClientFactory.NODE_TYPE, NodeClientFactory.getInstance());
+    ChatServerFactory.register(DynamicClientFactory.DYNAMIC_TYPE, dynamicClientFactory);
+    ChatServerFactory.register(P2PClientFactory.P2P_TYPE, new P2PClientFactory());
+    ChatServerFactory.register(JabberClientFactory.JABBER_SERVER_TYPE, new JabberClientFactory());
+    server = new HybridClient();
+    ServerConfigurer config = new ServerConfigurer("ServerImpl", "Server", (HybridClient) server);
+    GameModule.getGameModule().getGlobalPrefs().addOption("Server", config);
+    ChatServerControls c = new ChatServerControls();
+    c.addTo(this);
   }
 
   protected void initLogger() {
@@ -142,11 +184,6 @@ public class BasicModule extends GameModule {
       s = commandEncoders[i].encode(c);
     }
     return s;
-  }
-
-  public ServerConnection getServer() {
-    // TODO Auto-generated method stub
-    return null;
   }
 
   protected void buildDefaultComponents() {
