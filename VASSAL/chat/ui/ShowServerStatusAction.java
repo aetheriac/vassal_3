@@ -1,3 +1,20 @@
+/*
+ *
+ * Copyright (c) 2000-2007 by Rodney Kinney
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License (LGPL) as published by the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, copies are available
+ * at http://www.opensource.org.
+ */
 package VASSAL.chat.ui;
 
 import java.awt.BorderLayout;
@@ -11,10 +28,13 @@ import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JToolBar;
+import VASSAL.build.GameModule;
 import VASSAL.chat.ChatServerConnection;
+import VASSAL.chat.HttpMessageServer;
 import VASSAL.chat.ServerStatus;
 import VASSAL.chat.messageboard.MessageBoard;
 import VASSAL.chat.messageboard.MessageBoardControls;
+import VASSAL.chat.peer2peer.PeerPoolInfo;
 
 /**
  * Copyright (c) 2003 by Rodney Kinney.  All rights reserved.
@@ -36,20 +56,6 @@ public class ShowServerStatusAction extends AbstractAction {
     putValue(SHORT_DESCRIPTION, "Display server connections for all modules");
   }
   
-  public ShowServerStatusAction(ChatServerConnection svr, URL iconURL) {
-    this(svr.getStatusServer(), iconURL);
-    svr.addPropertyChangeListener(ChatServerConnection.STATUS_SERVER, new PropertyChangeListener() {
-      public void propertyChange(PropertyChangeEvent evt) {
-        ServerStatus status = (ServerStatus) evt.getNewValue();
-        frame.view.setStatusServer(status);
-        if (frame.isVisible() && status == null) {
-          frame.setVisible(false);
-        }
-        setEnabled(status != null);
-      }
-    });
-  }
-
   public void actionPerformed(ActionEvent e) {
     frame.refresh();
   }
@@ -90,17 +96,15 @@ public class ShowServerStatusAction extends AbstractAction {
       String name = null;
       if (evt.getNewValue() instanceof ServerStatus.ModuleSummary) {
         final String moduleName = ((ServerStatus.ModuleSummary) evt.getNewValue()).getModuleName();
-        throw new IllegalStateException("Not implemented:  update message board");
-//        name = moduleName;
-//        server = new CgiPeerPool(new PeerPoolInfo() {
-//          public String getModuleName() {
-//            return moduleName;
-//          }
-//
-//          public String getUserName() {
-//            return Module.getSvr().getUserInfo().getName();
-//          }
-//        }, "http://www.vassalengine.org/util/");
+        server = new HttpMessageServer(new PeerPoolInfo() {
+          public String getModuleName() {
+            return moduleName;
+          }
+
+          public String getUserName() {
+            return ((ChatServerConnection) GameModule.getGameModule().getServer()).getUserInfo().getName();
+          }
+        });
       }
       messageMgr.setServer(server, name);
     }

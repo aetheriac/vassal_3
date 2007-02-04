@@ -17,12 +17,22 @@
  */
 package VASSAL.chat;
 
+import java.util.Properties;
+
 /**
- * Represents the current status of a player on the server. Depending on the chat-room implementation, different
- * statuses may be available to a player. E.g. looking for a game, away from keyboard, banned, etc.
- * 
  * @author rkinney
- * 
  */
-public interface PlayerStatus {
+public class DynamicClientFactory extends ChatServerFactory {
+  public static final String DYNAMIC_TYPE = "dynamic";
+  public static final String URL = "url";
+
+  public ChatServerConnection buildServer(Properties param) {
+    String url = param.getProperty(URL);
+    if (url != null) {
+      return new DynamicClient(url);
+    }
+    else {
+      return new DynamicClient();
+    }
+  }
 }

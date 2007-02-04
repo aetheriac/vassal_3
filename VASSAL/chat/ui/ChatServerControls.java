@@ -1,3 +1,20 @@
+/*
+ *
+ * Copyright (c) 2000-2007 by Rodney Kinney
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License (LGPL) as published by the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, copies are available
+ * at http://www.opensource.org.
+ */
 package VASSAL.chat.ui;
 
 import java.awt.event.ActionEvent;
@@ -38,7 +55,7 @@ import VASSAL.preferences.VisibilityOption;
 import VASSAL.tools.ComponentSplitter;
 import VASSAL.tools.KeyStrokeListener;
 
-public abstract class ChatServerControls extends AbstractBuildable {
+public class ChatServerControls extends AbstractBuildable {
 
   protected RoomTree currentRoom;
   protected JTextField newRoom;
@@ -49,7 +66,8 @@ public abstract class ChatServerControls extends AbstractBuildable {
   protected ChatServerConnection client;
   protected JPanel controlPanel;
   protected ComponentSplitter.SplitPane splitter;
-  protected ChatControlsInitializer controlsInit;
+  protected ChatControlsInitializer oldClient;
+  protected BasicChatControlsInitializer basicControls;
 
   public ChatServerControls() {
     JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -170,11 +188,16 @@ public abstract class ChatServerControls extends AbstractBuildable {
   public void setClient(ChatServerConnection c) {
     client = c;
     if (c instanceof ChatControlsInitializer) {
-      if (controlsInit != null) {
-        controlsInit.uninitializeControls(this);
+      if (basicControls != null) {
+        basicControls.uninitializeControls(this);
       }
+      if (oldClient != null) {
+        oldClient.uninitializeControls(this);
+      }
+      basicControls = new BasicChatControlsInitializer(c);
+      basicControls.initializeControls(this);
       ((ChatControlsInitializer)c).initializeControls(this);
-      controlsInit = (ChatControlsInitializer) c;
+      oldClient = (ChatControlsInitializer) c;
     }
     PropertyChangeListener roomUpdater = new PropertyChangeListener() {
       public void propertyChange(final PropertyChangeEvent evt) {
