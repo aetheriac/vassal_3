@@ -30,7 +30,6 @@ import VASSAL.chat.SimpleStatus;
  */
 public class NodePlayer extends SimplePlayer {
   public static final String ID = "id";
-  private String id;
 
   public NodePlayer(String id) {
     this.id = id;
