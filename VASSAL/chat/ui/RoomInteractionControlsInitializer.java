@@ -22,7 +22,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -137,7 +136,6 @@ public class RoomInteractionControlsInitializer implements ChatControlsInitializ
       RoomActionFactory f = (RoomActionFactory) it.next();
       popup.add(f.getAction(room, tree));
     }
-    // popup.add(new JoinRoomAction(target, source.getSvrConnection()));
     return popup.getComponentCount() == 0 ? null : popup;
   }
 
@@ -161,9 +159,6 @@ public class RoomInteractionControlsInitializer implements ChatControlsInitializ
       PlayerActionFactory f = (PlayerActionFactory) it.next();
       popup.add(f.getAction(target, tree));
     }
-    // popup.add(new ShowProfileAction(target, (Frame) SwingUtilities.getAncestorOfClass(Frame.class, tree)));
-    // popup.add(new PrivateMessageAction(target, source.getSvrConnection(), source.getPrivateChatManager()));
-    // popup.add(new SendSoundAction("Send Wake-up", source.getSvrConnection(), WAKE_UP_SOUND, target));
     return popup.getComponentCount() == 0 ? null : popup;
   }
 
