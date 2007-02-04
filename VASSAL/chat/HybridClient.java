@@ -1,10 +1,19 @@
 /*
- * Created by IntelliJ IDEA.
- * User: rkinney
- * Date: Sep 16, 2002
- * Time: 11:07:55 PM
- * To change template for new class use
- * Code Style | Class Templates options (Tools | IDE Options).
+ *
+ * Copyright (c) 2000-2007 by Rodney Kinney
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License (LGPL) as published by the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, copies are available
+ * at http://www.opensource.org.
  */
 package VASSAL.chat;
 
@@ -12,38 +21,38 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeListenerProxy;
 import java.beans.PropertyChangeSupport;
+import VASSAL.chat.ui.ChatControlsInitializer;
+import VASSAL.chat.ui.ChatServerControls;
 import VASSAL.command.Command;
 
 /**
  * Delegates calls to another SvrConnection instance, which can be changed programmatically
+ * 
  * @author rkinney
- *
+ * 
  */
-public class HybridClient implements ChatServerConnection, PlayerEncoder {
+public class HybridClient implements ChatServerConnection, PlayerEncoder, ChatControlsInitializer {
   protected ChatServerConnection delegate;
   protected String defaultRoom = "Main Room";
   protected PropertyChangeSupport propSupport = new PropertyChangeSupport(this);
   protected PropertyChangeListener propForwarder;
-  
+  protected ChatServerControls controls;
+
   public HybridClient() {
     propForwarder = new PropertyChangeListener() {
       public void propertyChange(PropertyChangeEvent evt) {
         propSupport.firePropertyChange(evt);
       }
     };
-    this.delegate = new DummyClient();
+    setDelegate(new DummyClient());
   }
 
   public void addPropertyChangeListener(String propertyName, PropertyChangeListener l) {
-    propSupport.addPropertyChangeListener(propertyName,l);
-  }
-  
-  public Room[] getAvailableRooms() {
-    return delegate.getAvailableRooms();
+    propSupport.addPropertyChangeListener(propertyName, l);
   }
 
-  public ServerStatus getStatusServer() {
-    return delegate.getStatusServer();
+  public Room[] getAvailableRooms() {
+    return delegate.getAvailableRooms();
   }
 
   public Room getRoom() {
@@ -59,11 +68,11 @@ public class HybridClient implements ChatServerConnection, PlayerEncoder {
   }
 
   public void sendTo(Player recipient, Command c) {
-      delegate.sendTo(recipient, c);
+    delegate.sendTo(recipient, c);
   }
 
   public void sendToOthers(Command c) {
-      delegate.sendToOthers(c);
+    delegate.sendToOthers(c);
   }
 
   public void setConnected(boolean connect) {
@@ -75,11 +84,11 @@ public class HybridClient implements ChatServerConnection, PlayerEncoder {
   }
 
   public void setRoom(Room r) {
-      delegate.setRoom(r);
+    delegate.setRoom(r);
   }
 
   public void setUserInfo(Player p) {
-      delegate.setUserInfo(p);
+    delegate.setUserInfo(p);
   }
 
   public Player stringToPlayer(String s) {
@@ -100,18 +109,36 @@ public class HybridClient implements ChatServerConnection, PlayerEncoder {
     propSupport.firePropertyChange(new PropertyChangeEvent(this, STATUS, null, msg));
   }
 
-  public void setDelegate(ChatServerConnection svr) {
-    if (delegate.isConnected()) {
+  public void setDelegate(ChatServerConnection newDelegate) {
+    if (delegate != null && delegate.isConnected()) {
       throw new IllegalStateException("Cannot change server implementation while connected");
     }
     ChatServerConnection oldDelegate = delegate;
-    svr.setUserInfo(oldDelegate.getUserInfo());
-    ServerStatus oldStatus = getStatusServer();
+    if (oldDelegate != null) {
+      newDelegate.setUserInfo(oldDelegate.getUserInfo());
+    }
     PropertyChangeListener[] listeners = propSupport.getPropertyChangeListeners();
     for (int i = 0; i < listeners.length; i++) {
-      svr.addPropertyChangeListener(((PropertyChangeListenerProxy)listeners[i]).getPropertyName(), listeners[i]);
+      newDelegate.addPropertyChangeListener(((PropertyChangeListenerProxy) listeners[i]).getPropertyName(), listeners[i]);
     }
-    delegate = svr;
-    propSupport.firePropertyChange(new PropertyChangeEvent(this, STATUS_SERVER, oldStatus, getStatusServer()));
+    if (controls != null) {
+      if (delegate instanceof ChatControlsInitializer) {
+        ((ChatControlsInitializer) delegate).uninitializeControls(controls);
+      }
+      if (newDelegate instanceof ChatControlsInitializer) {
+        ((ChatControlsInitializer) newDelegate).initializeControls(controls);
+      }
+    }
+    delegate = newDelegate;
+  }
+
+  public void initializeControls(ChatServerControls controls) {
+    this.controls = controls;
+    if (delegate instanceof ChatControlsInitializer) {
+      ((ChatControlsInitializer) delegate).initializeControls(controls);
+    }
+  }
+
+  public void uninitializeControls(ChatServerControls controls) {
   }
 }
