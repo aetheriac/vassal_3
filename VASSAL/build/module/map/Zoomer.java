@@ -56,6 +56,7 @@ public class Zoomer extends AbstractConfigurable implements GameComponent {
   protected double zoomStep = 1.5;
   protected int zoomLevel = 0;
   protected int zoomStart = 1;
+  protected int zoomFull = 1;
   protected double[] zoomFactor;
   protected int maxZoom = 3;
   protected LaunchButton zoomInButton;
@@ -129,7 +130,7 @@ public class Zoomer extends AbstractConfigurable implements GameComponent {
   }
 
   public String[] getAttributeNames() {
-    return new String[]{FACTOR, MAX, ZOOM_START, 
+    return new String[]{FACTOR, MAX, ZOOM_START, FULL_SIZE, 
         IN_TOOLTIP, IN_BUTTON_TEXT, IN_ICON_NAME, ZOOM_IN, 
         OUT_TOOLTIP, OUT_BUTTON_TEXT, OUT_ICON_NAME, ZOOM_OUT};
   }
@@ -138,6 +139,7 @@ public class Zoomer extends AbstractConfigurable implements GameComponent {
     return new String[]{"Magnification factor",
                         "Number of zoom levels",
                         "Starting zoom level",
+                        "Full-size zoom level",
                         "Zoom in tooltip text",
                         "Zoom in button text",
                         "Zoom in Icon",
@@ -150,6 +152,7 @@ public class Zoomer extends AbstractConfigurable implements GameComponent {
 
   public Class[] getAttributeTypes() {
     return new Class[]{Double.class,
+                       Integer.class,
                        Integer.class,
                        Integer.class,
                        String.class,
@@ -177,6 +180,7 @@ public class Zoomer extends AbstractConfigurable implements GameComponent {
   protected static final String FACTOR = "factor";
   protected static final String MAX = "max";
   protected static final String ZOOM_START = "zoomStart";
+  protected static final String FULL_SIZE = "zoomFull";
   
   protected static final String ZOOM_IN = "zoomInKey";
   protected static final String IN_TOOLTIP = "inTooltip";
@@ -219,6 +223,9 @@ public class Zoomer extends AbstractConfigurable implements GameComponent {
     else if (ZOOM_START.equals(key)) {
 	  return "" + zoomStart;
     }
+    else if (FULL_SIZE.equals(key)) {
+	  return "" + zoomFull;
+    }
     else if (FACTOR.equals(key)) {
       return "" + zoomStep;
     }
@@ -240,7 +247,7 @@ public class Zoomer extends AbstractConfigurable implements GameComponent {
       }
       initZoomFactors();
     }
-	else if (ZOOM_START.equals(key)) {
+	 else if (ZOOM_START.equals(key)) {
 	  if (val instanceof String) {
 		val = new Integer((String) val);
 	  }
@@ -254,8 +261,23 @@ public class Zoomer extends AbstractConfigurable implements GameComponent {
 	  	 zoomStart = maxZoom;
 	  }
 	  initZoomFactors();
-	}    
-    else if (FACTOR.equals(key)) {
+	}
+   else if (FULL_SIZE.equals(key)) {
+	  if (val instanceof String) {
+		val = new Integer((String) val);
+	  }
+	  if (val != null) {
+		zoomFull = ((Integer) val).intValue();
+	  }
+	  if (zoomFull < 1) {
+	  	 zoomFull = 1;
+	  }
+	  if (zoomFull > maxZoom) {
+	  	 zoomFull = maxZoom;
+	  }
+	  initZoomFactors();
+	}
+   else if (FACTOR.equals(key)) {
       if (val instanceof String) {
         val = new Double((String) val);
       }
@@ -272,10 +294,18 @@ public class Zoomer extends AbstractConfigurable implements GameComponent {
 
   private void initZoomFactors() {
     zoomFactor = new double[maxZoom];
+
+/*
     zoomFactor[0] = 1.0;
     for (int i = 1; i < zoomFactor.length; ++i) {
       zoomFactor[i] = zoomFactor[i-1]/zoomStep;
     }
+*/
+
+    for (int i = 0; i < zoomFactor.length; ++i) {
+      zoomFactor[i] = Math.pow(zoomStep, zoomFull - i - 1);
+    }
+
     if (zoomStart < 1) {
     	zoomLevel = 0;
     }
@@ -285,8 +315,9 @@ public class Zoomer extends AbstractConfigurable implements GameComponent {
     else {
     	zoomLevel = zoomStart-1;
     }
-	zoomInButton.setEnabled(zoomLevel > 0);
-	zoomOutButton.setEnabled(zoomLevel < maxZoom - 1);
+	 
+    zoomInButton.setEnabled(zoomLevel > 0);
+	 zoomOutButton.setEnabled(zoomLevel < maxZoom - 1);
   }
 
   public Class[] getAllowableConfigureComponents() {
