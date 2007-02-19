@@ -230,13 +230,12 @@ public class DataArchive extends SecureClassLoader {
     }
     else {
       Rectangle ubox = getImageBounds(im);
-
       AffineTransform bt = new AffineTransform();
       bt.rotate(-Math.PI/180 * theta, ubox.getCenterX(), ubox.getCenterY());
       bt.scale(zoom, zoom);
 
       Rectangle tbox = bt.createTransformedShape(ubox).getBounds();
-    
+
       BufferedImage trans = new BufferedImage(tbox.width,
                                               tbox.height,
                                               BufferedImage.TYPE_4BYTE_ABGR);
