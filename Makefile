@@ -1,6 +1,6 @@
 CLASSPATH=.:../VASSAL-lib/batik.jar:../VASSAL-lib/VASSAL.jar:../VASSAL-lib/cryptix32.jar:../VASSAL-lib/smack.jar:../VASSAL-lib/smackx.jar:../VASSAL-lib/smackx-debug.jar
 
-JAVAPATH=/usr/java/jdk1.5.0_11
+JAVAPATH=/usr/java/jdk1.6.0
 
 JC=$(JAVAPATH)/bin/javac
 JFLAGS=-classpath $(CLASSPATH)
