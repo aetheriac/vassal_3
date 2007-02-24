@@ -1,4 +1,7 @@
-CLASSPATH=.:../VASSAL-lib/batik.jar:../VASSAL-lib/VASSAL.jar:../VASSAL-lib/cryptix32.jar:../VASSAL-lib/smack.jar:../VASSAL-lib/smackx.jar:../VASSAL-lib/smackx-debug.jar
+LIBDIR=../VASSAL-lib
+LIBS=
+
+CLASSPATH=$(shell find $(LIBDIR) -name '*.jar' | tr '\n' ':').
 
 JAVAPATH=/usr/java/jdk1.6.0
 
