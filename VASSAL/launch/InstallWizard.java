@@ -352,7 +352,8 @@ public class InstallWizard {
     protected void modifyDocument(Document doc) throws IOException {
       extractResources(doc);
       super.modifyDocument(doc);
-      doc.getDocumentElement().setAttribute("codebase", installDir.toURL().toString());
+      doc.getDocumentElement().setAttribute("codebase",
+         installDir.toURI().toURL().toString());
     }
 
     private void extractResources(Document doc) throws IOException {
