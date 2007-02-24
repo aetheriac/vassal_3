@@ -362,6 +362,9 @@ public class DataArchive extends SecureClassLoader {
     return new Rectangle(-icon.getIconWidth() / 2, -icon.getIconHeight() / 2, icon.getIconWidth(), icon.getIconHeight());
   }
 
+  /**
+   * @deprecated Don't use this. Regular scaling is just as good now.
+   */
   public Image improvedScaling(Image img, int width, int height) {
     ImageFilter filter;
 

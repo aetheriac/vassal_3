@@ -24,7 +24,9 @@ import java.awt.image.ColorModel;
 /**
  * Extension of java.awt.image.AreaAveragingScaleFilter.  Uses the 
  * same algorithm but makes sure all images are scaled using area 
- * averaging.  Ensures there is no fallback to ReplicateScaleFilter. */
+ * averaging.  Ensures there is no fallback to ReplicateScaleFilter.
+ * @deprecated Obselete. Java's scaling is just as good now.
+ */
 public class ImprovedAveragingScaleFilter extends AreaAveragingScaleFilter{
 	private int savedWidth, savedHeight, savedPixels[];
 	private static ColorModel defaultCM = ColorModel.getRGBdefault();
