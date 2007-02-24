@@ -32,7 +32,7 @@ public class PrivMsgCommand extends Command {
   public PrivMsgCommand(PrivateChatManager mgr, Player sender, String msg) {
     this.mgr = mgr;
     this.msg = msg;
-    p = (Player) sender;
+    p = sender;
   }
 
   public void executeCommand() {
