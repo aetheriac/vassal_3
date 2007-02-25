@@ -2025,8 +2025,9 @@ public class Map extends AbstractConfigurable implements GameComponent, FocusLis
 	}
 
 	/**
-   * Make a best gues for a unique identifier for the target. Use
-   * {@link VASSAL.tools.UniqueIdManager.Identifyable#getConfigureName} if non-null, otherwise use
+   * Make a best guess for a unique identifier for the target. Use
+   * {@link VASSAL.tools.UniqueIdManager.Identifyable#getConfigureName}
+   * if non-null, otherwise use
    * {@link VASSAL.tools.UniqueIdManager.Identifyable#getId}
    * 
    * @return
