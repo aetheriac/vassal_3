@@ -21,13 +21,16 @@ vpath %.class $(shell find classes -type d)
 %.class: %.java
 	$(JC) $(JCFLAGS) $(JFLAGS) $<
 
-all: $(CLASSES)
+all: classes $(CLASSES)
 
 jar:
 	$(JAR) cvf Vengine.jar images/* -C classes VASSAL 
 
 doc:
 	$(JDOC) -d doc $(SRC)
+
+classes:
+	mkdir -p classes
 
 .PHONY: clean
 
