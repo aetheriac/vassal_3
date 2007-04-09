@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (c) 2000-2003 by Rodney Kinney
+ * Copyright (c) 2000-2007 by Rodney Kinney, Joel Uckelman
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -30,17 +30,28 @@ import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+/**
+ * Paints a colored border around a GamePiece.
+ */
 public class ColoredBorder implements Highlighter {
   protected Color c;
   protected int thickness;
   
-  // Additional Highlighters
+  /** Stores additional Highlighters */
   protected ArrayList highlighters = new ArrayList();
 
+
+  /**
+   * Creates a 3-pixel wide, black ColoredBorder. 
+   */
   public ColoredBorder() {
     this(Color.black, 3);
   }
 
+  /**
+   * @param c the color of the border
+   * @param thickness the thickness of the border
+   */
   public ColoredBorder(Color c, int thickness) {
     this.c = c;
     this.thickness = thickness;
@@ -56,39 +67,37 @@ public class ColoredBorder implements Highlighter {
   
   public void draw(GamePiece p, Graphics g, int x, int y,
                    Component obs, double zoom) {
-    if (c != null || thickness > 0) {
-      if (g instanceof Graphics2D) {
-        Graphics2D g2d = (Graphics2D) g;
-        Stroke str = g2d.getStroke();
-        g2d.setStroke(new BasicStroke(Math.max(1,Math.round(zoom*thickness))));
-        g2d.setColor(c);
+    if (c != null && thickness > 0) {
+      Graphics2D g2d = (Graphics2D) g;
+//      Stroke str = g2d.getStroke();
+       
+      double sthick = Math.max(1.0, zoom*thickness);
+      g2d.setStroke(new BasicStroke(Math.round(sthick)));
+      g2d.setColor(c);
 
-        // Find the border by outsetting the bounding box, and then scaling
-        // the shape to fill the outset.
-        Shape s = p.getShape();
-        Rectangle br = s.getBounds();
-        double xzoom = (br.getWidth()+1)/br.getWidth();
-        double yzoom = (br.getHeight()+1)/br.getHeight();
-        AffineTransform t = AffineTransform.getTranslateInstance(x,y);
-        t.scale(xzoom*zoom,yzoom*zoom);
+      // Find the border by outsetting the bounding box,
+      // and scaling the shape to fill the outset.
+      Shape s = p.getShape();
+      Rectangle br = s.getBounds();
+      AffineTransform t = AffineTransform.getTranslateInstance(x,y);
+      t.scale((br.width+sthick/br.width)*zoom,
+              (br.height+sthick/br.height)*zoom);
 
-        g2d.draw(t.createTransformedShape(s));
-        g2d.setStroke(str);
-      }
-      else {
-        highlightSelectionBounds(p, g, x, y, obs, zoom);
-      }
+      g2d.draw(t.createTransformedShape(s));
+//      g2d.setStroke(str);
     }
-    
+   
     // Draw any additional highlighters
     for (Iterator i = highlighters.iterator();i.hasNext();) {
       Highlighter h = (Highlighter) i.next();
       h.draw(p, g, x, y, obs, zoom);
-    }
-    
+    }    
   }
 
-  protected void highlightSelectionBounds(GamePiece p, Graphics g, int x, int y, Component obs, double zoom) {
+  /** @deprecated Use {@link #draw} instead. */  
+  protected void highlightSelectionBounds(GamePiece p, Graphics g,
+                                          int x, int y, Component obs,
+                                          double zoom) {
     Rectangle r = p.getShape().getBounds();
     g.setColor(c);
     for (int i = 1; i < thickness; ++i)

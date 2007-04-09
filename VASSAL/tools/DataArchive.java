@@ -63,6 +63,7 @@ import VASSAL.build.GameModule;
 import VASSAL.build.module.GlobalOptions;
 import VASSAL.build.module.documentation.HelpFile;
 import VASSAL.configure.BooleanConfigurer;
+import VASSAL.tools.ImageUtilities;
 
 /**
  * Wrapper around a Zip archive with methods to cache images
@@ -72,7 +73,6 @@ public class DataArchive extends SecureClassLoader {
   protected List extensions = new ArrayList();
   private HashMap imageCache = new HashMap();
   private HashMap soundCache = new HashMap();
-//  private HashMap scaledImageCache = new HashMap();
   private HashMap transImageCache = new HashMap();
   private HashMap imageSources = new HashMap();
   protected String[] imageNames;
@@ -103,13 +103,6 @@ public class DataArchive extends SecureClassLoader {
     return archive;
   }
 
-  /**
-   * @deprecated Use {@link getImage} instead.
-   */
-  public static Image findImage(File zip, String file) throws IOException {
-    return getImage(getFileStream(zip, file));
-  }
-
   public static InputStream getFileStream(File zip, String file) throws IOException {
     try {
       ZipFile z = new ZipFile(zip);
@@ -121,28 +114,6 @@ public class DataArchive extends SecureClassLoader {
     }
   }
  
-  /**
-   * @deprecated Use {@link getImage} instead.
-   */
-  public static Image findImage(File dir, String zip, String file)
-      throws IOException {
-    /*
-     ** Looks for entry "file" in ZipFile "zip" in directory "dir"
-     ** If no such zipfile, look for "file" in "dir"
-     */
-    if ((new File(dir, zip)).exists()) {
-      return getImage(getFileStream(dir, zip, file));
-    }
-    else if ((new File(dir, file)).exists()) {
-      return Toolkit.getDefaultToolkit().getImage
-          (dir.getPath() + File.separatorChar + file);
-    }
-    else {
-      throw new IOException("Image " + file + " not found in " + dir
-                            + File.separator + zip);
-    }
-  }
-
   /*
    ** Find an image from the archive
    * Once an image is found, cache it in Hashtable
@@ -187,7 +158,7 @@ public class DataArchive extends SecureClassLoader {
       return null;
     }
 
-    Dimension d = getImageBounds(base).getSize();
+    Dimension d = ImageUtilities.getImageBounds(base).getSize();
     d.width *= scale;
     d.height *= scale;
     if (d.width == 0 || d.height == 0) {
@@ -229,7 +200,7 @@ public class DataArchive extends SecureClassLoader {
         .getTransformedInstance(zoom, theta);
     }
     else {
-      Rectangle ubox = getImageBounds(im);
+      Rectangle ubox = ImageUtilities.getImageBounds(im);
       AffineTransform bt = new AffineTransform();
       bt.rotate(-Math.PI/180 * theta, ubox.getCenterX(), ubox.getCenterY());
       bt.scale(zoom, zoom);
@@ -353,31 +324,6 @@ public class DataArchive extends SecureClassLoader {
 */
 
   /**
-   *
-   * @param im
-   * @return the boundaries of this image, where (0,0) is the center of the image
-   */
-  public static Rectangle getImageBounds(Image im) {
-    ImageIcon icon = new ImageIcon(im);
-    return new Rectangle(-icon.getIconWidth() / 2, -icon.getIconHeight() / 2, icon.getIconWidth(), icon.getIconHeight());
-  }
-
-  /**
-   * @deprecated Don't use this. Regular scaling is just as good now.
-   */
-  public Image improvedScaling(Image img, int width, int height) {
-    ImageFilter filter;
-
-    filter = new ImprovedAveragingScaleFilter(img.getWidth(null),
-                                              img.getHeight(null),
-                                              width, height);
-
-    ImageProducer prod;
-    prod = new FilteredImageSource(img.getSource(), filter);
-    return Toolkit.getDefaultToolkit().createImage(prod);
-  }
-
-  /**
    * Get the size of an image without loading and decoding it.
    *
    * @param name filename of the image
@@ -488,20 +434,6 @@ public class DataArchive extends SecureClassLoader {
       DataArchive ext = (DataArchive) i.next();
       ext.clearTransformedImageCache();
     }
-  }
-
-  /**
-   * @deprecated Use {@link #clearTransformedImageCache()} instead.
-   */
-  public void clearScaledImageCache() {
-    clearTransformedImageCache();
-/*
-    scaledImageCache.clear();
-    for (Iterator iter = extensions.iterator(); iter.hasNext();) {
-      DataArchive ext = (DataArchive) iter.next();
-      ext.clearScaledImageCache();
-    }
-*/
   }
 
   public Image getImage(String name) throws IOException {
@@ -847,5 +779,69 @@ public class DataArchive extends SecureClassLoader {
       result = 37 * result + (int)(l^(l >>> 32)); 
       return result;
     }
+  }
+
+  //
+  // Deprecated methods
+  //  
+
+  /**
+   * @deprecated Use {@link getImage} instead.
+   */
+  public static Image findImage(File zip, String file) throws IOException {
+    return getImage(getFileStream(zip, file));
+  }
+
+  /**
+   * @deprecated Use {@link getImage} instead.
+   */
+  public static Image findImage(File dir, String zip, String file)
+      throws IOException {
+    /*
+     ** Looks for entry "file" in ZipFile "zip" in directory "dir"
+     ** If no such zipfile, look for "file" in "dir"
+     */
+    if ((new File(dir, zip)).exists()) {
+      return getImage(getFileStream(dir, zip, file));
+    }
+    else if ((new File(dir, file)).exists()) {
+      return Toolkit.getDefaultToolkit().getImage
+          (dir.getPath() + File.separatorChar + file);
+    }
+    else {
+      throw new IOException("Image " + file + " not found in " + dir
+                            + File.separator + zip);
+    }
+  }
+
+  /**
+   * @deprecated Use {@link ImageUtilities.getImageBounds}.
+   * @param im
+   * @return the boundaries of this image, where (0,0) is the center of the image
+   */
+  public static Rectangle getImageBounds(Image im) {
+    return ImageUtilities.getImageBounds(im);
+  }
+
+  /**
+   * @deprecated Don't use this. Regular scaling is just as good now.
+   */
+  public Image improvedScaling(Image img, int width, int height) {
+    ImageFilter filter;
+
+    filter = new ImprovedAveragingScaleFilter(img.getWidth(null),
+                                              img.getHeight(null),
+                                              width, height);
+
+    ImageProducer prod;
+    prod = new FilteredImageSource(img.getSource(), filter);
+    return Toolkit.getDefaultToolkit().createImage(prod);
+  }
+
+  /**
+   * @deprecated Use {@link #clearTransformedImageCache()} instead.
+   */
+  public void clearScaledImageCache() {
+    clearTransformedImageCache();
   }
 }

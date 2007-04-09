@@ -1,13 +1,15 @@
 LIBDIR=../VASSAL-lib
 LIBS=
 
-CLASSPATH=$(shell find $(LIBDIR) -name '*.jar' | tr '\n' ':').
+#CLASSPATH=$(shell find $(LIBDIR) -name '*.jar' | tr '\n' ':').
+CLASSPATH=$(LIBDIR)/*:.
 
 JAVAPATH=/usr/java/jdk1.6.0
 
 JC=$(JAVAPATH)/bin/javac
 JFLAGS=-classpath $(CLASSPATH)
-JCFLAGS=-d classes -source 1.4 -Xlint -Xlint:-serial -Xlint:-path
+JCFLAGS=-d classes -source 1.4 -Xlint -Xlint:-serial
+#-Xlint:-serial -Xlint:-path
 JRFLAGS=
 
 JAR=$(JAVAPATH)/bin/jar

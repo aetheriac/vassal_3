@@ -60,6 +60,7 @@ import VASSAL.configure.KeyModifiersConfigurer;
 import VASSAL.configure.StringConfigurer;
 import VASSAL.tools.DataArchive;
 import VASSAL.tools.FormattedString;
+import VASSAL.tools.ImageUtilities;
 import VASSAL.tools.SequenceEncoder;
 
 // for random layers
@@ -514,7 +515,7 @@ public class Embellishment extends Decorator implements EditablePiece {
         try {
           Image im = getCurrentImage();
           if (im != null) {
-            size[value - 1] = DataArchive.getImageBounds(im);
+            size[value - 1] = ImageUtilities.getImageBounds(im);
             size[value - 1].translate(xOff, yOff);
           }
           else {

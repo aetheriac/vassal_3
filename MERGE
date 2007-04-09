@@ -19,19 +19,7 @@
 * Call DataArchive.clearTransformedImageCache() instead of deprecated
   DataArchive.clearScaledImageCache().
 
-1647:
-
-* show() is deprecated in Java 1.5. Use setVisible(true) instead.
-
-1713:
-
-* Bug: Imageless layers should return null image.
-
 1714:
 
 * Initial take on > 1:1 zooming.
-
-1723:
-
-* Bug: Saved game updater export should present Save, not Open file chooser.
 

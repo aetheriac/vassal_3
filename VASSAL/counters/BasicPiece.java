@@ -48,6 +48,7 @@ import VASSAL.command.ChangePiece;
 import VASSAL.command.Command;
 import VASSAL.command.RemovePiece;
 import VASSAL.tools.DataArchive;
+import VASSAL.tools.ImageUtilities;
 import VASSAL.tools.SequenceEncoder;
 
 /**
@@ -238,8 +239,9 @@ public class BasicPiece implements EditablePiece, StateMergeable {
   private void initImage() {
     if (imageName.trim().length() > 0) {
       try {
-        image = GameModule.getGameModule().getDataArchive().getCachedImage(imageName);
-        imageBounds = DataArchive.getImageBounds(image);
+        image = GameModule.getGameModule().getDataArchive()
+                          .getCachedImage(imageName);
+        imageBounds = ImageUtilities.getImageBounds(image);
       }
       catch (IOException e) {
         imageBounds = new Rectangle();

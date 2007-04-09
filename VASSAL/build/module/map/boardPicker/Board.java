@@ -25,6 +25,7 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
@@ -32,6 +33,8 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+
 import VASSAL.build.AbstractConfigurable;
 import VASSAL.build.Buildable;
 import VASSAL.build.Builder;
@@ -64,6 +67,12 @@ public class Board extends AbstractConfigurable implements GridContainer {
   public static final String REVERSIBLE = "reversible";
 
   protected Image boardImage;
+
+  private BoardView view;
+
+  public JComponent getView() {
+    return view;
+  }
 
   /** @deprecated */
   protected Hashtable scaledCache = new Hashtable();
@@ -345,6 +354,17 @@ public class Board extends AbstractConfigurable implements GridContainer {
         Icon icon = new ImageIcon(boardImage);
         boundaries.setSize(icon.getIconWidth(), icon.getIconHeight());
         fixedBoundaries = true;
+
+/////
+        BufferedImage bi = new BufferedImage(icon.getIconWidth(),
+                                             icon.getIconHeight(),
+                                             BufferedImage.TYPE_INT_ARGB);
+        Graphics g = bi.createGraphics();
+        g.drawImage(boardImage, 0, 0, null);
+        g.dispose();
+
+        view = new BoardView(bi);
+/////
       }
       catch (IOException e) {
         e.printStackTrace();

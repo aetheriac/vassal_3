@@ -40,6 +40,11 @@ public class FontConfigurer extends Configurer {
   private JComboBox family;
   private int[] sizes;
 
+  // this is a very expensive call, so do it only once
+  private static final String[] fontFamilyNames =
+    GraphicsEnvironment.getLocalGraphicsEnvironment()
+                       .getAvailableFontFamilyNames();
+
   public FontConfigurer(String key, String name) {
     this(key, name, new Font("SansSerif", Font.PLAIN, 12));
   }
@@ -67,9 +72,8 @@ public class FontConfigurer extends Configurer {
       p.setLayout(new BoxLayout(p, BoxLayout.X_AXIS));
       p.add(new JLabel(name));
       family = new JComboBox();
-      String[] s = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
-      for (int i = 0; i < s.length; ++i) {
-        family.addItem(s[i]);
+      for (int i = 0; i < fontFamilyNames.length; ++i) {
+        family.addItem(fontFamilyNames[i]);
       }
       family.setSelectedItem(value == null ? "SansSerif" : ((Font) value).getFamily());
       family.setMaximumSize(new Dimension(family.getMaximumSize().width,family.getPreferredSize().height));

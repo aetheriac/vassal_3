@@ -76,6 +76,7 @@ import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.image.ImageTranscoder;
 import org.apache.batik.util.ParsedURL;
+//import org.apache.batik.util.ParsedURLJarProtocolHandler;
 import org.apache.batik.util.XMLConstants;
 import org.apache.batik.util.XMLResourceDescriptor;
 
@@ -102,6 +103,9 @@ public class SVGManager {
          XMLResourceDescriptor.getXMLParserClassName()); 
       trans = new BufferedImageTranscoder();
       rendFactory = new ConcreteImageRendererFactory();
+
+//      ParsedURL.registerHandler(new URLHandler);
+//      ParsedURL.registerHandler(new ParsedURLJarProtocolHandler());
    }
  
    public BufferedImage loadSVGImage(String file, InputStream fileStream)
@@ -288,6 +292,19 @@ public class SVGManager {
       return base;
    }
 
+/*
+   protected class URLHandler implements ParsedURLProtocolHandler {
+      public String getProtocolHandled() {
+      }
+      
+      public ParsedURLData parseURL(ParsedURL basepurl, String urlStr) {
+      }
+
+      public ParsedURLData parseURL(String urlStr) {
+      }
+   }
+*/
+   
    /**
     * Renders SVG to a BufferedImage.
     */
@@ -377,6 +394,7 @@ public class SVGManager {
       public static final TranscodingHints.Key KEY_FORCE_TRANSPARENT_WHITE
          = new BooleanKey();
 
+static int count = 0;
    protected class SVGManagerDocumentLoader extends DocumentLoader {
       public SVGManagerDocumentLoader(UserAgent userAgent) {
          super(userAgent);
@@ -384,6 +402,8 @@ public class SVGManager {
 
       public Document loadDocument(String uri)
        throws MalformedURLException, IOException {
+System.out.print(++count);
+System.out.println(": " + uri);
          String file = DataArchive.IMAGE_DIR +
             (new File((new URL(uri)).getPath())).getName();
          return loadDocument(uri, archive.getFileStream(file));

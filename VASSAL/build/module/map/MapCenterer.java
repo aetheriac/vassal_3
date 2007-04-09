@@ -24,6 +24,7 @@ import java.awt.event.MouseListener;
 import VASSAL.build.AbstractBuildable;
 import VASSAL.build.Buildable;
 import VASSAL.build.module.Map;
+import VASSAL.build.module.MapView;
 import VASSAL.counters.Deck;
 import VASSAL.counters.EventFilter;
 import VASSAL.counters.GamePiece;
@@ -80,7 +81,7 @@ public class MapCenterer extends AbstractBuildable implements MouseListener {
         }
       }
       if (found == null) {
-        Map.View m = (Map.View) e.getSource();
+        MapView m = (MapView) e.getSource();
         m.getMap().centerAt(e.getPoint());
       }
     }

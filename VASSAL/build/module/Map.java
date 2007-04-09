@@ -104,6 +104,7 @@ import VASSAL.build.module.map.StackMetrics;
 import VASSAL.build.module.map.TextSaver;
 import VASSAL.build.module.map.Zoomer;
 import VASSAL.build.module.map.boardPicker.Board;
+import VASSAL.build.module.map.boardPicker.BoardView;
 import VASSAL.build.module.map.boardPicker.board.MapGrid;
 import VASSAL.build.module.map.boardPicker.board.Region;
 import VASSAL.build.module.map.boardPicker.board.RegionGrid;
@@ -163,7 +164,7 @@ public class Map extends AbstractConfigurable implements GameComponent, FocusLis
 	private String mapName = "";
 	private static final String MAIN_WINDOW_HEIGHT = "mainWindowHeight";
 	private static UniqueIdManager idMgr = new UniqueIdManager("Map");
-	protected JPanel theMap;
+	protected JComponent theMap;
 	private Vector drawComponents = new Vector();
 	protected JScrollPane scroll;
 	protected ComponentSplitter.SplitPane mainWindowDock;
@@ -622,7 +623,17 @@ public class Map extends AbstractConfigurable implements GameComponent, FocusLis
 			boards.addElement(board);
 		}
 		setBoardBoundaries();
+      adjustBoardViewBoundaries();
 	}
+
+   private void adjustBoardViewBoundaries() {
+      for (int i = 0, n = boards.size(); i < n; ++i) {
+			Board b = (Board) boards.get(i);
+         b.fixImage();  // ugly, don't do this
+         JComponent bv = b.getView();
+         bv.setBounds(b.bounds());
+		}
+   }
 
 	public Command getRestoreCommand() {
 		return null;
@@ -1193,6 +1204,13 @@ public class Map extends AbstractConfigurable implements GameComponent, FocusLis
 
 	public void repaint(boolean cf) {
 		clearFirst = cf;
+      
+   	for (int i = 0; i < boards.size(); ++i) {
+			Board b = (Board) boards.elementAt(i);
+         ((BoardView)(b.getView())).setZoom(getZoom());
+      }
+      adjustBoardViewBoundaries();
+
 		theMap.repaint();
 	}
 
@@ -1210,10 +1228,10 @@ public class Map extends AbstractConfigurable implements GameComponent, FocusLis
 
 	public void paintRegion(Graphics g, Rectangle visibleRect) {
 		clearMapBorder(g); // To avoid ghost pieces around the edge
-		drawBoardsInRegion(g, visibleRect);
-		drawDrawable(g, false);
-		drawPiecesInRegion(g, visibleRect);
-		drawDrawable(g, true);
+//		drawBoardsInRegion(g, visibleRect);
+//		drawDrawable(g, false);
+//		drawPiecesInRegion(g, visibleRect);
+//		drawDrawable(g, true);
 	}
 
 	public void drawBoardsInRegion(Graphics g, Rectangle visibleRect) {
@@ -1438,6 +1456,11 @@ public class Map extends AbstractConfigurable implements GameComponent, FocusLis
 			Point location = getLocation(relPos.x, relPos.y, 1.0);
 			b.setLocation(location.x, location.y);
 			b.translate(offset.x, offset.y);
+
+         b.fixImage();  // ugly, don't do this
+         JComponent bv = b.getView();
+         theMap.add(bv);
+         bv.setBounds(b.bounds());
 		}
 		theMap.revalidate();
 	}
@@ -2036,10 +2059,10 @@ public class Map extends AbstractConfigurable implements GameComponent, FocusLis
 		return UniqueIdManager.getIdentifier(this);
 	}
 
-	/** Return the AWT component representing the map */
+	/** Return the component representing the map */
 	public JComponent getView() {
 		if (theMap == null) {
-			theMap = new View(this);
+			theMap = new MapView(this);
 			scroll = new AdjustableSpeedScrollPane(
             theMap,
             JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
@@ -2097,6 +2120,7 @@ public class Map extends AbstractConfigurable implements GameComponent, FocusLis
 			}
 		}
 	}
+
 	/**
    * The component that represents the map itself
    */
