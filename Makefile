@@ -62,12 +62,22 @@ version:
 #installer:
 #	$(JAR) cevf VASSAL/launch/install/InstallWizard InstallVASSAL.jar -C $(CLASSDIR) VASSAL/launch/ VASSAL/chat/HttpRequestWrapper*
 
-release: version all $(JARS)
+release-macosx: version all $(JARS)
+	mkdir -p $(TMPDIR)/VASSAL-$(VERSION).app/Contents/{MacOS,Resources}
+	cp dist/{PkgInfo,Info.plist} $(TMPDIR)/VASSAL-$(VERSION).app/Contents
+	cp dist/JavaApplicationStub $(TMPDIR)/VASSAL-$(VERSION).app/Contents/MacOS
+	svn export $(LIBDIR) $(TMPDIR)/VASSAL-$(VERSION).app/Contents/Resources/Java
+	cp $(LIBDIR)/{Vengine.jar,docs.jar} $(TMPDIR)/VASSAL-$(VERSION).app/Contents/Resources/Java
+	cd $(TMPDIR) ; zip -9rv VASSAL-$(VERSION)-macosx.zip VASSAL-$(VERSION).app ; cd ..
+
+release-others: version all $(JARS)
 	mkdir -p $(TMPDIR)/VASSAL-$(VERSION)/{ext,plugins} 
 	svn export $(LIBDIR) $(TMPDIR)/VASSAL-$(VERSION)/lib
-	cp $(LIBDIR)/Vengine.jar $(LIBDIR)/docs.jar $(TMPDIR)/VASSAL-$(VERSION)/lib
-	cp dist/VASSAL.sh dist/VASSAL.bat dist/VASSAL.exe $(TMPDIR)/VASSAL-$(VERSION)
+	cp $(LIBDIR)/{Vengine.jar,docs.jar} $(TMPDIR)/VASSAL-$(VERSION)/lib
+	cp dist/VASSAL.{sh,bat,exe} $(TMPDIR)/VASSAL-$(VERSION)
 	cd $(TMPDIR) ; zip -9rv VASSAL-$(VERSION).zip VASSAL-$(VERSION) ; cd ..
+
+release: release-others release-macosx
 
 clean-release:
 	$(RM) -r $(TMPDIR)/* $(LIBDIR)/Vengine.jar $(LIBDIR)/docs.jar
