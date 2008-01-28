@@ -1,40 +1,84 @@
-LIBDIR=../VASSAL-lib
-LIBS=
+SRCDIR:=src
+LIBDIR:=lib
+CLASSDIR:=classes
+TMPDIR:=tmp
+JDOCDIR:=javadoc
+DOCDIR:=doc
+DISTDIR:=dist
 
-#CLASSPATH=$(shell find $(LIBDIR) -name '*.jar' | tr '\n' ':').
-CLASSPATH=$(LIBDIR)/*:.
+VERSION:=3.1.0-svn$(shell svnversion | perl -pe 's/(\d+:)?(\d+[MS]?)/$$2/; s/(\d+)M/$$1+1/e')
 
-JAVAPATH=/usr/java/jdk1.6.0
+#CLASSPATH:=$(CLASSDIR):$(LIBDIR)/*
+CLASSPATH:=$(CLASSDIR):$(shell echo $(LIBDIR)/*.jar | tr ' ' ':')
 
-JC=$(JAVAPATH)/bin/javac
-JFLAGS=-classpath $(CLASSPATH)
-JCFLAGS=-d classes -source 1.4 -Xlint -Xlint:-serial
-#-Xlint:-serial -Xlint:-path
-JRFLAGS=
+#JAVAPATH:=/usr/lib/jvm/java-1.6.0-sun
+JAVAPATH:=/usr/lib/jvm/java-1.5.0-sun
 
-JAR=$(JAVAPATH)/bin/jar
-JDOC=$(JAVAPATH)/bin/javadoc
+JC:=$(JAVAPATH)/bin/javac
+JCFLAGS:=-d $(CLASSDIR) -source 5 -Xlint -classpath $(CLASSPATH) \
+				 -sourcepath $(SRCDIR)
 
-SRC=$(shell find -name '*.java' | sed 's/^\.\///')
-CLASSES=$(SRC:.java=.class)
+JAR:=$(JAVAPATH)/bin/jar
+JDOC:=$(JAVAPATH)/bin/javadoc
 
-vpath %.class $(shell find classes -type d)
+SOURCES:=$(shell find $(SRCDIR) -name '*.java' | sed "s/^$(SRCDIR)\///")
+CLASSES:=$(SOURCES:.java=.class)
+JARS:=Vengine.jar docs.jar
+
+vpath %.class $(shell find $(CLASSDIR) -type d)
+vpath %.java  $(shell find $(SRCDIR) -type d -name .svn -prune -o -print)
+vpath %.jar $(LIBDIR)
+
+all: $(CLASSDIR) $(CLASSES) i18n
+
+$(CLASSDIR):
+	mkdir -p $(CLASSDIR)
 
 %.class: %.java
-	$(JC) $(JCFLAGS) $(JFLAGS) $<
+	$(JC) $(JCFLAGS) $<
 
-all: classes $(CLASSES)
+i18n: $(CLASSDIR)
+	for i in `cd $(SRCDIR) && find VASSAL -name '*.properties'`; do cp $(SRCDIR)/$$i $(CLASSDIR)/$$i; done
 
-jar:
-	$(JAR) cvf Vengine.jar images/* -C classes VASSAL 
+#fast:
+#	$(JC) $(JCFLAGS) $(shell find $(SRCDIR) -name '*.java')
 
-doc:
-	$(JDOC) -d doc $(SRC)
+#show:
+#	echo $(patsubst %,-C $(TMPDIR)/doc %,$(wildcard $(TMPDIR)/doc/*)) 
 
-classes:
-	mkdir -p classes
+Vengine.jar: all
+	$(JAR) cvfm $(LIBDIR)/$@ dist/Vengine.mf images/* -C $(CLASSDIR) .
 
-.PHONY: clean
+docs.jar:
+	mkdir -p $(TMPDIR)
+	svn export $(DOCDIR) $(TMPDIR)/doc
+	find $(TMPDIR)/doc -type f | sed "s/^$(TMPDIR)\/doc\///" >$(TMPDIR)/doc/docsList
+	cp dist/docsInfo $(TMPDIR)/doc
+	$(JAR) cvf $(LIBDIR)/$@ -C $(TMPDIR)/doc .
 
-clean:
-	$(RM) -r classes/*
+version:
+	sed -ri 's/VERSION = ".*"/VERSION = "$(VERSION)"/' $(SRCDIR)/VASSAL/Info.java
+
+#installer:
+#	$(JAR) cevf VASSAL/launch/install/InstallWizard InstallVASSAL.jar -C $(CLASSDIR) VASSAL/launch/ VASSAL/chat/HttpRequestWrapper*
+
+release: version all $(JARS)
+	mkdir -p $(TMPDIR)/VASSAL-$(VERSION) $(TMPDIR)/VASSAL-$(VERSION)/ext
+	svn export $(LIBDIR) $(TMPDIR)/VASSAL-$(VERSION)/lib
+	cp $(LIBDIR)/Vengine.jar $(LIBDIR)/docs.jar $(TMPDIR)/VASSAL-$(VERSION)/lib
+	cp dist/VASSAL.sh dist/VASSAL.bat dist/VASSAL.exe $(TMPDIR)/VASSAL-$(VERSION)
+	cd $(TMPDIR) ; zip -9rv VASSAL-$(VERSION).zip VASSAL-$(VERSION) ; cd ..
+
+clean-release:
+	$(RM) -r $(TMPDIR)/* $(LIBDIR)/Vengine.jar $(LIBDIR)/docs.jar
+
+javadoc:
+	$(JDOC) -d $(JDOCDIR) -link http://java.sun.com/javase/6/docs/api -sourcepath $(SRCDIR) -subpackages $(shell echo $(notdir $(wildcard src/*)) | tr ' ' ':')
+
+clean-javadoc:
+	$(RM) -r $(JDOCDIR)
+
+clean: clean-release
+	$(RM) -r $(CLASSDIR)/*
+
+.PHONY: all clean release clean-release i18n javadoc clean-javadoc version

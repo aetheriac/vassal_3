@@ -1,3 +1,0 @@
-#!/bin/bash
-
-LD_LIBRARY_PATH=../VASSAL-lib java -Xms256M -Xmx512M -classpath ../VASSAL-lib/*:classes:Vengine.jar -Dswing.defaultlaf=javax.swing.plaf.metal.MetalLookAndFeel -Dswing.boldMetal=false -Dswing.aatext=true -Dsun.java2d.opengl=True VASSAL.launch.Main
