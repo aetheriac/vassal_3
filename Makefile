@@ -63,7 +63,7 @@ version:
 #	$(JAR) cevf VASSAL/launch/install/InstallWizard InstallVASSAL.jar -C $(CLASSDIR) VASSAL/launch/ VASSAL/chat/HttpRequestWrapper*
 
 release: version all $(JARS)
-	mkdir -p $(TMPDIR)/VASSAL-$(VERSION) $(TMPDIR)/VASSAL-$(VERSION)/ext
+	mkdir -p $(TMPDIR)/VASSAL-$(VERSION)/{ext,plugins} 
 	svn export $(LIBDIR) $(TMPDIR)/VASSAL-$(VERSION)/lib
 	cp $(LIBDIR)/Vengine.jar $(LIBDIR)/docs.jar $(TMPDIR)/VASSAL-$(VERSION)/lib
 	cp dist/VASSAL.sh dist/VASSAL.bat dist/VASSAL.exe $(TMPDIR)/VASSAL-$(VERSION)
