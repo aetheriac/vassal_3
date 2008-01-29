@@ -8,11 +8,11 @@ DISTDIR:=dist
 
 VERSION:=3.1.0-svn$(shell svnversion | perl -pe 's/(\d+:)?(\d+[MS]?)/$$2/; s/(\d+)M/$$1+1/e')
 
-CLASSPATH:=$(CLASSDIR):$(LIBDIR)/*
-JAVAPATH:=/usr/lib/jvm/java-1.6.0-sun
+#CLASSPATH:=$(CLASSDIR):$(LIBDIR)/*
+#JAVAPATH:=/usr/lib/jvm/java-1.6.0-sun
 
-#CLASSPATH:=$(CLASSDIR):$(shell echo $(LIBDIR)/*.jar | tr ' ' ':')
-#JAVAPATH:=/usr/lib/jvm/java-1.5.0-sun
+CLASSPATH:=$(CLASSDIR):$(shell echo $(LIBDIR)/*.jar | tr ' ' ':')
+JAVAPATH:=/usr/lib/jvm/java-1.5.0-sun
 
 JC:=$(JAVAPATH)/bin/javac
 JCFLAGS:=-d $(CLASSDIR) -source 5 -Xlint -classpath $(CLASSPATH) \
@@ -69,6 +69,15 @@ release-macosx: version all $(JARS)
 	svn export $(LIBDIR) $(TMPDIR)/VASSAL-$(VERSION).app/Contents/Resources/Java
 	cp $(LIBDIR)/{Vengine.jar,docs.jar} $(TMPDIR)/VASSAL-$(VERSION).app/Contents/Resources/Java
 	cd $(TMPDIR) ; zip -9rv VASSAL-$(VERSION)-macosx.zip VASSAL-$(VERSION).app ; cd ..
+
+## Creating a dmg file:
+# 
+# dd if=/dev/zero of=VASSAL-3.1.0-svn2911.dmg bs=1M count=20
+# mkfs.hfsplus -v -s 'VASSAL-3.1.0-svn2911' VASSAL-3.1.0-svn2911.dmg
+# mount -t hfsplus -o loop VASSAL-3.1.0-svn2911.dmg img
+# cp -va VASSAL-3.1.0-svn2911.app img
+# umount img
+#
 
 release-others: version all $(JARS)
 	mkdir -p $(TMPDIR)/VASSAL-$(VERSION)/{ext,plugins} 
