@@ -5,7 +5,7 @@
   <key>CFBundleName</key>
   <string>VASSAL</string>
   <key>CFBundleIdentifier</key>
-  <string>VASSAL.launch.Launcher</string>
+  <string>VASSAL.launch.Main</string>
   <key>CFBundleVersion</key>
   <string>3.1.0-svn2911</string>
   <key>CFBundleAllowMixedLocalizations</key>
