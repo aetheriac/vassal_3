@@ -66,6 +66,7 @@ import VASSAL.build.IllegalBuildException;
 import VASSAL.build.module.Plugin;
 import VASSAL.build.module.documentation.HelpFile;
 import VASSAL.build.module.documentation.HelpWindow;
+import VASSAL.build.widget.PieceSlot;
 import VASSAL.i18n.Resources;
 import VASSAL.i18n.TranslateAction;
 
@@ -350,6 +351,7 @@ public class ConfigureTree extends JTree implements PropertyChangeListener, Mous
             Configurable clone = copyBase.getClass().newInstance();
             clone.build(copyBase.getBuildElement(Builder.createNewDocument()));
             insert(target, clone, getTreeNode(target).getChildCount());
+            updateGpIds(clone);
           }
           catch (InstantiationException e1) {
             e1.printStackTrace();
@@ -369,10 +371,26 @@ public class ConfigureTree extends JTree implements PropertyChangeListener, Mous
   }
 
   protected boolean isValidPasteTarget(Configurable target) {
-    return (cutData != null && isValidParent(target, (Configurable) cutData.getUserObject()))
-        || (copyData != null && isValidParent(target, (Configurable) copyData.getUserObject()));
+    return (cutData != null &&
+            isValidParent(target, (Configurable) cutData.getUserObject())) ||
+           (copyData != null &&
+            isValidParent(target, (Configurable) copyData.getUserObject()));
   }
 
+  /**
+   * Allocate new PieceSlot Id's to any PieceSlot sub-components
+   * 
+   * @param c Configurable to update
+   */
+  protected void updateGpIds(Configurable c) {
+    if (c instanceof PieceSlot) {
+      ((PieceSlot) c).updateGpId(GameModule.getGameModule());
+    }
+    else {
+      for (Configurable comp : c.getConfigureComponents()) updateGpIds(comp);
+    }
+  }
+  
   protected Action buildImportAction(final Configurable target) {
     Action a = new AbstractAction("Add Imported Class") {
       private static final long serialVersionUID = 1L;
@@ -445,6 +463,9 @@ public class ConfigureTree extends JTree implements PropertyChangeListener, Mous
         try {
           final Configurable child = (Configurable) newConfig.newInstance();
           child.build(null);
+          if (child instanceof PieceSlot) {
+            ((PieceSlot) child).updateGpId(GameModule.getGameModule());
+          }
           final Configurable c = target;
           if (child.getConfigurer() != null) {
             if (insert(target, child, getTreeNode(target).getChildCount())) {
