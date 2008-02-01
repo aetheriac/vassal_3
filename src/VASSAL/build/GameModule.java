@@ -28,7 +28,6 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import javax.swing.JComponent;
@@ -101,7 +100,7 @@ import VASSAL.tools.ToolBarComponent;
  * such as {@link DataArchive}, {@link ServerConnection}, {@link Logger},
  * and {@link Prefs}.</p>
  */
-public abstract class GameModule extends AbstractConfigurable implements CommandEncoder, ToolBarComponent, PropertySource, MutablePropertiesContainer, TopLevelComponent {
+public abstract class GameModule extends AbstractConfigurable implements CommandEncoder, ToolBarComponent, PropertySource, MutablePropertiesContainer, GpIdSupport {
   protected static final String DEFAULT_NAME = "Unnamed module";  //$NON-NLS-1$
   public static final String MODULE_NAME = "name";  //$NON-NLS-1$
   public static final String MODULE_VERSION = "version";  //$NON-NLS-1$
@@ -121,8 +120,7 @@ public abstract class GameModule extends AbstractConfigurable implements Command
   protected MutablePropertiesContainer propsContainer = new Impl();
   protected PropertyChangeListener repaintOnPropertyChange = new PropertyChangeListener() {
     public void propertyChange(PropertyChangeEvent evt) {
-        for (Iterator maps = Map.getAllMaps(); maps.hasNext(); ) {
-          Map map = (Map) maps.next();
+        for (Map map : Map.getMapList()) {
           map.repaint();            
         }
     }
@@ -155,11 +153,11 @@ public abstract class GameModule extends AbstractConfigurable implements Command
   protected int nextGpId = 0;
   
   /*
-   * Store the currently building top level component. Only meaningful while
+   * Store the currently building GpId source. Only meaningful while
    * the GameModule or an Extension is actually in the process of being built
    * during module/extension load. 
    */
-  protected TopLevelComponent currentTopLevelComponent = null;
+  protected GpIdSupport gpidSupport = null;
   
   /**
    * @return the top-level frame of the controls window
@@ -303,9 +301,8 @@ public abstract class GameModule extends AbstractConfigurable implements Command
     return new String[]{Resources.getString("Editor.GameModule.name_label"), Resources.getString("Editor.GameModule.version_label")}; //$NON-NLS-1$ //$NON-NLS-2$
   }
 
-  @SuppressWarnings("unchecked")
-  public Class[] getAttributeTypes() {
-    return new Class[]{
+  public Class<?>[] getAttributeTypes() {
+    return new Class<?>[]{
       String.class,
       String.class
     };
@@ -723,7 +720,7 @@ public abstract class GameModule extends AbstractConfigurable implements Command
     }
     else {
       theModule = module;
-      theModule.setTopLevelComponent(theModule);
+      theModule.setGpIdSupport(theModule);
       try {
         theModule.build();
       }
@@ -759,12 +756,12 @@ public abstract class GameModule extends AbstractConfigurable implements Command
     return String.valueOf(nextGpId++);
   }
   
-  public void setTopLevelComponent(TopLevelComponent c) {
-    currentTopLevelComponent = c;
+  public void setGpIdSupport(GpIdSupport s) {
+    gpidSupport = s;
   }
   
-  public TopLevelComponent getTopLevelComponent() {
-    return currentTopLevelComponent;
+  public GpIdSupport getGpIdSupport() {
+    return gpidSupport;
   }
   
   /**

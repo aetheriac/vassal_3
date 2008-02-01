@@ -57,6 +57,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -2031,23 +2032,80 @@ mainWindowDock = splitter.splitBottom(splitter.getSplitAncestor(GameModule.getGa
   }
 
   public String[] getAttributeDescriptions() {
-    return new String[] { "Map Name:  ", "Mark pieces that move (if they possess the proper trait):  ", "\"Mark unmoved\" button text:  ", "\"Mark unmoved\" tooltip text:  ", "\"Mark unmoved\" button icon:  ", "Horizontal Padding:  ",
-        "Vertical Padding:  ", "Can contain multiple boards?", "Border color for selected counters:  ", "Border thickness for selected counters:  ",
-        "Include toolbar button to show/hide?", "Toolbar button text:  ", "Toolbar tooltip text:  ", "Toolbar button icon:  ", "Hotkey:  ", "Auto-report format for movement within this map:  ",
-        "Auto-report format for movement to this map:  ", "Auto-report format for units created in this map:  ", "Auto-report format for units modified on this map:  ",
-        "Key Command to apply to all units ending movement on this map:  " };
+    return new String[] {
+      "Map Name:  ",
+      "Mark pieces that move (if they possess the proper trait):  ",
+      "\"Mark unmoved\" button text:  ",
+      "\"Mark unmoved\" tooltip text:  ",
+      "\"Mark unmoved\" button icon:  ",
+      "Horizontal Padding:  ",
+      "Vertical Padding:  ",
+      "Can contain multiple boards?",
+      "Border color for selected counters:  ",
+      "Border thickness for selected counters:  ",
+      "Include toolbar button to show/hide?",
+      "Toolbar button text:  ",
+      "Toolbar tooltip text:  ",
+      "Toolbar button icon:  ",
+      "Hotkey:  ",
+      "Auto-report format for movement within this map:  ",
+      "Auto-report format for movement to this map:  ",
+      "Auto-report format for units created in this map:  ",
+      "Auto-report format for units modified on this map:  ",
+      "Key Command to apply to all units ending movement on this map:  "
+    };
   }
 
   public String[] getAttributeNames() {
-    return new String[] { NAME, MARK_MOVED, MARK_UNMOVED_TEXT, MARK_UNMOVED_TOOLTIP, MARK_UNMOVED_ICON, EDGE_WIDTH, EDGE_HEIGHT, ALLOW_MULTIPLE, HIGHLIGHT_COLOR, HIGHLIGHT_THICKNESS,
-        USE_LAUNCH_BUTTON, BUTTON_NAME, TOOLTIP, ICON, HOTKEY, MOVE_WITHIN_FORMAT, MOVE_TO_FORMAT, CREATE_FORMAT, CHANGE_FORMAT, MOVE_KEY };
+    return new String[] { 
+      NAME,
+      MARK_MOVED,
+      MARK_UNMOVED_TEXT,
+      MARK_UNMOVED_TOOLTIP,
+      MARK_UNMOVED_ICON,
+      EDGE_WIDTH,
+      EDGE_HEIGHT,
+      ALLOW_MULTIPLE,
+      HIGHLIGHT_COLOR,
+      HIGHLIGHT_THICKNESS,
+      USE_LAUNCH_BUTTON,
+      BUTTON_NAME,
+      TOOLTIP,
+      ICON,
+      HOTKEY,
+      MOVE_WITHIN_FORMAT,
+      MOVE_TO_FORMAT,
+      CREATE_FORMAT,
+      CHANGE_FORMAT,
+      MOVE_KEY
+    };
   }
 
-  public Class[] getAttributeTypes() {
-    return new Class[] { String.class, GlobalOptions.Prompt.class, String.class, String.class, UnmovedIconConfig.class, Integer.class, Integer.class, Boolean.class, Color.class,
-        Integer.class, Boolean.class, String.class, String.class, IconConfig.class, KeyStroke.class, MoveWithinFormatConfig.class, MoveToFormatConfig.class,
-        CreateFormatConfig.class, ChangeFormatConfig.class, KeyStroke.class };
+  public Class<?>[] getAttributeTypes() {
+    return new Class<?>[] {
+      String.class,
+      GlobalOptions.Prompt.class,
+      String.class,
+      String.class,
+      UnmovedIconConfig.class,
+      Integer.class,
+      Integer.class,
+      Boolean.class,
+      Color.class,
+      Integer.class,
+      Boolean.class,
+      String.class,
+      String.class, 
+      IconConfig.class,
+      KeyStroke.class,
+      MoveWithinFormatConfig.class,
+      MoveToFormatConfig.class,
+      CreateFormatConfig.class,
+      ChangeFormatConfig.class,
+      KeyStroke.class
+    };
   }
+
   public static final String LOCATION = "location"; //$NON-NLS-1$
   public static final String OLD_LOCATION = "previousLocation"; //$NON-NLS-1$
   public static final String OLD_MAP = "previousMap"; //$NON-NLS-1$
@@ -2180,20 +2238,31 @@ mainWindowDock = splitter.splitBottom(splitter.getSplitAncestor(GameModule.getGa
   }
 
   /**
-   * Utility method to return a list of all map components in the module
-   * 
-   * @return
+   * Utility method to return a {@link List} of all map components in the
+   * module.
+   *
+   * @return the list of <code>Map</code>s
    */
-// FIXME: should return a Collection<Map> instead
-  public static Iterator getAllMaps() {
-    Collection<Map> l = GameModule.getGameModule().getComponentsOf(Map.class);
+  public static List<Map> getMapList() {
+    final List<Map> l = GameModule.getGameModule().getComponentsOf(Map.class);
     for (ChartWindow cw :
           GameModule.getGameModule().getComponentsOf(ChartWindow.class)) {
       for (MapWidget mw : cw.getAllDescendantComponentsOf(MapWidget.class)) {
         l.add(mw.getMap());
       }
     }
-    return l.iterator();
+    return l;
+  }
+  
+  /**
+   * Utility method to return a list of all map components in the module
+   * 
+   * @return Iterator over all maps
+   * @deprecated Use {@link #getMapList()} instead.
+   */
+  @Deprecated
+  public static Iterator getAllMaps() {
+    return getMapList().iterator();
   }
 
   /**
