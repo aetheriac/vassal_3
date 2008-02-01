@@ -130,8 +130,8 @@ public class GlobalOptions extends AbstractConfigurable {
 //    GameModule.getGameModule().getPrefs().addOption(maxHeapConf);
 
     final PropertyChangeListener heapListener;
-    final String os = System.getProperty("os.name");
-    if (os.startsWith("Windows")) {
+    final String os = System.getProperty("os.name").toLowerCase();
+    if (os.startsWith("windows")) {
       // We are running on Windows. Blech! The plan here is to update
       // the VASSAL.l4j.ini which the Launch4j JAR wrapper reads.
       heapListener = new PropertyChangeListener() {
@@ -192,7 +192,7 @@ public class GlobalOptions extends AbstractConfigurable {
         }
       };
     }
-    else if (os.startsWith("Mac OS")) {
+    else if (os.startsWith("mac os")) {
       // We are running on OSX. We know this because there is no
       // 1.5+ JVM for Mac OS9. The plan here is to update the
       // Info.plist which is contained in the VASSAL.app bundle.
