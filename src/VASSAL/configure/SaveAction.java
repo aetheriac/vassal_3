@@ -28,14 +28,12 @@ import javax.swing.ImageIcon;
  */
 public abstract class SaveAction extends AbstractAction {
   public SaveAction() {
-    URL iconURL = getClass().getResource("/images/Save16.gif");
+    final URL iconURL = getClass().getResource("/images/Save16.gif");
     if (iconURL != null) {
       putValue(Action.SMALL_ICON, new ImageIcon(iconURL));
     }
-    else {
-      putValue(Action.NAME, "Save");
-    }
+
+    putValue(Action.NAME, "Save");
     putValue(Action.SHORT_DESCRIPTION, "Save");
   }
-
 }

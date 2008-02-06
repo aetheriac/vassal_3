@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Properties;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import VASSAL.Info;
@@ -158,9 +160,20 @@ public class Main {
       GameModule.getGameModule().getWizardSupport().showWelcomeWizard();
     }
     else if (moduleFile == null) {
+/*
       ConsoleWindow w = new ConsoleWindow();
       w.setControls(isFirstTime ? new FirstTimeUserPanel(w).getControls() : new ConsoleControls(w).getControls());
       w.getFrame().setVisible(true);
+*/
+      PlayerWindow.getInstance().setSize(800,600);
+      PlayerWindow.getInstance().setVisible(true);
+      if (isFirstTime) {
+        final JDialog d = new JDialog(PlayerWindow.getInstance(), true);
+        d.setLocationRelativeTo(PlayerWindow.getInstance());
+        d.add(new FirstTimeUserPanel(null).getControls());
+        d.pack();
+        d.setVisible(true);
+      }
     }
     else if (editMode) {
       new EditModuleAction(null).loadModule(moduleFile);
@@ -207,6 +220,7 @@ public class Main {
   protected void configure(final String[] args) {
     File prefsFile = new File(Info.getHomeDir(), "Preferences");
     isFirstTime = !prefsFile.exists();
+//    isFirstTime = true;
     int n = -1;
     while (++n < args.length) {
       String arg = args[n];
