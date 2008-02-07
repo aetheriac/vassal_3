@@ -23,6 +23,8 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ImageIcon;
 
+import VASSAL.i18n.Resources;
+
 /**
  * General-purpose "Save As" action
  */
@@ -33,7 +35,7 @@ public abstract class SaveAsAction extends AbstractAction {
       putValue(Action.SMALL_ICON, new ImageIcon(iconURL));
     }
 
-    putValue(Action.NAME, "Save As...");
-    putValue(Action.SHORT_DESCRIPTION, "Save As...");
+    putValue(Action.NAME, Resources.getString("Editor.save_as"));
+    putValue(Action.SHORT_DESCRIPTION, Resources.getString("Editor.save_as"));
   }
 }

@@ -22,7 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.zip.ZipFile;
 import VASSAL.build.GameModule;
-import VASSAL.configure.ModuleEditWindow;
+//import VASSAL.configure.ModuleEditWindow;
 import VASSAL.i18n.Resources;
 import VASSAL.tools.ArchiveWriter;
 
@@ -38,6 +38,7 @@ public class EditModuleAction extends LoadModuleAction {
     ArchiveWriter archive = new ArchiveWriter(new ZipFile(f.getPath()));
     GameModule.init(new BasicModule(archive));
     GameModule.getGameModule().getFrame().setVisible(true);
-    new ModuleEditWindow().setVisible(true);
+//    new ModuleEditWindow().setVisible(true);
+    EditorWindow.getInstance().moduleLoading(GameModule.getGameModule());
   }
 }

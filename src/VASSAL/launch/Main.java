@@ -16,6 +16,8 @@
  */
 package VASSAL.launch;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,9 +32,11 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import VASSAL.Info;
 import VASSAL.build.GameModule;
 import VASSAL.build.module.ExtensionsLoader;
+import VASSAL.build.module.GlobalOptions;
 import VASSAL.build.module.ModuleExtension;
 import VASSAL.i18n.Localization;
 import VASSAL.i18n.Resources;
@@ -62,6 +66,19 @@ public class Main {
       public void run() {
         Runnable runnable = new Runnable() {
           public void run() {
+System.out.println(Prefs.getGlobalPrefs().getStoredValue(GlobalOptions.SHOW_SPLASH));
+            if ("true".equals(
+                Prefs.getGlobalPrefs().getStoredValue(GlobalOptions.SHOW_SPLASH))) {
+              final AboutVASSAL w = new AboutVASSAL();
+              w.setVisible(true);
+              w.toFront();
+              new Timer(2000, new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                  w.dispose();
+                }
+              }).start();
+            }
+
             try {
               Main.this.configure(args);
               Main.this.extractResourcesAndLaunch(0);
@@ -160,19 +177,24 @@ public class Main {
       GameModule.getGameModule().getWizardSupport().showWelcomeWizard();
     }
     else if (moduleFile == null) {
+      if (editMode) {
+        EditorWindow.getInstance().setVisible(true);
+      }
+      else {
 /*
       ConsoleWindow w = new ConsoleWindow();
       w.setControls(isFirstTime ? new FirstTimeUserPanel(w).getControls() : new ConsoleControls(w).getControls());
       w.getFrame().setVisible(true);
 */
-      PlayerWindow.getInstance().setSize(800,600);
-      PlayerWindow.getInstance().setVisible(true);
-      if (isFirstTime) {
-        final JDialog d = new JDialog(PlayerWindow.getInstance(), true);
-        d.setLocationRelativeTo(PlayerWindow.getInstance());
-        d.add(new FirstTimeUserPanel(null).getControls());
-        d.pack();
-        d.setVisible(true);
+        PlayerWindow.getInstance().setSize(800,600);
+        PlayerWindow.getInstance().setVisible(true);
+        if (isFirstTime) {
+          final JDialog d = new JDialog(PlayerWindow.getInstance(), true);
+          d.setLocationRelativeTo(PlayerWindow.getInstance());
+          d.add(new FirstTimeUserPanel(null).getControls());
+          d.pack();
+          d.setVisible(true);
+        }
       }
     }
     else if (editMode) {

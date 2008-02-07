@@ -17,7 +17,9 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
+import javax.swing.JWindow;
 
+import VASSAL.build.GameModule;
 import VASSAL.build.module.documentation.HelpFile;
 import VASSAL.build.module.documentation.HelpWindow;
 import VASSAL.configure.ConfigureTree;
@@ -28,6 +30,7 @@ import VASSAL.configure.SavedGameUpdaterDialog;
 import VASSAL.configure.ShowHelpAction;
 import VASSAL.i18n.Resources;
 import VASSAL.i18n.TranslateVassalWindow;
+import VASSAL.tools.imports.ImportAction;
 
 public class EditorWindow extends JFrame {
   protected static final EditorWindow instance = new EditorWindow();
@@ -41,7 +44,12 @@ public class EditorWindow extends JFrame {
     null
   );
 
-  protected final ConfigureTree tree = new ConfigureTree(null, helpWindow);
+  protected ConfigureTree tree;
+
+  public void moduleLoading(GameModule mod) {
+    tree = new ConfigureTree(mod, helpWindow);
+    scrollPane.setViewportView(tree);
+  }
 
   private final Map<MenuKey,JMenuItem> menuItems =
     new HashMap<MenuKey,JMenuItem>();
@@ -71,14 +79,21 @@ public class EditorWindow extends JFrame {
     return helpMenu;
   }
 
-   public enum MenuKey {
+  public enum MenuKey {
+    NEW,
+    OPEN,
     SAVE,
     SAVE_AS,
+    CLOSE,
+    IMPORT,
+    NEW_EXTENSION,
+    LOAD_EXTENSION,
     QUIT,
     CREATE_MODULE_UPDATER,
     UPDATE_SAVED,
     TRANSLATE_VASSAL,
-    HELP
+    HELP,
+    ABOUT_VASSAL
   };
  
   public JMenuItem getMenuItem(MenuKey key) {
@@ -138,6 +153,18 @@ public class EditorWindow extends JFrame {
     fileMenu = new JMenu(Resources.getString("General.file"));
     fileMenu.setMnemonic(KeyEvent.VK_F);
     menuBar.add(fileMenu);
+  
+//    final JMenuItem newModule = new JMenuItem("New Module");
+    final CreateModuleAction createModuleAction = new CreateModuleAction(this);
+    menuItems.put(MenuKey.NEW, fileMenu.add(createModuleAction));
+
+//    final JMenuItem openModule = new JMenuItem("Open Module");
+    final EditModuleAction editModuleAction = new EditModuleAction(this);
+    menuItems.put(MenuKey.OPEN, fileMenu.add(editModuleAction));
+
+    final JMenuItem closeModule = new JMenuItem("Close Module");
+    closeModule.setEnabled(false); 
+    menuItems.put(MenuKey.CLOSE, fileMenu.add(closeModule));
 
     final SaveAction saveAction = new SaveAction() {
       private static final long serialVersionUID = 1L;
@@ -147,6 +174,7 @@ public class EditorWindow extends JFrame {
       }
     };
 
+    saveAction.setEnabled(false);
     menuItems.put(MenuKey.SAVE, fileMenu.add(saveAction));
     toolBar.add(saveAction);
 
@@ -158,21 +186,40 @@ public class EditorWindow extends JFrame {
       }
     };
 
+    saveAsAction.setEnabled(false);
     menuItems.put(MenuKey.SAVE_AS, fileMenu.add(saveAsAction));
     toolBar.add(saveAsAction);
 
     fileMenu.addSeparator(); 
 
-    final JMenuItem quitItem = new JMenuItem(Resources.QUIT);
-    quitItem.addActionListener(new ActionListener() {
+    final ImportAction importAction = new ImportAction(this);
+    menuItems.put(MenuKey.IMPORT, fileMenu.add(importAction));
+
+    fileMenu.addSeparator();
+
+//    final JMenuItem newExtension = new JMenuItem("New Extension");
+    final NewExtensionAction newExtensionAction = new NewExtensionAction(this); 
+    newExtensionAction.setEnabled(false);
+    menuItems.put(MenuKey.NEW_EXTENSION, fileMenu.add(newExtensionAction));
+
+//    final JMenuItem loadExtension = new JMenuItem("Load Extension");
+    final EditExtensionAction editExtensionAction =
+      new EditExtensionAction(this);
+    editExtensionAction.setEnabled(false);      
+    menuItems.put(MenuKey.LOAD_EXTENSION, fileMenu.add(editExtensionAction));
+
+    fileMenu.addSeparator();
+
+    final JMenuItem quit = new JMenuItem(Resources.getString(Resources.QUIT));
+    quit.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         System.exit(0);
       }
     });
    
-    quitItem.setMnemonic('Q');
-    menuItems.put(MenuKey.QUIT, fileMenu.add(quitItem));
- 
+    quit.setMnemonic('Q');
+    menuItems.put(MenuKey.QUIT, fileMenu.add(quit));
+
     // build Edit menu
     editMenu = new JMenu(Resources.getString("General.edit"));
     menuBar.add(editMenu);
@@ -181,35 +228,56 @@ public class EditorWindow extends JFrame {
     toolsMenu = new JMenu(Resources.getString("General.tools"));
     menuBar.add(toolsMenu);
     
-    JMenuItem mi = menuItems.put(MenuKey.CREATE_MODULE_UPDATER,
-      toolsMenu.add(Resources.getString(
-        "Editor.ModuleEditor.create_module_updater"))); //$NON-NLS-1$
-    mi.addActionListener(new ActionListener() {
+    final JMenuItem createModuleUpdater = toolsMenu.add(Resources.getString(
+      "Editor.ModuleEditor.create_module_updater")); //$NON-NLS-1$
+    createModuleUpdater.setEnabled(false);
+    createModuleUpdater.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         new ModuleUpdaterDialog(EditorWindow.this).setVisible(true);
       }
     });
 
-    mi = menuItems.put(MenuKey.UPDATE_SAVED,
-      toolsMenu.add(Resources.getString(
-        "Editor.ModuleEditor.update_saved"))); //$NON-NLS-1$
-    mi.addActionListener(new ActionListener() {
+    menuItems.put(MenuKey.CREATE_MODULE_UPDATER, createModuleUpdater);
+
+    final JMenuItem updateSavedGame = toolsMenu.add(Resources.getString(
+      "Editor.ModuleEditor.update_saved")); //$NON-NLS-1$
+    updateSavedGame.setEnabled(false);
+    updateSavedGame.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         new SavedGameUpdaterDialog(EditorWindow.this).setVisible(true);
       }
     });
-
+    
+    menuItems.put(MenuKey.UPDATE_SAVED, updateSavedGame);
+    
     toolsMenu.addSeparator();
 
-    mi = menuItems.put(MenuKey.TRANSLATE_VASSAL,
-      toolsMenu.add(Resources.getString(
-        "Editor.ModuleEditor.translate_vassal"))); //$NON-NLS-1$
-    mi.addActionListener(new ActionListener() {
+// FIXME: does translate really depend on having a module loaded?
+    final JMenuItem translateVASSAL = toolsMenu.add(Resources.getString(
+        "Editor.ModuleEditor.translate_vassal")); //$NON-NLS-1$
+    translateVASSAL.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         new TranslateVassalWindow(EditorWindow.this).setVisible(true);
       }
     });
 
+    menuItems.put(MenuKey.TRANSLATE_VASSAL, translateVASSAL);
+
+    editModuleAction.addAction(new Runnable() {
+      public void run() {
+        createModuleAction.setEnabled(false);
+        editModuleAction.setEnabled(false);
+        // closeModule.setEnabled(true);
+        saveAction.setEnabled(true);
+        saveAsAction.setEnabled(true);
+        importAction.setEnabled(false);
+        newExtensionAction.setEnabled(true);
+        editExtensionAction.setEnabled(true);
+        createModuleUpdater.setEnabled(true);
+        updateSavedGame.setEnabled(true);
+      }
+    });
+ 
     // build Help menu
     helpMenu = new JMenu(Resources.getString("General.help"));
     menuBar.add(helpMenu);
@@ -229,8 +297,12 @@ public class EditorWindow extends JFrame {
       e.printStackTrace();
     }
 
-    add(scrollPane, BorderLayout.CENTER);
+    helpMenu.addSeparator();
 
+    final Action aboutVASSAL = AboutVASSAL.getAction();
+    menuItems.put(MenuKey.ABOUT_VASSAL, helpMenu.add(aboutVASSAL));
+
+    add(scrollPane, BorderLayout.CENTER);
     pack();
   }
 

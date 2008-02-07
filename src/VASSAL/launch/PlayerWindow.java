@@ -22,7 +22,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JToolBar;
-import javax.swing.JWindow;
 
 import VASSAL.build.GameModule;
 import VASSAL.build.module.Documentation;
@@ -297,15 +296,7 @@ public class PlayerWindow extends JFrame {
 
     helpMenu.addSeparator();
 
-    final JMenuItem aboutVASSAL = new JMenuItem("About VASSAL");
-    aboutVASSAL.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        final JWindow w = new AboutVASSAL(PlayerWindow.this);
-        w.setVisible(true);
-        w.toFront();
-      }
-    });
-
+    final Action aboutVASSAL = AboutVASSAL.getAction();
     menuItems.put(MenuKey.ABOUT_VASSAL, helpMenu.add(aboutVASSAL));
 
     // build toolbar

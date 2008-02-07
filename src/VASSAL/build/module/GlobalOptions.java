@@ -84,6 +84,7 @@ public class GlobalOptions extends AbstractConfigurable {
   public static final String MAXIMUM_HEAP = "maximumHeap"; //$NON-NLS-1$
   public static final String INITIAL_HEAP = "initialHeap"; //$NON-NLS-1$
   public static final String WELCOME_WIZARD = "welcomeWizard"; //$NON-NLS-1$
+  public static final String SHOW_SPLASH = "showSplash"; //$NON-NLS-1$
 
   public static final String PLAYER_NAME = "playerName"; //$NON-NLS-1$
   public static final String PLAYER_SIDE = "playerSide"; //$NON-NLS-1$
@@ -295,6 +296,13 @@ public class GlobalOptions extends AbstractConfigurable {
 //      Resources.getString("GlobalOptions.welcome_wizard"),
       Boolean.TRUE);
     Prefs.getGlobalPrefs().addOption(wizardConf);
+
+    final BooleanConfigurer splashConf = new BooleanConfigurer(
+      SHOW_SPLASH,
+      "Show Splash Screen at Startup?",
+//      Resources.getString("GlobalOptions.welcome_wizard"),
+      Boolean.TRUE);
+    Prefs.getGlobalPrefs().addOption(splashConf);
 
     validator = new SingleChildInstance(GameModule.getGameModule(), getClass());
   }
