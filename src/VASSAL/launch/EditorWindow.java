@@ -49,6 +49,7 @@ public class EditorWindow extends JFrame {
   public void moduleLoading(GameModule mod) {
     tree = new ConfigureTree(mod, helpWindow);
     scrollPane.setViewportView(tree);
+    pack();
   }
 
   private final Map<MenuKey,JMenuItem> menuItems =
