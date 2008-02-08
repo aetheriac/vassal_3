@@ -178,6 +178,7 @@ System.out.println(Prefs.getGlobalPrefs().getStoredValue(GlobalOptions.SHOW_SPLA
     }
     else if (moduleFile == null) {
       if (editMode) {
+        EditorWindow.getInstance().setSize(250,400);
         EditorWindow.getInstance().setVisible(true);
       }
       else {

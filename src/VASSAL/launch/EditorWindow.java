@@ -60,7 +60,7 @@ public class EditorWindow extends JFrame {
   protected final JToolBar toolBar = new JToolBar();
 
   protected final JMenu fileMenu;
-  protected final JMenu editMenu;
+//  protected final JMenu editMenu;
   protected final JMenu toolsMenu;
   protected final JMenu helpMenu;
 
@@ -68,9 +68,11 @@ public class EditorWindow extends JFrame {
     return fileMenu;
   }
 
+/*
   public JMenu getEditMenu() {
     return editMenu;
   }
+*/
 
   public JMenu getToolsMenu() {
     return toolsMenu;
@@ -221,9 +223,11 @@ public class EditorWindow extends JFrame {
     quit.setMnemonic('Q');
     menuItems.put(MenuKey.QUIT, fileMenu.add(quit));
 
+/*
     // build Edit menu
     editMenu = new JMenu(Resources.getString("General.edit"));
     menuBar.add(editMenu);
+*/
 
    // build Tools menu
     toolsMenu = new JMenu(Resources.getString("General.tools"));
