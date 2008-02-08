@@ -66,12 +66,14 @@ public class Main {
       public void run() {
         Runnable runnable = new Runnable() {
           public void run() {
-System.out.println(Prefs.getGlobalPrefs().getStoredValue(GlobalOptions.SHOW_SPLASH));
-            if ("true".equals(
-                Prefs.getGlobalPrefs().getStoredValue(GlobalOptions.SHOW_SPLASH))) {
+            final String showSplash =
+              Prefs.getGlobalPrefs().getStoredValue(GlobalOptions.SHOW_SPLASH);
+            // Be sure to show splash if there is no recorded pref, as this
+            // means VASSAL is being run for the first time.
+            if (showSplash == null || showSplash.equals("true")) {
               final AboutVASSAL w = new AboutVASSAL();
+              w.setAlwaysOnTop(true);
               w.setVisible(true);
-              w.toFront();
               new Timer(2000, new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                   w.dispose();
