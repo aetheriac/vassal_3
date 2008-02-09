@@ -73,6 +73,7 @@ public class Main {
             if (showSplash == null || showSplash.equals("true")) {
               final AboutVASSAL w = new AboutVASSAL();
               w.setAlwaysOnTop(true);
+              w.setFocusableWindowState(false);
               w.setVisible(true);
               new Timer(2000, new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
