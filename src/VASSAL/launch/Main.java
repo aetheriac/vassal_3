@@ -56,6 +56,8 @@ public class Main {
   protected List<String> extractTargets = new ArrayList<String>();
   protected List<String> autoExtensions = new ArrayList<String>();
 
+  protected JFrame frame = null;
+
   public Main(final String[] args) {
     initSystemProperties();
     System.err.println("-- OS " + System.getProperty("os.name")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -181,8 +183,9 @@ public class Main {
     }
     else if (moduleFile == null) {
       if (editMode) {
-        EditorWindow.getInstance().setSize(250,400);
-        EditorWindow.getInstance().setVisible(true);
+        frame = EditorWindow.getInstance();
+        frame.setSize(250,400);
+        frame.setVisible(true);
       }
       else {
 /*
@@ -190,8 +193,10 @@ public class Main {
       w.setControls(isFirstTime ? new FirstTimeUserPanel(w).getControls() : new ConsoleControls(w).getControls());
       w.getFrame().setVisible(true);
 */
-        PlayerWindow.getInstance().setSize(800,600);
-        PlayerWindow.getInstance().setVisible(true);
+        frame = PlayerWindow.getInstance();
+        frame.setSize(800,600);
+        frame.setVisible(true);
+
         if (isFirstTime) {
           final JDialog d = new JDialog(PlayerWindow.getInstance(), true);
           d.setLocationRelativeTo(PlayerWindow.getInstance());
