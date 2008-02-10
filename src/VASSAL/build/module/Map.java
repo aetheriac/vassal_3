@@ -1460,7 +1460,7 @@ mainWindowDock = splitter.splitBottom(splitter.getSplitAncestor(GameModule.getGa
     highlighters.remove(h);
   }
   
-  public Iterator getHighlighters() {
+  public Iterator<Highlighter> getHighlighters() {
     return highlighters.iterator();
   }
 
@@ -1498,8 +1498,8 @@ mainWindowDock = splitter.splitBottom(splitter.getSplitAncestor(GameModule.getGa
       r.translate(pos.x, pos.y);
       if (Boolean.TRUE.equals(p.getProperty(Properties.SELECTED))) {
         r = r.union(highlighter.boundingBox(p));
-        for (Iterator i = getHighlighters(); i.hasNext();) {
-          r = r.union(((Highlighter) i).boundingBox(p));
+        for (Iterator<Highlighter> i = getHighlighters(); i.hasNext();) {
+          r = r.union(i.next().boundingBox(p));
         }
       }
       if (p.getParent() != null) {
@@ -2266,7 +2266,7 @@ mainWindowDock = splitter.splitBottom(splitter.getSplitAncestor(GameModule.getGa
    * @deprecated Use {@link #getMapList()} instead.
    */
   @Deprecated
-  public static Iterator getAllMaps() {
+  public static Iterator<Map> getAllMaps() {
     return getMapList().iterator();
   }
 
