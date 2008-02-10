@@ -1,3 +1,5 @@
+!include "MUI2.nsh"
+
 ; Note: VERSION and TMPDIR are defined from the command line in the Makefile
 ;!define VERSION "3.1.0-svn3025"
 ;!define TMPDIR "/home/uckelman/projects/VASSAL/uckelman-working/tmp"
@@ -7,18 +9,35 @@
 Name "VASSAL-${VERSION}"
 OutFile "${TMPDIR}/VASSAL-${VERSION}-windows.exe"
 
-; SetCompress auto ; (can be off or force)
-; SetDatablockOptimize on ; (can be off)
-; CRCCheck on ; (can be off)
-; AutoCloseWindow false ; (can be true for the window go away automatically at end)
-; ShowInstDetails hide ; (can be show to have them shown, or nevershow to disable)
-; SetDateSave off ; (can be on to have files restored to their orginal date)
-
 InstallDir "$PROGRAMFILES\VASSAL\VASSAL-${VERSION}"
 InstallDirRegKey HKLM "SOFTWARE\vassalengine.org\VASSAL-${VERSION}" ""
 DirText "Select the directory in which to install VASSAL-${VERSION}:"
 
-Section "" 
+!define MUI_ABORTWARNING
+!define MUI_UNABORTWARNING
+
+!define MUI_COMPONENTSPAGE_NODESC
+;!define MUI_TEXT_COMPONENTS_TITLE "Choose Components"
+;!define MUI_TEXT_COMPONENTS_SUBTITLE "Choose which features of VASSAL you want to install."
+
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_COMPONENTS
+!insertmacro MUI_PAGE_INSTFILES
+;!define MUI_FINISHPAGE_RUN "$INSTDIR\VASSAL.exe"
+;!define MUI_FINISHPAGE_TEXT "Start VASSAL?"
+;!insertmacro MUI_PAGE_FINISH
+
+
+;Var StartMenuFolder
+;!insertmacro MUI_PAGE_STARTMENU "Application" $StartMenuFolder
+;!define MUI_STARTMENUPAGE_TEXT_CHECKBOX "Do not create Start menu items."
+;!define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "Start Menu Folder"
+;!insertmacro MUI_PAGE_FINISH
+
+Section "Base Files" BaseFiles
+  SectionIn RO
+
+  ; set the files to bundle
   SetOutPath "$INSTDIR"
   File "${SRCDIR}/*.exe"
   File "${SRCDIR}/*.bat"
@@ -26,6 +45,7 @@ Section ""
   SetOutPath "$INSTDIR\lib"
   File /r "${SRCDIR}/lib/*"
 
+  ; write keys to the registry
   WriteRegStr HKLM "SOFTWARE\vassalengine.org\VASSAL-${VERSION}" "" "$INSTDIR"
 
   WriteRegStr HKLM ${UROOT} "DisplayName" "VASSAL (${VERSION})"
@@ -38,16 +58,44 @@ Section ""
   WriteRegDWORD HKLM ${UROOT} "NoModify" 0x00000001
   WriteRegDWORD HKLM ${UROOT} "NoRepair" 0x00000001
 
+  ; create the uninstaller
   WriteUninstaller "$INSTDIR\uninst.exe"
 SectionEnd 
+
+Section "Start Menu shortcuts" StartShortcuts
+  ; create the Start menu items
+  CreateDirectory "$SMPROGRAMS\VASSAL\VASSAL-${VERSION}"
+  CreateShortCut "$SMPROGRAMS\VASSAL\VASSAL-${VERSION}\VASSAL.lnk" "$INSTDIR\VASSAL.exe"
+  CreateShortCut "$SMPROGRAMS\VASSAL\VASSAL-${VERSION}\VASSALEditor.lnk" "$INSTDIR\VASSALEditor.exe"
+SectionEnd
+
+Section "Desktop shortcuts" DesktopShortcuts
+  ; create desktop shortcuts
+  CreateShortCut "$DESKTOP\VASSAL-${VERSION}.lnk" "$INSTDIR\VASSAL.exe"
+  CreateShortCut "$DESKTOP\VASSALEditor-${VERSION}.lnk" "$INSTDIR\VASSALEditor.exe"
+SectionEnd
 
 UninstallText "This will uninstall VASSAL-${VERSION} from your system."
 
 Section Uninstall
-  ; delete whatever files/registry keys/etc you installed here.
+  ; delete the uninstaller
   Delete "$INSTDIR\uninst.exe"
+
+  ; delete the desktop shortucts
+  Delete "$DESKTOP\VASSAL-${VERSION}.lnk"
+  Delete "$DESKTOP\VASSALEditor-${VERSION}.lnk"
+
+  ; delete the Start menu items
+  RMDir /r "$SMPROGRAMS\VASSAL\VASSAL-${VERSION}"
+
+  ; delete registry keys
   DeleteRegKey HKLM "SOFTWARE\vassalengine.org\VASSAL-${VERSION}"
   DeleteRegKey HKLM ${UROOT}
+
+  ; delete the install director
   RMDir /r "$INSTDIR"
+
+  ; delete VASSAL if empty
   RMDir "$PROGRAMFILES\VASSAL" 
+  RMDir "$SMPROGRAMS\VASSAL"
 SectionEnd 
