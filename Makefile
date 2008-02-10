@@ -21,6 +21,8 @@ JCFLAGS:=-d $(CLASSDIR) -source 5 -target 5 -Xlint -classpath $(CLASSPATH) \
 JAR:=$(JAVAPATH)/bin/jar
 JDOC:=$(JAVAPATH)/bin/javadoc
 
+NSIS:=PATH=$$PATH:/home/uckelman/java/nsis-2.35/ makensis
+
 SOURCES:=$(shell find $(SRCDIR) -name '*.java' | sed "s/^$(SRCDIR)\///")
 CLASSES:=$(SOURCES:.java=.class)
 JARS:=Vengine.jar docs.jar
@@ -64,9 +66,6 @@ docs.jar:
 version:
 	sed -ri 's/VERSION = ".*"/VERSION = "$(VERSION)"/' $(SRCDIR)/VASSAL/Info.java
 
-#installer:
-#	$(JAR) cevf VASSAL/launch/install/InstallWizard InstallVASSAL.jar -C $(CLASSDIR) VASSAL/launch/ VASSAL/chat/HttpRequestWrapper*
-
 $(TMPDIR)/VASSAL-$(VERSION).app: version all $(JARS)
 	mkdir -p $(TMPDIR)/VASSAL-$(VERSION).app/Contents/{MacOS,Resources}
 	cp dist/{PkgInfo,Info.plist} $(TMPDIR)/VASSAL-$(VERSION).app/Contents
@@ -81,18 +80,23 @@ $(TMPDIR)/VASSAL-$(VERSION).dmg: $(TMPDIR)/VASSAL-$(VERSION).app
 	sudo sh -c "mount -t hfsplus -o loop $(TMPDIR)/VASSAL-$(VERSION).dmg $(TMPDIR)/dmg ; cp -va $(TMPDIR)/VASSAL-$(VERSION).app $(TMPDIR)/dmg ; umount $(TMPDIR)/dmg"
 	rmdir $(TMPDIR)/dmg
 
-$(TMPDIR)/VASSAL-$(VERSION).zip: version all $(JARS)
-	mkdir -p $(TMPDIR)/VASSAL-$(VERSION)/{ext,plugins} 
+$(TMPDIR)/VASSAL-$(VERSION).zip: version all $(JARS) 
+	mkdir -p $(TMPDIR)/VASSAL-$(VERSION)
 	svn export $(LIBDIR) $(TMPDIR)/VASSAL-$(VERSION)/lib
 	cp $(LIBDIR)/{Vengine.jar,docs.jar} $(TMPDIR)/VASSAL-$(VERSION)/lib
 	cp dist/VASSAL{Editor,}.{sh,bat,exe} $(TMPDIR)/VASSAL-$(VERSION)
 	cd $(TMPDIR) ; zip -9rv VASSAL-$(VERSION).zip VASSAL-$(VERSION) ; cd ..
 
+$(TMPDIR)/VASSAL-$(VERSION)-windows.exe: release-generic
+	$(NSIS) -NOCD -DVERSION=$(VERSION) -DTMPDIR=$(TMPDIR) dist/VASSAL.nsi
+
 release-macosx: $(TMPDIR)/VASSAL-$(VERSION).dmg
 
-release-others: $(TMPDIR)/VASSAL-$(VERSION).zip
+release-windows: $(TMPDIR)/VASSAL-$(VERSION)-windows.exe
 
-release: release-others release-macosx
+release-generic: $(TMPDIR)/VASSAL-$(VERSION).zip
+
+release: release-generic release-windows release-macosx
 
 clean-release:
 	$(RM) -r $(TMPDIR)/* $(LIBDIR)/Vengine.jar $(LIBDIR)/docs.jar
@@ -106,4 +110,4 @@ clean-javadoc:
 clean: clean-release
 	$(RM) -r $(CLASSDIR)/*
 
-.PHONY: all clean release release-macosx release-others clean-release i18n images javadoc clean-javadoc version
+.PHONY: all clean release release-macosx release-windows release-generic clean-release i18n images javadoc clean-javadoc version
