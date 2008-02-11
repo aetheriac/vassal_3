@@ -32,7 +32,7 @@ import VASSAL.tools.VersionTokenizer;
  * Class for storing release-related information
  */
 public final class Info {
-  private static final String VERSION = "3.1.0-svn3006"; //$NON-NLS-1$
+  private static final String VERSION = "3.1.0-svn3028"; //$NON-NLS-1$
   private static File homeDir;
   private static Boolean is2dEnabled;
   private static Boolean isDndEnabled;
@@ -68,8 +68,7 @@ public final class Info {
 // FIXME: check where this is used. maybe we can deprecate?
     final VersionTokenizer tok = new VersionTokenizer(VERSION);
     try {
-      return Integer.toString(tok.next()) +
-             Integer.toString(tok.next()) +
+      return Integer.toString(tok.next()) + "." +
              Integer.toString(tok.next());
     }
     catch (VersionFormatException e) {
