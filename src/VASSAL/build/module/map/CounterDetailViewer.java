@@ -172,8 +172,9 @@ public class CounterDetailViewer extends AbstractConfigurable implements Drawabl
     view = map.getView();
     validator = new SingleChildInstance(map, getClass());
     map.addDrawComponent(this);
+    String keyDesc = hotkey == null ? "" : "(" + HotKeyConfigurer.getString(hotkey) + ")";
     GameModule.getGameModule().getPrefs().addOption(Resources.getString("Prefs.general_tab"),
-        new BooleanConfigurer(USE_KEYBOARD, Resources.getString("CounterDetailViewer.use_prompt", HotKeyConfigurer.getString(hotkey)), Boolean.FALSE));
+        new BooleanConfigurer(USE_KEYBOARD, Resources.getString("CounterDetailViewer.use_prompt", keyDesc), Boolean.FALSE));
     GameModule.getGameModule().getPrefs().addOption(Resources.getString("Prefs.general_tab"),
         new IntConfigurer(PREFERRED_DELAY, Resources.getString("CounterDetailViewer.delay_prompt"), new Integer(delay)));
 
@@ -214,21 +215,20 @@ public class CounterDetailViewer extends AbstractConfigurable implements Drawabl
     }
   }
 
-  /** Required for backward compatibility */
+  @Deprecated // Required for backward compatibility 
   protected void drawGraphics(Graphics g, Point pt, JComponent comp,
                               PieceIterator pi) {
-// FIXME: can we deprecate this?
     ArrayList<GamePiece> a = new ArrayList<GamePiece>();
     while (pi.hasMoreElements()) {
       a.add(pi.nextPiece());
     }
-    drawGraphics(g, pt, comp, pi);
+    drawGraphics(g, pt, comp, a);
   }
 
-  protected void drawGraphics(Graphics g, Point pt, JComponent comp, List pieces) {
+  protected void drawGraphics(Graphics g, Point pt, JComponent comp, List<GamePiece> pieces) {
 
     for (int i = 0; i < pieces.size(); i++) {
-      GamePiece piece = (GamePiece) pieces.get(i);
+      GamePiece piece = pieces.get(i);
       if (unrotatePieces) piece.setProperty(Properties.USE_UNROTATED_SHAPE, Boolean.TRUE);
       Rectangle pieceBounds = piece.getShape().getBounds();
       if (unrotatePieces) piece.setProperty(Properties.USE_UNROTATED_SHAPE, Boolean.FALSE);
@@ -265,7 +265,7 @@ public class CounterDetailViewer extends AbstractConfigurable implements Drawabl
       for (int i = 0; i < pieces.size(); i++) {
         // Draw the next piece
         // pt is the location of the left edge of the piece
-        GamePiece piece = (GamePiece) pieces.get(i);
+        GamePiece piece = pieces.get(i);
         if (unrotatePieces) piece.setProperty(Properties.USE_UNROTATED_SHAPE, Boolean.TRUE);
         Rectangle pieceBounds = piece.getShape().getBounds();
         g.setClip(bounds.x - 3, bounds.y - 3, bounds.width + 5, bounds.height + 5);
@@ -292,18 +292,17 @@ public class CounterDetailViewer extends AbstractConfigurable implements Drawabl
     return textVisible && counterReportFormat.getFormat().length() > 0;
   }
 
-  /** Required for backward compatibility */
+  @Deprecated // Required for backward compatibility 
   protected void drawText(Graphics g, Point pt,
                           JComponent comp, PieceIterator pi) {
-// FIXME: can we deprecate this?
     ArrayList<GamePiece> a = new ArrayList<GamePiece>();
     while (pi.hasMoreElements()) {
       a.add(pi.nextPiece());
     }
-    drawText(g, pt, comp, pi);
+    drawText(g, pt, comp, a);
   }
 
-  protected void drawText(Graphics g, Point pt, JComponent comp, List pieces) {
+  protected void drawText(Graphics g, Point pt, JComponent comp, List<GamePiece> pieces) {
     /*
      * Label with the location If the counter viewer is being displayed, then
      * place the location name just above the left hand end of the counters. If
@@ -343,9 +342,8 @@ public class CounterDetailViewer extends AbstractConfigurable implements Drawabl
     }
   }
 
-  /** Required for backward compatibility */
+  @Deprecated // Required for backward compatibility 
   protected void drawLabel(Graphics g, Point pt, String label) {
-// FIXME: can we deprecate this?
     drawLabel(g, pt, label, Labeler.RIGHT, Labeler.BOTTOM);
   }
 
@@ -843,6 +841,7 @@ public class CounterDetailViewer extends AbstractConfigurable implements Drawabl
     }
   }
 
+  @SuppressWarnings("unchecked")
   public Class[] getAllowableConfigureComponents() {
     return new Class[0];
   }
