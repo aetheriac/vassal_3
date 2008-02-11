@@ -18,6 +18,7 @@
 package VASSAL.launch;
 
 import java.awt.BorderLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -34,6 +35,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 import javax.swing.JWindow;
+import javax.swing.KeyStroke;
 
 import VASSAL.build.GameModule;
 import VASSAL.build.module.documentation.HelpFile;
@@ -199,6 +201,9 @@ public class EditorWindow extends JFrame {
     };
 
     saveAction.setEnabled(false);
+    saveAction.putValue(Action.ACCELERATOR_KEY,
+      KeyStroke.getKeyStroke(KeyEvent.VK_S,
+        Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
     menuItems.put(MenuKey.SAVE, fileMenu.add(saveAction));
     toolBar.add(saveAction);
 
@@ -215,6 +220,9 @@ public class EditorWindow extends JFrame {
     };
 
     saveAsAction.setEnabled(false);
+    saveAsAction.putValue(Action.ACCELERATOR_KEY,
+      KeyStroke.getKeyStroke(KeyEvent.VK_A,
+        Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
     menuItems.put(MenuKey.SAVE_AS, fileMenu.add(saveAsAction));
     toolBar.add(saveAsAction);
 
