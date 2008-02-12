@@ -67,39 +67,43 @@ version:
 	sed -ri 's/VERSION = ".*"/VERSION = "$(VERSION)"/' $(SRCDIR)/VASSAL/Info.java
 
 $(TMPDIR)/VASSAL-$(VERSION).app: version all $(JARS)
-	mkdir -p $(TMPDIR)/VASSAL-$(VERSION).app/Contents/{MacOS,Resources}
-	cp dist/{PkgInfo,Info.plist} $(TMPDIR)/VASSAL-$(VERSION).app/Contents
-	cp dist/JavaApplicationStub $(TMPDIR)/VASSAL-$(VERSION).app/Contents/MacOS
-	svn export $(LIBDIR) $(TMPDIR)/VASSAL-$(VERSION).app/Contents/Resources/Java
-	cp $(LIBDIR)/{Vengine.jar,docs.jar} $(TMPDIR)/VASSAL-$(VERSION).app/Contents/Resources/Java
+	mkdir -p $@/Contents/{MacOS,Resources}
+	cp dist/{PkgInfo,Info.plist} $@/Contents
+	cp dist/JavaApplicationStub $@/Contents/MacOS
+	svn export $(LIBDIR) $@/Contents/Resources/Java
+	cp $(LIBDIR)/{Vengine.jar,docs.jar} $@/Contents/Resources/Java
 
-$(TMPDIR)/VASSAL-$(VERSION).dmg: $(TMPDIR)/VASSAL-$(VERSION).app
-	dd if=/dev/zero of=$(TMPDIR)/VASSAL-$(VERSION).dmg bs=1M count=$$(( `du -s $(TMPDIR)/VASSAL-$(VERSION).app/ | sed 's/\s\+.*$$//'` / 1024 + 1 ))
-	mkfs.hfsplus -s -v VASSAL-$(VERSION) $(TMPDIR)/VASSAL-$(VERSION).dmg
+$(TMPDIR)/VASSAL-$(VERSION)-macosx.dmg: $(TMPDIR)/VASSAL-$(VERSION).app
+	dd if=/dev/zero of=$@ bs=1M count=$$(( `du -s $< | sed 's/\s\+.*$$//'` / 1024 + 1 ))
+	mkfs.hfsplus -s -v VASSAL-$(VERSION) $@
 	mkdir -p $(TMPDIR)/dmg
-	sudo sh -c "mount -t hfsplus -o loop $(TMPDIR)/VASSAL-$(VERSION).dmg $(TMPDIR)/dmg ; cp -va $(TMPDIR)/VASSAL-$(VERSION).app $(TMPDIR)/dmg ; umount $(TMPDIR)/dmg"
+	sudo sh -c "mount -t hfsplus -o loop $@ $(TMPDIR)/dmg ; cp -va $< $(TMPDIR)/dmg ; umount $(TMPDIR)/dmg"
 	rmdir $(TMPDIR)/dmg
 
-$(TMPDIR)/VASSAL-$(VERSION).zip: version all $(JARS) 
+$(TMPDIR)/VASSAL-$(VERSION)-generic.zip: version all $(JARS) 
 	mkdir -p $(TMPDIR)/VASSAL-$(VERSION)
 	svn export $(LIBDIR) $(TMPDIR)/VASSAL-$(VERSION)/lib
 	cp $(LIBDIR)/{Vengine.jar,docs.jar} $(TMPDIR)/VASSAL-$(VERSION)/lib
 	cp dist/VASSAL.{sh,bat,exe} $(TMPDIR)/VASSAL-$(VERSION)
-	cd $(TMPDIR) ; zip -9rv VASSAL-$(VERSION).zip VASSAL-$(VERSION) ; cd ..
+	cd $(TMPDIR) ; zip -9rv $(notdir $@) VASSAL-$(VERSION) ; cd ..
+#	cd $(TMPDIR) ; zip -9rv $@ VASSAL-$(VERSION) ; cd ..
 
 $(TMPDIR)/VASSAL-$(VERSION)-windows.exe: release-generic
 	$(NSIS) -NOCD -DVERSION=$(VERSION) -DTMPDIR=$(TMPDIR) dist/VASSAL.nsi
 
-release-macosx: $(TMPDIR)/VASSAL-$(VERSION).dmg
+release-macosx: $(TMPDIR)/VASSAL-$(VERSION)-macosx.dmg
 
 release-windows: $(TMPDIR)/VASSAL-$(VERSION)-windows.exe
 
-release-generic: $(TMPDIR)/VASSAL-$(VERSION).zip
+release-generic: $(TMPDIR)/VASSAL-$(VERSION)-generic.zip
 
 release: release-generic release-windows release-macosx
 
 clean-release:
 	$(RM) -r $(TMPDIR)/* $(LIBDIR)/Vengine.jar $(LIBDIR)/docs.jar
+
+#upload:
+#	scp $(TMPDIR)/VASSAL-$(VERSION){-windows.exe,-macosx.dmg,.zip} nomic.net:www/tmp/vassal
 
 javadoc:
 	$(JDOC) -d $(JDOCDIR) -link http://java.sun.com/javase/6/docs/api -sourcepath $(SRCDIR) -subpackages $(shell echo $(notdir $(wildcard src/*)) | tr ' ' ':')
