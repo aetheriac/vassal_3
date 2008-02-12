@@ -348,6 +348,11 @@ public class EditorWindow extends JFrame {
     final Action aboutVASSAL = AboutVASSAL.getAction();
     menuItems.put(MenuKey.ABOUT_VASSAL, helpMenu.add(aboutVASSAL));
 
+    // turn off File > Edit Module in PlayerWindow when the Editor is created
+    PlayerWindow.getInstance()
+                .getMenuItem(PlayerWindow.MenuKey.EDIT_MODULE)
+                .setEnabled(false);
+
     // the presence of the panel prevents a NullPointerException on packing
     final JPanel panel = new JPanel();
     panel.setPreferredSize(new Dimension(250,400));

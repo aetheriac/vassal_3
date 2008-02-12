@@ -205,6 +205,10 @@ public class PlayerWindow extends JFrame {
     editModule.setEnabled(true);
     editModule.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
+        final GameModule mod = GameModule.getGameModule();
+        if (mod != null) {
+          EditorWindow.getInstance().moduleLoading(mod);
+        }
         EditorWindow.getInstance().setVisible(true);
       }
     });
