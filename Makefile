@@ -86,7 +86,6 @@ $(TMPDIR)/VASSAL-$(VERSION)-generic.zip: version all $(JARS)
 	cp $(LIBDIR)/{Vengine.jar,docs.jar} $(TMPDIR)/VASSAL-$(VERSION)/lib
 	cp dist/VASSAL.{sh,bat,exe} $(TMPDIR)/VASSAL-$(VERSION)
 	cd $(TMPDIR) ; zip -9rv $(notdir $@) VASSAL-$(VERSION) ; cd ..
-#	cd $(TMPDIR) ; zip -9rv $@ VASSAL-$(VERSION) ; cd ..
 
 $(TMPDIR)/VASSAL-$(VERSION)-windows.exe: release-generic
 	$(NSIS) -NOCD -DVERSION=$(VERSION) -DTMPDIR=$(TMPDIR) dist/VASSAL.nsi
