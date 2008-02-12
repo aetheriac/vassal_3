@@ -19,6 +19,7 @@ package VASSAL.launch;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -90,6 +91,7 @@ public class PlayerWindow extends JFrame {
   public enum MenuKey {
     OPEN_MODULE,
     CLOSE_MODULE,
+    EDIT_MODULE,
     NEW_GAME,
     OPEN_GAME,
     SAVE_GAME,
@@ -199,8 +201,17 @@ public class PlayerWindow extends JFrame {
     final JMenuItem closeModule = new JMenuItem("Close Module");
     closeModule.setEnabled(false);
 
+    final JMenuItem editModule = new JMenuItem("Edit Module");
+    editModule.setEnabled(true);
+    editModule.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        EditorWindow.getInstance().setVisible(true);
+      }
+    });
+
     menuItems.put(MenuKey.OPEN_MODULE, fileMenu.add(loadModuleAction));
     menuItems.put(MenuKey.CLOSE_MODULE, fileMenu.add(closeModule));
+    menuItems.put(MenuKey.EDIT_MODULE, fileMenu.add(editModule));
 
     fileMenu.addSeparator();
 
@@ -322,6 +333,7 @@ public class PlayerWindow extends JFrame {
 
     // build central area
     controlPanel.setLayout(new BorderLayout());
+    controlPanel.setPreferredSize(new Dimension(800,600));
     add(controlPanel, BorderLayout.CENTER);
     
     pack(); 

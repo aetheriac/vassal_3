@@ -18,6 +18,7 @@
 package VASSAL.launch;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -55,13 +56,13 @@ import VASSAL.tools.imports.ImportAction;
 public class EditorWindow extends JFrame {
   protected static EditorWindow instance = null;
 
+  public static boolean hasInstance() {
+    return instance != null; 
+  }
+
   public static EditorWindow getInstance() {
     if (instance == null) instance = new EditorWindow();
     return instance;
-  }
-
-  public static boolean hasInstance() {
-    return instance != null;
   }
 
   protected final HelpWindow helpWindow = new HelpWindow(
@@ -161,10 +162,7 @@ public class EditorWindow extends JFrame {
     return null;
   }
 
-  protected final JScrollPane scrollPane =
-    new JScrollPane(new JPanel(), // prevents a NullPointerException on packing
-                    JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                    JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+  protected final JScrollPane scrollPane;
 
   protected EditorWindow() {
     setTitle("VASSAL Editor");
@@ -349,6 +347,15 @@ public class EditorWindow extends JFrame {
 
     final Action aboutVASSAL = AboutVASSAL.getAction();
     menuItems.put(MenuKey.ABOUT_VASSAL, helpMenu.add(aboutVASSAL));
+
+    // the presence of the panel prevents a NullPointerException on packing
+    final JPanel panel = new JPanel();
+    panel.setPreferredSize(new Dimension(250,400));
+
+    scrollPane = new JScrollPane(
+      panel,
+      JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+      JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
     add(scrollPane, BorderLayout.CENTER);
     pack();

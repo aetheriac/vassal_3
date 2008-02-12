@@ -66,13 +66,11 @@ Section "Start Menu shortcuts" StartShortcuts
   ; create the Start menu items
   CreateDirectory "$SMPROGRAMS\VASSAL\VASSAL-${VERSION}"
   CreateShortCut "$SMPROGRAMS\VASSAL\VASSAL-${VERSION}\VASSAL.lnk" "$INSTDIR\VASSAL.exe"
-  CreateShortCut "$SMPROGRAMS\VASSAL\VASSAL-${VERSION}\VASSALEditor.lnk" "$INSTDIR\VASSALEditor.exe"
 SectionEnd
 
 Section "Desktop shortcuts" DesktopShortcuts
   ; create desktop shortcuts
   CreateShortCut "$DESKTOP\VASSAL-${VERSION}.lnk" "$INSTDIR\VASSAL.exe"
-  CreateShortCut "$DESKTOP\VASSALEditor-${VERSION}.lnk" "$INSTDIR\VASSALEditor.exe"
 SectionEnd
 
 UninstallText "This will uninstall VASSAL-${VERSION} from your system."
@@ -83,7 +81,6 @@ Section Uninstall
 
   ; delete the desktop shortucts
   Delete "$DESKTOP\VASSAL-${VERSION}.lnk"
-  Delete "$DESKTOP\VASSALEditor-${VERSION}.lnk"
 
   ; delete the Start menu items
   RMDir /r "$SMPROGRAMS\VASSAL\VASSAL-${VERSION}"

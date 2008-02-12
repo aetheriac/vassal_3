@@ -56,8 +56,6 @@ public class Main {
   protected List<String> extractTargets = new ArrayList<String>();
   protected List<String> autoExtensions = new ArrayList<String>();
 
-  protected JFrame frame = null;
-
   public Main(final String[] args) {
     initSystemProperties();
     System.err.println("-- OS " + System.getProperty("os.name")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -182,28 +180,21 @@ public class Main {
       GameModule.getGameModule().getWizardSupport().showWelcomeWizard();
     }
     else if (moduleFile == null) {
-      if (editMode) {
-        frame = EditorWindow.getInstance();
-        frame.setSize(250,400);
-        frame.setVisible(true);
-      }
-      else {
+      if (editMode)
+        EditorWindow.getInstance().setVisible(true);
 /*
       ConsoleWindow w = new ConsoleWindow();
       w.setControls(isFirstTime ? new FirstTimeUserPanel(w).getControls() : new ConsoleControls(w).getControls());
       w.getFrame().setVisible(true);
 */
-        frame = PlayerWindow.getInstance();
-        frame.setSize(800,600);
-        frame.setVisible(true);
+      PlayerWindow.getInstance().setVisible(true);
 
-        if (isFirstTime) {
-          final JDialog d = new JDialog(PlayerWindow.getInstance(), true);
-          d.setLocationRelativeTo(PlayerWindow.getInstance());
-          d.add(new FirstTimeUserPanel(null).getControls());
-          d.pack();
-          d.setVisible(true);
-        }
+      if (isFirstTime) {
+        final JDialog d = new JDialog(PlayerWindow.getInstance(), true);
+        d.setLocationRelativeTo(PlayerWindow.getInstance());
+        d.add(new FirstTimeUserPanel(null).getControls());
+        d.pack();
+        d.setVisible(true);
       }
     }
     else if (editMode) {

@@ -139,7 +139,7 @@ public class BasicModule extends GameModule {
         }
       });
 
-      ew.setMenuItem(EditorWindow.MenuKey.QUIT, quitItem);
+      ew.setMenuItem(EditorWindow.MenuKey.QUIT, edQuitItem);
     }
   }
 
