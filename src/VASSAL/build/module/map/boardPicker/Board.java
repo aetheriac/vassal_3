@@ -26,6 +26,7 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
+import java.awt.image.ImageObserver;
 import java.io.File;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -326,7 +327,8 @@ public class Board extends AbstractConfigurable implements GridContainer {
           final int tw = Math.min(ow, location.x+bounds.width-tx);
           final int th = Math.min(oh, location.y+bounds.height-ty);
 
-          final Repainter rep = new Repainter(obs, tx, ty, tw, th);
+//          final Repainter rep = new Repainter(obs, tx, ty, tw, th);
+          final TileRepainter rep = new TileRepainter(obs, tx, ty, tw, th);
 
           try {
             final Future<Image> fim = op.getFutureTile(tile.x, tile.y, rep);
@@ -358,7 +360,8 @@ public class Board extends AbstractConfigurable implements GridContainer {
               g.setColor(oldColor);
   
               // draw animated throbber
-              g.drawImage(throbber, tx+tw/2-thxoff, ty+th/2-thyoff, obs);
+//              g.drawImage(throbber, tx+tw/2-thxoff, ty+th/2-thyoff, obs);
+              g.drawImage(throbber, tx+tw/2-thxoff, ty+th/2-thyoff, rep);
             }
           }
           catch (CancellationException e) {
@@ -403,6 +406,25 @@ public class Board extends AbstractConfigurable implements GridContainer {
       if (grid != null) {
         grid.draw(g, bounds, visibleRect, zoom, reversed);
       }
+    }
+  }
+
+  public static class TileRepainter extends Repainter
+                                    implements ImageObserver {
+    private boolean opComplete = false;
+
+    public TileRepainter(Component c, int x, int y, int w, int h) {
+      super(c, x, y, w, h);
+    }
+
+    public void imageOpChange(ImageOp op, boolean success) {
+      super.imageOpChange(op, success);
+      opComplete = true;
+    }
+
+    public boolean imageUpdate(Image img, int flags,
+                               int x, int y, int w, int h) {
+      return !opComplete && c.imageUpdate(img, flags, x, y, w, h);
     }
   }
 
