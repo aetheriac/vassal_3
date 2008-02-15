@@ -26,11 +26,14 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import VASSAL.build.GameModule;
 import VASSAL.build.module.ModuleExtension;
+import VASSAL.i18n.Resources;
 import VASSAL.tools.ScrollPane;
 
 /**
- * Editing window for a module extension
+ * Editing window for a module extension.
+ * @deprecated Functionality moved to {@link ExtensionEditorWindow}.
  */
+@Deprecated
 public class ExtensionEditWindow extends ModuleEditWindow {
   private static final long serialVersionUID = 1L;
 
@@ -45,12 +48,16 @@ public class ExtensionEditWindow extends ModuleEditWindow {
   }
 
   private void initExtensionComponents() {
-    tree = new ExtensionTree(GameModule.getGameModule(), helpWindow, extension);
+    //tree = new ExtensionTree(GameModule.getGameModule(), helpWindow, extension);
     super.initComponents(new ScrollPane(tree));
     toolbar.addSeparator();
     toolbar.add(extension.getEditAction(new JDialog(this)));
   }
 
+  protected String getComponentType() {
+    return Resources.getString("Editor.ExtensionEditor.component_type");
+  }
+  
   protected void refreshTitle() {
     if (extension != null) {
       setTitle("Edit "+extension.getName());

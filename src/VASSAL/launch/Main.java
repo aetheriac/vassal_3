@@ -28,11 +28,12 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Properties;
+
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+
 import VASSAL.Info;
 import VASSAL.build.GameModule;
 import VASSAL.build.module.ExtensionsLoader;
@@ -181,7 +182,7 @@ public class Main {
     }
     else if (moduleFile == null) {
       if (editMode)
-        EditorWindow.getInstance().setVisible(true);
+        ModuleEditorWindow.getInstance().setVisible(true);
 /*
       ConsoleWindow w = new ConsoleWindow();
       w.setControls(isFirstTime ? new FirstTimeUserPanel(w).getControls() : new ConsoleControls(w).getControls());

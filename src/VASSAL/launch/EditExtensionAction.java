@@ -21,6 +21,8 @@ import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
 import java.util.zip.ZipFile;
+
+import VASSAL.build.GameModule;
 import VASSAL.build.module.ModuleExtension;
 import VASSAL.i18n.Resources;
 import VASSAL.tools.ArchiveWriter;
@@ -32,16 +34,19 @@ import VASSAL.tools.ArchiveWriter;
  */
 public class EditExtensionAction extends LoadModuleAction {
   private static final long serialVersionUID = 1L;
+  protected Component parentEditor;
   
   public EditExtensionAction(Component comp) {
     super(comp);
     putValue(NAME,Resources.getString("Editor.edit_extension"));
+    parentEditor = comp;
   }
   
   protected void loadModule(File f) throws IOException {
     ModuleExtension ext = new ModuleExtension(new ArchiveWriter(new ZipFile(f.getPath())));
     ext.build();
-    new VASSAL.configure.ExtensionEditWindow(ext).setVisible(true);
+    ExtensionEditorWindow.getInstance().moduleLoading(GameModule.getGameModule(), ext);
+    parentEditor.setVisible(false);
   }
 
 }

@@ -18,26 +18,23 @@
 package VASSAL.launch;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.swing.Action;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
 import javax.swing.JToolBar;
 
 import VASSAL.build.GameModule;
@@ -53,6 +50,8 @@ import VASSAL.preferences.Prefs;
 import VASSAL.tools.WrapLayout;
 
 public class PlayerWindow extends JFrame {
+  private static final long serialVersionUID = 1L;
+
   protected static final PlayerWindow instance = new PlayerWindow();
 
   public static PlayerWindow getInstance() {
@@ -201,21 +200,8 @@ public class PlayerWindow extends JFrame {
     final JMenuItem closeModule = new JMenuItem("Close Module");
     closeModule.setEnabled(false);
 
-    final JMenuItem editModule = new JMenuItem("Edit Module");
-    editModule.setEnabled(true);
-    editModule.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        final GameModule mod = GameModule.getGameModule();
-        if (mod != null) {
-          EditorWindow.getInstance().moduleLoading(mod);
-        }
-        EditorWindow.getInstance().setVisible(true);
-      }
-    });
-
     menuItems.put(MenuKey.OPEN_MODULE, fileMenu.add(loadModuleAction));
     menuItems.put(MenuKey.CLOSE_MODULE, fileMenu.add(closeModule));
-    menuItems.put(MenuKey.EDIT_MODULE, fileMenu.add(editModule));
 
     fileMenu.addSeparator();
 
@@ -280,6 +266,21 @@ public class PlayerWindow extends JFrame {
     menuItems.put(MenuKey.SERVER_STATUS, toolsMenu.add(
       new ShowServerStatusAction(new CgiServerStatus(), null)));
 
+    final JMenuItem editModule = new JMenuItem(
+      Resources.getString("PlayerWindow.module_editor"));
+    editModule.setEnabled(true);
+    editModule.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        final GameModule mod = GameModule.getGameModule();
+        if (mod != null) {
+          ModuleEditorWindow.getInstance().moduleLoading(mod);
+        }
+        ModuleEditorWindow.getInstance().setVisible(true);
+      }
+    });
+
+    menuItems.put(MenuKey.EDIT_MODULE, toolsMenu.add(editModule));
+
     final JMenuItem editPrefs =
       new JMenuItem(Resources.getString("Prefs.edit_preferences"));
     editPrefs.setEnabled(false);
@@ -333,8 +334,8 @@ public class PlayerWindow extends JFrame {
     toolBar.setLayout(new WrapLayout(FlowLayout.LEFT, 0, 0));
     toolBar.setAlignmentX(0.0f);
     toolBar.setFloatable(false);
-    add(toolBar, BorderLayout.NORTH);
-
+    add(toolBar, BorderLayout.NORTH);   
+    
     // build central area
     controlPanel.setLayout(new BorderLayout());
     controlPanel.setPreferredSize(new Dimension(800,600));

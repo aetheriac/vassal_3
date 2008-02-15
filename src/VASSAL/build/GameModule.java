@@ -18,9 +18,7 @@
  */
 package VASSAL.build;
 
-import java.awt.BorderLayout;
 import java.awt.FileDialog;
-import java.awt.FlowLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
@@ -30,10 +28,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
-import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
@@ -81,6 +79,7 @@ import VASSAL.configure.MandatoryComponent;
 import VASSAL.counters.GamePiece;
 import VASSAL.i18n.Resources;
 import VASSAL.launch.EditorWindow;
+import VASSAL.launch.ModuleEditorWindow;
 import VASSAL.launch.PlayerWindow;
 import VASSAL.preferences.Prefs;
 import VASSAL.tools.ArchiveWriter;
@@ -183,7 +182,7 @@ public abstract class GameModule extends AbstractConfigurable implements Command
     });
 
     if (EditorWindow.hasInstance()) {
-      final EditorWindow ew = EditorWindow.getInstance();
+      final EditorWindow ew = ModuleEditorWindow.getInstance();
       ew.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
       ew.addWindowListener(new WindowAdapter() {
         public void windowClosing(WindowEvent e) {
@@ -680,10 +679,8 @@ public abstract class GameModule extends AbstractConfigurable implements Command
             cancelled = true;
           }
         }
-        else if (getArchiveWriter() != null) {
-          for (ModuleExtension ext : getComponentsOf(ModuleExtension.class)) {
-            cancelled = !ext.confirmExit();
-          }
+        for (ModuleExtension ext : getComponentsOf(ModuleExtension.class)) {
+          cancelled = !ext.confirmExit();
         }
       }
     }

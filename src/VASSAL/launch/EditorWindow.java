@@ -27,6 +27,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.swing.Action;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -35,34 +36,40 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
-import javax.swing.JWindow;
 import javax.swing.KeyStroke;
 
 import VASSAL.build.GameModule;
+import VASSAL.build.module.ModuleExtension;
 import VASSAL.build.module.documentation.HelpFile;
 import VASSAL.build.module.documentation.HelpWindow;
 import VASSAL.configure.ConfigureTree;
 import VASSAL.configure.ModuleUpdaterDialog;
 import VASSAL.configure.SaveAction;
 import VASSAL.configure.SaveAsAction;
-import VASSAL.configure.SavedGameUpdaterDialog;
 import VASSAL.configure.ShowHelpAction;
 import VASSAL.configure.ValidationReport;
 import VASSAL.configure.ValidationReportDialog;
 import VASSAL.i18n.Resources;
 import VASSAL.i18n.TranslateVassalWindow;
-import VASSAL.tools.imports.ImportAction;
 
-public class EditorWindow extends JFrame {
+/**
+ * EditorWindow is the base class for the three top-level component
+ * editors :- ModuleEditorWindow, ExtensionEditorWindow, PluginEditorWindow
+ * 
+ * @author Brent Easton
+ *
+ */
+public abstract class EditorWindow extends JFrame {
+  private static final long serialVersionUID = 1L;
   protected static EditorWindow instance = null;
+  protected SaveAction saveAction;
+  protected SaveAsAction saveAsAction;
+  protected JMenuItem componentHelpItem;
+  protected JMenuItem createUpdater;
+  protected JMenuItem close;
 
   public static boolean hasInstance() {
-    return instance != null; 
-  }
-
-  public static EditorWindow getInstance() {
-    if (instance == null) instance = new EditorWindow();
-    return instance;
+    return instance != null;
   }
 
   protected final HelpWindow helpWindow = new HelpWindow(
@@ -71,12 +78,10 @@ public class EditorWindow extends JFrame {
   );
 
   protected ConfigureTree tree;
-
-  public void moduleLoading(GameModule mod) {
-    tree = new ConfigureTree(mod, helpWindow);
-    scrollPane.setViewportView(tree);
-    pack();
-  }
+  
+  public abstract String getEditorType();
+  public abstract void moduleLoading(GameModule mod);
+  public abstract void moduleLoading(GameModule mod, ModuleExtension ext);
 
   private final Map<MenuKey,JMenuItem> menuItems =
     new HashMap<MenuKey,JMenuItem>();
@@ -85,20 +90,18 @@ public class EditorWindow extends JFrame {
   
   protected final JToolBar toolBar = new JToolBar();
 
-  protected final JMenu fileMenu;
-//  protected final JMenu editMenu;
-  protected final JMenu toolsMenu;
-  protected final JMenu helpMenu;
+  private final JMenu fileMenu;
+  private final JMenu editMenu;
+  private final JMenu toolsMenu;
+  private final JMenu helpMenu;
 
   public JMenu getFileMenu() {
     return fileMenu;
   }
 
-/*
   public JMenu getEditMenu() {
     return editMenu;
   }
-*/
 
   public JMenu getToolsMenu() {
     return toolsMenu;
@@ -125,6 +128,10 @@ public class EditorWindow extends JFrame {
     ABOUT_VASSAL
   };
  
+  protected void addMenuItem(MenuKey key, JMenuItem item) {
+    menuItems.put(key, item);
+  }
+  
   public JMenuItem getMenuItem(MenuKey key) {
     return menuItems.get(key);
   }
@@ -163,10 +170,9 @@ public class EditorWindow extends JFrame {
   }
 
   protected final JScrollPane scrollPane;
-
+  
   protected EditorWindow() {
-    setTitle("VASSAL Editor");
-
+    setTitle("VASSAL " + getEditorType() + " Editor");    
     setLayout(new BorderLayout());
     setJMenuBar(menuBar);
     
@@ -177,153 +183,58 @@ public class EditorWindow extends JFrame {
     fileMenu = new JMenu(Resources.getString("General.file"));
     fileMenu.setMnemonic(KeyEvent.VK_F);
     menuBar.add(fileMenu);
- 
-    final CreateModuleAction createModuleAction = new CreateModuleAction(this);
-    menuItems.put(MenuKey.NEW, fileMenu.add(createModuleAction));
+    populateFileMenu(fileMenu);
 
-    final EditModuleAction editModuleAction = new EditModuleAction(this);
-    menuItems.put(MenuKey.OPEN, fileMenu.add(editModuleAction));
-
-    final JMenuItem closeModule = new JMenuItem("Close Module");
-    closeModule.setEnabled(false); 
-    menuItems.put(MenuKey.CLOSE, fileMenu.add(closeModule));
-
-    final SaveAction saveAction = new SaveAction() {
-      private static final long serialVersionUID = 1L;
-
-      public void actionPerformed(ActionEvent e) {
-        EditorWindow.this.saver(new Runnable() {
-          public void run() {
-            GameModule.getGameModule().save();
-          }
-        }); 
-      }
-    };
-
-    saveAction.setEnabled(false);
-    saveAction.putValue(Action.ACCELERATOR_KEY,
-      KeyStroke.getKeyStroke(KeyEvent.VK_S,
-        Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-    menuItems.put(MenuKey.SAVE, fileMenu.add(saveAction));
-    toolBar.add(saveAction);
-
-    final SaveAsAction saveAsAction = new SaveAsAction() {
-      private static final long serialVersionUID = 1L;
-
-      public void actionPerformed(ActionEvent e) {
-        EditorWindow.this.saver(new Runnable() {
-          public void run() {
-            GameModule.getGameModule().saveAs();
-          }
-        });
-      }
-    };
-
-    saveAsAction.setEnabled(false);
-    saveAsAction.putValue(Action.ACCELERATOR_KEY,
-      KeyStroke.getKeyStroke(KeyEvent.VK_A,
-        Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
-    menuItems.put(MenuKey.SAVE_AS, fileMenu.add(saveAsAction));
-    toolBar.add(saveAsAction);
-
-    fileMenu.addSeparator(); 
-
-    final ImportAction importAction = new ImportAction(this);
-    menuItems.put(MenuKey.IMPORT, fileMenu.add(importAction));
-
-    fileMenu.addSeparator();
-
-    final NewExtensionAction newExtensionAction = new NewExtensionAction(this); 
-    newExtensionAction.setEnabled(false);
-    menuItems.put(MenuKey.NEW_EXTENSION, fileMenu.add(newExtensionAction));
-
-    final EditExtensionAction editExtensionAction =
-      new EditExtensionAction(this);
-    editExtensionAction.setEnabled(false);      
-    menuItems.put(MenuKey.LOAD_EXTENSION, fileMenu.add(editExtensionAction));
-
-    fileMenu.addSeparator();
-
-    final JMenuItem quit = new JMenuItem(Resources.getString(Resources.QUIT));
-    quit.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        System.exit(0);
-      }
-    });
-   
-    quit.setMnemonic('Q');
-    menuItems.put(MenuKey.QUIT, fileMenu.add(quit));
-    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-/*
-    // build Edit menu
+    // Create an empty Edit Menu. It is populated by the edit Tree
+    // after the component is loaded
     editMenu = new JMenu(Resources.getString("General.edit"));
     menuBar.add(editMenu);
-*/
 
     // build Tools menu
     toolsMenu = new JMenu(Resources.getString("General.tools"));
     menuBar.add(toolsMenu);
-    
-    final JMenuItem createModuleUpdater = toolsMenu.add(Resources.getString(
-      "Editor.ModuleEditor.create_module_updater")); //$NON-NLS-1$
-    createModuleUpdater.setEnabled(false);
-    createModuleUpdater.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        new ModuleUpdaterDialog(EditorWindow.this).setVisible(true);
-      }
-    });
-
-    menuItems.put(MenuKey.CREATE_MODULE_UPDATER, createModuleUpdater);
-
-    final JMenuItem updateSavedGame = toolsMenu.add(Resources.getString(
-      "Editor.ModuleEditor.update_saved")); //$NON-NLS-1$
-    updateSavedGame.setEnabled(false);
-    updateSavedGame.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        new SavedGameUpdaterDialog(EditorWindow.this).setVisible(true);
-      }
-    });
-    
-    menuItems.put(MenuKey.UPDATE_SAVED, updateSavedGame);
-    
-    toolsMenu.addSeparator();
-
-    final JMenuItem translateVASSAL = toolsMenu.add(Resources.getString(
-        "Editor.ModuleEditor.translate_vassal")); //$NON-NLS-1$
-    translateVASSAL.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        new TranslateVassalWindow(EditorWindow.this).setVisible(true);
-      }
-    });
-
-    menuItems.put(MenuKey.TRANSLATE_VASSAL, translateVASSAL);
-
-    final Runnable toggleItemsAfterModuleStart = new Runnable() {
-      public void run() {
-        createModuleAction.setEnabled(false);
-        editModuleAction.setEnabled(false);
-        // closeModule.setEnabled(true);
-        saveAction.setEnabled(true);
-        saveAsAction.setEnabled(true);
-        importAction.setEnabled(false);
-        newExtensionAction.setEnabled(true);
-        editExtensionAction.setEnabled(true);
-        createModuleUpdater.setEnabled(true);
-        updateSavedGame.setEnabled(true);
-
-        PlayerWindow.getInstance()
-                    .getMenuItem(PlayerWindow.MenuKey.OPEN_MODULE)
-                    .setEnabled(false);
-      }
-    };
-
-    editModuleAction.addAction(toggleItemsAfterModuleStart);
-    createModuleAction.addAction(toggleItemsAfterModuleStart);
+    populateToolsMenu(toolsMenu);
  
     // build Help menu
     helpMenu = new JMenu(Resources.getString("General.help"));
     menuBar.add(helpMenu);
+    populateHelpMenu(helpMenu);
+ 
+    // turn off File > Edit Module in PlayerWindow when the Editor is created
+    PlayerWindow.getInstance()
+                .getMenuItem(PlayerWindow.MenuKey.EDIT_MODULE)
+                .setEnabled(false);
+    
+    // the presence of the panel prevents a NullPointerException on packing
+    final JPanel panel = new JPanel();
+    panel.setPreferredSize(new Dimension(250,400));
+
+    scrollPane = new JScrollPane(
+      panel,
+      JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+      JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+    
+    add(scrollPane, BorderLayout.CENTER);
+    pack();
+  }
+
+  /**
+   * Add options to the File Menu. Different component types will 
+   * add different options.
+   */
+  protected abstract void populateFileMenu(JMenu menu);
+
+  /**
+   * Add options to the Tools Menu. Different component types will 
+   * add different options.
+   */
+  protected abstract void populateToolsMenu(JMenu menu);
+ 
+  /**
+   * Add options to the Help Menu. All component types share the same Help 
+   * Menu options.
+   */
+  protected void populateHelpMenu(JMenu menu) {
 
     Action helpAction = null;
 
@@ -337,35 +248,113 @@ public class EditorWindow extends JFrame {
         "Editor.ModuleEditor.reference_manual")); //$NON-NLS-1$
 
       toolBar.add(helpAction);
-      menuItems.put(MenuKey.HELP, helpMenu.add(helpAction));
+      menuItems.put(MenuKey.HELP, menu.add(helpAction));
     }
     catch (MalformedURLException e) {
       e.printStackTrace();
     }
 
-    helpMenu.addSeparator();
+    // Temporary Component Help item until the Module is loaded
+    componentHelpItem = new JMenuItem("Component help");
+    componentHelpItem.setEnabled(false);
+    menu.add(componentHelpItem);
+    
+    menu.addSeparator();
 
     final Action aboutVASSAL = AboutVASSAL.getAction();
-    menuItems.put(MenuKey.ABOUT_VASSAL, helpMenu.add(aboutVASSAL));
+    menuItems.put(MenuKey.ABOUT_VASSAL, menu.add(aboutVASSAL));
+    
+  }
+  
+  /*
+   * Menu Items common to multiple components
+   */  
+  protected void addSaveMenuItem(JMenu menu) {
+    saveAction = new SaveAction() {
+      private static final long serialVersionUID = 1L;
+      public void actionPerformed(ActionEvent e) {
+        save();
+        treeStateChanged(false);
+      }
+    };
 
-    // turn off File > Edit Module in PlayerWindow when the Editor is created
-    PlayerWindow.getInstance()
-                .getMenuItem(PlayerWindow.MenuKey.EDIT_MODULE)
-                .setEnabled(false);
+    saveAction.setEnabled(false);
+    saveAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+    addMenuItem(MenuKey.SAVE, menu.add(saveAction));
+    toolBar.add(saveAction);
+  }
+  
+  protected void addSaveAsMenuItem(JMenu menu) {
+    saveAsAction = new SaveAsAction() {
+      private static final long serialVersionUID = 1L;
+      public void actionPerformed(ActionEvent e) {
+        saveAs();
+        treeStateChanged(false);
+      }
+    };
 
-    // the presence of the panel prevents a NullPointerException on packing
-    final JPanel panel = new JPanel();
-    panel.setPreferredSize(new Dimension(250,400));
+    saveAsAction.setEnabled(false);
+    saveAsAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_A, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+    addMenuItem(MenuKey.SAVE_AS, menu.add(saveAsAction));
+    toolBar.add(saveAsAction);
+  }
+  
+  protected void addCloseMenuItem(JMenu menu) {
+    close = new JMenuItem("Close " + getEditorType());
+    close.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        close();
+      }
+    });
+    close.setEnabled(false);
+    addMenuItem(MenuKey.CLOSE, menu.add(close));
+  }
+  
+  /*
+   * Each component must Save, SaveAs and close itself
+   */
+  protected abstract void save();
+  protected abstract void saveAs();
+  protected abstract void close();
+  
+  protected void addQuitMenuItem(JMenu menu) {
 
-    scrollPane = new JScrollPane(
-      panel,
-      JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-      JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+    final JMenuItem quit = new JMenuItem(Resources.getString(Resources.QUIT));
+    quit.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        System.exit(0);
+      }
+    });
+   
+    quit.setMnemonic('Q');
+    menuItems.put(MenuKey.QUIT, menu.add(quit));
+  }
+  
+  protected void addTranslateMenuItem(JMenu menu) {
 
-    add(scrollPane, BorderLayout.CENTER);
-    pack();
+    final JMenuItem translateVASSAL = menu.add(Resources.getString(
+        "Editor.ModuleEditor.translate_vassal")); //$NON-NLS-1$
+    translateVASSAL.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        new TranslateVassalWindow(EditorWindow.this).setVisible(true);
+      }
+    });
+
+    menuItems.put(MenuKey.TRANSLATE_VASSAL, translateVASSAL);
   }
 
+  protected void addUpdaterMenuItem(JMenu menu) {
+    createUpdater = menu.add("Create " + getEditorType() + " updater");
+    createUpdater.setEnabled(false);
+    createUpdater.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        new ModuleUpdaterDialog(EditorWindow.this).setVisible(true);
+      }
+    });
+
+    addMenuItem(MenuKey.CREATE_MODULE_UPDATER, createUpdater);
+  }
+  
   protected void saver(final Runnable save) {
     final ValidationReport report = new ValidationReport();
     GameModule.getGameModule().validate(GameModule.getGameModule(), report);
@@ -385,8 +374,15 @@ public class EditorWindow extends JFrame {
       ).setVisible(true);
     }
   }
-
-  public static void main(String[] args) {
-    new EditorWindow().setVisible(true);
+  
+  /**
+   * Called by the enclosed ConfigureTree or ExtensionTree when it's dirty
+   * state is changed. The implementing class should override this if they
+   * need to take action like changing menu availability.
+   * 
+   * @param changed true if the tree is in a changed (dirty) state
+   */
+  public void treeStateChanged(boolean changed) {
+    
   }
 }
