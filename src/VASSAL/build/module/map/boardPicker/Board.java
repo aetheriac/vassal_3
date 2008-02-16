@@ -28,6 +28,7 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.image.ImageObserver;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
@@ -327,8 +328,7 @@ public class Board extends AbstractConfigurable implements GridContainer {
           final int tw = Math.min(ow, location.x+bounds.width-tx);
           final int th = Math.min(oh, location.y+bounds.height-ty);
 
-//          final Repainter rep = new Repainter(obs, tx, ty, tw, th);
-          final TileRepainter rep = new TileRepainter(obs, tx, ty, tw, th);
+          final Repainter rep = new Repainter(obs, tx, ty, tw, th);
 
           try {
             final Future<Image> fim = op.getFutureTile(tile.x, tile.y, rep);
@@ -347,6 +347,10 @@ public class Board extends AbstractConfigurable implements GridContainer {
               }
   
               requested.remove(tile);
+/*
+              final ThrobberObserver tobs = throbberObservers.remove(tile);
+              if (tobs != null) tobs.stop();
+*/
             }
             else {
               if (requested.get(tile) == null) {
@@ -360,8 +364,20 @@ public class Board extends AbstractConfigurable implements GridContainer {
               g.setColor(oldColor);
   
               // draw animated throbber
+              ThrobberObserver tobs  = throbberObservers.get(tile);
+              if (tobs == null) {
+                tobs = throbberObservers.put(tile,
+                  new ThrobberObserver(obs, zoom));
+              }
+              else if (zoom != tobs.getZoom()) {
+                throbberObservers.remove(tobs);
+                tobs.stop();
+                tobs = throbberObservers.put(tile,
+                  new ThrobberObserver(obs, zoom));
+              }
+
+              g.drawImage(throbber, tx+tw/2-thxoff, ty+th/2-thyoff, tobs);
 //              g.drawImage(throbber, tx+tw/2-thxoff, ty+th/2-thyoff, obs);
-              g.drawImage(throbber, tx+tw/2-thxoff, ty+th/2-thyoff, rep);
             }
           }
           catch (CancellationException e) {
@@ -371,6 +387,15 @@ public class Board extends AbstractConfigurable implements GridContainer {
             ErrorLog.warn(e);
           }
         }
+
+        for (Point tile : requested.keySet().toArray(new Point[0])) {
+          if (Arrays.binarySearch(tiles, tile, tileOrdering) < 0) {
+            final Future<Image> fim = requested.remove(tile);
+            final ThrobberObserver tobs = throbberObservers.remove(tile);
+            if (tobs != null) tobs.stop();
+          }
+        }
+
 /*
         final StringBuilder sb = new StringBuilder();
         for (Point tile : requested.keySet().toArray(new Point[0])) {
@@ -409,25 +434,33 @@ public class Board extends AbstractConfigurable implements GridContainer {
     }
   }
 
-  public static class TileRepainter extends Repainter
-                                    implements ImageObserver {
-    private boolean opComplete = false;
+  private java.util.Map<Point,ThrobberObserver> throbberObservers =
+    new ConcurrentHashMap<Point,ThrobberObserver>();
 
-    public TileRepainter(Component c, int x, int y, int w, int h) {
-      super(c, x, y, w, h);
+  public static class ThrobberObserver implements ImageObserver {
+    private final Component c;
+    private final double zoom;
+    private boolean done = false;
+
+    public ThrobberObserver(Component c, double zoom) {
+      this.c = c;
+      this.zoom = zoom;
     }
 
-    public void imageOpChange(ImageOp op, boolean success) {
-      super.imageOpChange(op, success);
-      opComplete = true;
+    public double getZoom() {
+      return zoom;
+    }
+
+    public void stop() {
+      done = true;
     }
 
     public boolean imageUpdate(Image img, int flags,
                                int x, int y, int w, int h) {
-      return !opComplete && c.imageUpdate(img, flags, x, y, w, h);
+      return !done && c.imageUpdate(img, flags, x, y, w, h);
     }
   }
-
+ 
   @Deprecated
   public synchronized Image getScaledImage(double zoom, Component obs) {
     try {
