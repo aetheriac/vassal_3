@@ -347,10 +347,9 @@ public class Board extends AbstractConfigurable implements GridContainer {
               }
   
               requested.remove(tile);
-/*
+
               final ThrobberObserver tobs = throbberObservers.remove(tile);
               if (tobs != null) tobs.stop();
-*/
             }
             else {
               if (requested.get(tile) == null) {
@@ -455,8 +454,11 @@ public class Board extends AbstractConfigurable implements GridContainer {
       done = true;
     }
 
+//    private static int count = 0;
+
     public boolean imageUpdate(Image img, int flags,
                                int x, int y, int w, int h) {
+//System.out.println((count++) + " " + done);
       return !done && c.imageUpdate(img, flags, x, y, w, h);
     }
   }
