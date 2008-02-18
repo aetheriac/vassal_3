@@ -162,6 +162,4 @@ public class ModuleEditorWindow extends EditorWindow {
     newExtensionAction.setEnabled(!changed);
     editExtensionAction.setEnabled(!changed);
   }
-  
-
 }
