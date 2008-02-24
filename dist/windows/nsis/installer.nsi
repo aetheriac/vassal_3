@@ -1,3 +1,22 @@
+# 
+#  $Id$
+# 
+#  Copyright (c) 2008 by Joel Uckelman
+# 
+#  This library is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU Library General Public
+#  License (LGPL) as published by the Free Software Foundation.
+# 
+#  This library is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+#  Library General Public License for more details.
+# 
+#  You should have received a copy of the GNU Library General Public
+#  License along with this library; if not, copies are available
+#  at http://www.opensource.org.
+# 
+
 #
 # General Configuration
 #
@@ -20,16 +39,18 @@ OutFile "${TMPDIR}/VASSAL-${VERSION}-windows.exe"
 InstallDir "$PROGRAMFILES\VASSAL\VASSAL-${VERSION}"
 InstallDirRegKey "HKLM" "${IROOT}" "InstallLocation"
 
-; compression
-;SetCompress auto
-;SetCompressor /SOLID lzma
-;SetDatablockOptimize on
+# compression
+SetCompress auto
+SetCompressor /SOLID lzma
+SetDatablockOptimize on
 
+!include "FileFunc.nsh"
 !include "MUI2.nsh"
 !include "nsDialogs.nsh"
 !include "WinMessages.nsh"
 !include "WordFunc.nsh"
 
+!insertmacro GetFileName
 !insertmacro VersionConvert
 !insertmacro VersionCompare
 !insertmacro WordFind
@@ -123,6 +144,24 @@ Page custom preConfirm leaveConfirm
 
 !define SkipIfNotCustom "!insertmacro SkipIfNotCustom"
 
+; finds the version of the JRE, if any
+!macro GetJREVersion _RESULT
+  ReadRegStr ${_RESULT} "HKLM" "Software\JavaSoft\Java Runtime Environment" "CurrentVersion"
+  ${If} ${_RESULT} != ""
+    Push "$0"
+  ${Else}
+    ReadRegStr ${_RESULT} "HKLM" "Software\JavaSoft\Java Development Kit" "CurrentVersion"
+    ${If} ${_RESULT} != ""
+      Push "$0"
+    ${Else}
+      Push 0
+    ${EndIf}
+  ${EndIf}
+!macroend
+
+!define GetJREVersion "!insertmacro GetJREVersion"
+
+
 #
 # Setup Option Variables
 #
@@ -170,6 +209,13 @@ Var KeepButton
 Var RemoveButton
 
 Function preUninstallOld
+  ; bail out if we find no other versions
+  EnumRegKey $0 "HKLM" "${VROOT}" 0
+  ${If} $0 == ""
+    StrCpy $RemoveOtherVersions ""
+    Abort
+  ${EndIf}
+
   ${If} CustomSetup != 1
     ; remove all other versions in Standard setup
     ; find all other versions of VASSAL
@@ -223,12 +269,6 @@ Function preUninstallOld
       IntOp $R0 $R0 + 1
     ${EndIf}
   ${LoopUntil} $1 == ""
-
-  ; bail out if we found no other versions
-  ${If} $R0 == 0
-    StrCpy $RemoveOtherVersions ""
-    Abort
-  ${EndIf}
 
   ; ready the buttons
   SendMessage $KeepListBox ${LB_SETCURSEL} 0 0
@@ -304,26 +344,10 @@ Function leaveUninstallOld
 FunctionEnd
 
 
-Function GetJREVersion
-  ReadRegStr $0 "HKLM" "Software\JavaSoft\Java Runtime Environment" "CurrentVersion"
-  StrCmp "$0" "" 0 Found 
-  ReadRegStr $0 "HKLM" "Software\JavaSoft\Java Development Kit" "CurrentVersion"
-  StrCmp "$0" "" 0 Found
-
-  NotFound:
-    Push "0"
-    Return
-
-  Found:
-    Push "$0"
-FunctionEnd
-
-
 Function preJavaCheck
   StrCpy $InstallJRE 0  ; set default 
 
-  Call GetJREVersion
-  Pop $1
+  ${GetJREVersion} $1
   ${VersionConvert} "$1" "" $R1
   ${VersionConvert} "${JRE_MINIMUM}" "" $R2
   ${VersionCompare} "$R1" "$R2" $2
@@ -472,11 +496,19 @@ Section "-Application" Application
       notdone:
         DetailPrint "Uninstall: $1"
       
+        ; get old install and uninstaller paths
         ReadRegStr $2 "HKLM" "Software\Microsoft\Windows\CurrentVersion\Uninstall\$1" "InstallLocation"
         ReadRegStr $3 "HKLM" "Software\Microsoft\Windows\CurrentVersion\Uninstall\$1" "UninstallString"
-        
-        ExecWait '"$3" /S _?=$2'
-        IfErrors 0 +2
+
+        ; copy the uninstaller to $TEMP
+        CopyFiles "$3" "$TEMP"
+        ${GetFileName} $3 $3
+
+        ; run the uninstaller silently 
+        ExecWait '"$TEMP\$3" /S _?=$2'
+        IfErrors +2 0
+        Delete "$TEMP\$3"   ; remove the uninstaller copy
+        Goto +2
         DetailPrint "Failed: $1" 
         ClearErrors
  
