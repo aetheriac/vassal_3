@@ -27,11 +27,9 @@ InstallDirRegKey "HKLM" "${IROOT}" "InstallLocation"
 
 !include "MUI2.nsh"
 !include "nsDialogs.nsh"
-!include "TextFunc.nsh"
 !include "WinMessages.nsh"
 !include "WordFunc.nsh"
 
-!insertmacro TrimNewLines
 !insertmacro VersionConvert
 !insertmacro VersionCompare
 !insertmacro WordFind
@@ -174,19 +172,14 @@ Var RemoveButton
 Function preUninstallOld
   ${If} CustomSetup != 1
     ; remove all other versions in Standard setup
-    ; find the uninstall commands for all other versions of VASSAL
+    ; find all other versions of VASSAL
     StrCpy $RemoveOtherVersions ""
     StrCpy $R0 0
     ${Do} 
       EnumRegKey $0 "HKLM" "${VROOT}" $R0
-  
-      ${If} $0 != ""
-        ReadRegStr $0 "HKLM" "Software\Microsoft\Windows\CurrentVersion\Uninstall\$0" "UninstallString"
-        StrCpy $RemoveOtherVersions "$RemoveOtherVersions$0$\n"
-        IntOp $R0 $R0 + 1
-      ${EndIf}
+      StrCpy $RemoveOtherVersions "$RemoveOtherVersions$0$\n"
+      IntOp $R0 $R0 + 1
     ${LoopUntil} $0 == ""
-    ${TrimNewLines} "$RemoveOtherVersions" $RemoveOtherVersions
   ${EndIf}
 
   ${SkipIfNotCustom}
@@ -212,7 +205,6 @@ Function preUninstallOld
   ${NSD_CreateButton} 125u 90u 50u 14u "< Keep"
   Pop $KeepButton
   ${NSD_OnClick} $KeepButton keepClicked
-  EnableWindow $KeepButton 0
 
   ${NSD_CreateLabel} 180u 32u 120u 12u "To Remove:"
   Pop $0
@@ -232,33 +224,53 @@ Function preUninstallOld
     ${EndIf}
   ${LoopUntil} $1 == ""
 
+  ; bail out if we found no other versions
+  ${If} $R0 == 0
+    StrCpy $RemoveOtherVersions ""
+    Abort
+  ${EndIf}
+
+  ; ready the buttons
+  SendMessage $KeepListBox ${LB_SETCURSEL} 0 0
+  Call adjustButtons
+
+  ${NSD_OnChange} $KeepListBox adjustButtons
+  ${NSD_OnChange} $RemoveListBox adjustButtons
+
   nsDialogs::Show
 FunctionEnd
 
 
 Function moveSelection
-  ; move selected item from box $R0 to box $R1
+  ; move selected item from box $R1 to box $R0
   Pop $R0
   Pop $R1
   SendMessage $R1 ${LB_GETCURSEL} 0 0 $0
+  ${If} $0 == LB_ERR
+    Return
+  ${EndIf}
   System::Call "user32::SendMessage(i $R1,i ${LB_GETTEXT},i r0, t .r1)i .r2"
-  SendMessage $R1 ${LB_DELETESTRING} 0 "STR:$1"
+  SendMessage $R1 ${LB_DELETESTRING} $0 0
   SendMessage $R0 ${LB_ADDSTRING} 0 "STR:$1"
 FunctionEnd
 
 
 Function adjustButtons
-  ; disable a button if its source listbox is empty
-  SendMessage $KeepListBox ${LB_GETCOUNT} 0 0 $0
-  ${If} $0 > 0
+  ; disable a button if its source listbox has no selection
+  SendMessage $KeepListBox ${LB_GETCURSEL} 0 0 $0
+  ${If} $0 == -1
+    StrCpy $0 0
+  ${Else}
     StrCpy $0 1
-  ${EndIf}
+  ${EndIf}    
   EnableWindow $RemoveButton $0
 
-  SendMessage $RemoveListBox ${LB_GETCOUNT} 0 0 $0
-  ${If} $0 > 0
+  SendMessage $RemoveListBox ${LB_GETCURSEL} 0 0 $0
+  ${If} $0 == -1
+    StrCpy $0 0
+  ${Else}
     StrCpy $0 1
-  ${EndIf}
+  ${EndIf}    
   EnableWindow $KeepButton $0
 FunctionEnd
 
@@ -287,10 +299,8 @@ Function leaveUninstallOld
   SendMessage $RemoveListBox ${LB_GETCOUNT} 0 0 $1 
   ${For} $0 0 $1
     System::Call "user32::SendMessage(i $RemoveListBox,i ${LB_GETTEXT},i r0, t .r2)i .r4"
-    ReadRegStr $2 "HKLM" "Software\Microsoft\Windows\CurrentVersion\Uninstall\$2" "UninstallString"
     StrCpy $RemoveOtherVersions "$RemoveOtherVersions$2$\n"
   ${Next}
-  ${TrimNewLines} "$RemoveOtherVersions" $RemoveOtherVersions
 FunctionEnd
 
 
@@ -450,18 +460,28 @@ Section "-Application" Application
  
   ; remove old versions of VASSAL, if requested
   ${If} $RemoveOtherVersions != ""
-    ; split uninstall strings on '\n'
-    ${WordFind} "$RemoveOtherVersions" "$\n" "#" $1
-    ${For} $0 0 $1
-      ${WordFind} "$RemoveOtherVersions" "$\n" "+$0" $2
-      MessageBox MB_OK "Remove: $2"
-
-;      DetailPrint "Running $2"
-;      ClearErrors
-;      ExecWait "$2 _?=$INSTDIR"
-;      IfErrors 0 +1
-;      DetailPrint "Failed: $2"
-    ${Next}
+    ; split version strings on '\n'
+    ; there must be at least one '\n', or WordFind finds no words
+    StrCpy $0 1   ; word indices are 1-based 
+    ${Do}
+      ${WordFind} "$RemoveOtherVersions" "$\n" "E+$0" $1 
+      IfErrors done notdone
+      done:
+        ${Break}
+      
+      notdone:
+        DetailPrint "Uninstall: $1"
+      
+        ReadRegStr $2 "HKLM" "Software\Microsoft\Windows\CurrentVersion\Uninstall\$1" "InstallLocation"
+        ReadRegStr $3 "HKLM" "Software\Microsoft\Windows\CurrentVersion\Uninstall\$1" "UninstallString"
+        
+        ExecWait '"$3" /S _?=$2'
+        IfErrors 0 +2
+        DetailPrint "Failed: $1" 
+        ClearErrors
+ 
+        IntOp $0 $0 + 1
+    ${Loop}
   ${EndIf}
  
   ; install a JRE, if necessary
@@ -498,7 +518,7 @@ Section "-Application" Application
   WriteRegStr "HKLM" "${UROOT}" "DisplayName" "VASSAL (${VERSION})"
   WriteRegStr "HKLM" "${UROOT}" "DisplayVersion" "${VERSION}"
   WriteRegStr "HKLM" "${UROOT}" "InstallLocation" "$INSTDIR"
-  WriteRegStr "HKLM" "${UROOT}" "UninstallString" '"$INSTDIR\uninst.exe"'
+  WriteRegStr "HKLM" "${UROOT}" "UninstallString" "$INSTDIR\uninst.exe"
   WriteRegStr "HKLM" "${UROOT}" "Publisher" "vassalengine.org"
   WriteRegStr "HKLM" "${UROOT}" "URLInfoAbout" "http://www.vassalengine.org"
   WriteRegStr "HKLM" "${UROOT}" "URLUpdateInfo" "http://www.vassalengine.org"
