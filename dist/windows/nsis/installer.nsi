@@ -27,11 +27,14 @@ InstallDirRegKey "HKLM" "${IROOT}" "InstallLocation"
 
 !include "MUI2.nsh"
 !include "nsDialogs.nsh"
+!include "TextFunc.nsh"
 !include "WinMessages.nsh"
 !include "WordFunc.nsh"
 
+!insertmacro TrimNewLines
 !insertmacro VersionConvert
 !insertmacro VersionCompare
+!insertmacro WordFind
 
 #
 # Modern UI 2 setup
@@ -156,39 +159,12 @@ Function preSetupType
   nsDialogs::Show
 FunctionEnd
 
+
 Function leaveSetupType
   ; read the install type from the Custom radio button
   ${NSD_GetState} $CustomSetup $CustomSetup
 FunctionEnd
 
-Function GetOldVersions
-  ; find other installed versions of VASSAL
-  StrCpy $R0 0
-  Push ""
-  ${Do} 
-    EnumRegKey $1 "HKLM" "${VROOT}" $R0
-    
-    ${If} $1 != ""
-      Push $1
-      IntOp $R0 $R0 + 1
-    ${EndIf}
-  ${LoopUntil} $1 == ""
-FunctionEnd
-
-Function GetOldUninstallers
-  ; find the uninstall commands for other versions of VASSAL
-  StrCpy $R0 0
-  Push ""
-  ${Do} 
-    EnumRegKey $1 "HKLM" "${VROOT}" $R0
-    
-    ${If} $1 != ""
-      ReadRegStr $1 "HKLM" "Software\Microsoft\Windows\CurrentVersion\Uninstall\$1" "UninstallString"
-      Push $1
-      IntOp $R0 $R0 + 1
-    ${EndIf}
-  ${LoopUntil} $1 == ""
-FunctionEnd
 
 Var KeepListBox
 Var RemoveListBox
@@ -196,8 +172,22 @@ Var KeepButton
 Var RemoveButton
 
 Function preUninstallOld
-  ; remove other versions by default
-  StrCpy $RemoveOtherVersions 1
+  ${If} CustomSetup != 1
+    ; remove all other versions in Standard setup
+    ; find the uninstall commands for all other versions of VASSAL
+    StrCpy $RemoveOtherVersions ""
+    StrCpy $R0 0
+    ${Do} 
+      EnumRegKey $0 "HKLM" "${VROOT}" $R0
+  
+      ${If} $0 != ""
+        ReadRegStr $0 "HKLM" "Software\Microsoft\Windows\CurrentVersion\Uninstall\$0" "UninstallString"
+        StrCpy $RemoveOtherVersions "$RemoveOtherVersions$0$\n"
+        IntOp $R0 $R0 + 1
+      ${EndIf}
+    ${LoopUntil} $0 == ""
+    ${TrimNewLines} "$RemoveOtherVersions" $RemoveOtherVersions
+  ${EndIf}
 
   ${SkipIfNotCustom}
 
@@ -206,21 +196,28 @@ Function preUninstallOld
   nsDialogs::Create /NOUNLOAD 1018
   Pop $0
 
-  ${NSD_CreateLabel} 0 0 100% 12u "The installer has found the following versions of VASSAL installed on your computer:"
+  ${NSD_CreateLabel} 0 0 100% 24u "The installer has found the following versions of VASSAL installed on your computer. Please select the versions of VASSAL you would like to remove now."
   Pop $0
 
-  ${NSD_CreateListBox} 0 20u 120u 90u ""
+  ${NSD_CreateLabel} 0 32u 120u 12u "To Keep:"
+  Pop $0
+
+  ${NSD_CreateListBox} 0 44u 120u 90u ""
   Pop $KeepListBox
 
-  ${NSD_CreateButton} 125u 50u 50u 14u "Remove >"
+  ${NSD_CreateButton} 125u 74u 50u 14u "Remove >"
   Pop $RemoveButton
   ${NSD_OnClick} $RemoveButton removeClicked
 
-  ${NSD_CreateButton} 125u 66u 50u 14u "< Keep"
+  ${NSD_CreateButton} 125u 90u 50u 14u "< Keep"
   Pop $KeepButton
   ${NSD_OnClick} $KeepButton keepClicked
+  EnableWindow $KeepButton 0
 
-  ${NSD_CreateListBox} 180u 20u 120u 90u ""
+  ${NSD_CreateLabel} 180u 32u 120u 12u "To Remove:"
+  Pop $0
+
+  ${NSD_CreateListBox} 180u 44u 120u 90u ""
   Pop $RemoveListBox
 
   ; populate the keep list
@@ -235,31 +232,65 @@ Function preUninstallOld
     ${EndIf}
   ${LoopUntil} $1 == ""
 
-  SendMessage $KeepListBox ${LB_ADDSTRING} 0 "STR:X"
-  SendMessage $KeepListBox ${LB_ADDSTRING} 0 "STR:Y"
-  SendMessage $KeepListBox ${LB_ADDSTRING} 0 "STR:Z"
-
-  ${NSD_CreateLabel} 0 120u 100% 12u "Please select the versions of VASSAL you would like to remove now."
-  Pop $0
-
   nsDialogs::Show
 FunctionEnd
 
 
+Function moveSelection
+  ; move selected item from box $R0 to box $R1
+  Pop $R0
+  Pop $R1
+  SendMessage $R1 ${LB_GETCURSEL} 0 0 $0
+  System::Call "user32::SendMessage(i $R1,i ${LB_GETTEXT},i r0, t .r1)i .r2"
+  SendMessage $R1 ${LB_DELETESTRING} 0 "STR:$1"
+  SendMessage $R0 ${LB_ADDSTRING} 0 "STR:$1"
+FunctionEnd
+
+
+Function adjustButtons
+  ; disable a button if its source listbox is empty
+  SendMessage $KeepListBox ${LB_GETCOUNT} 0 0 $0
+  ${If} $0 > 0
+    StrCpy $0 1
+  ${EndIf}
+  EnableWindow $RemoveButton $0
+
+  SendMessage $RemoveListBox ${LB_GETCOUNT} 0 0 $0
+  ${If} $0 > 0
+    StrCpy $0 1
+  ${EndIf}
+  EnableWindow $KeepButton $0
+FunctionEnd
+
+
 Function removeClicked
-  
+  ; move a selected item from Keep to Remove
+  Push $KeepListBox
+  Push $RemoveListBox
+  Call moveSelection
+  Call adjustButtons
 FunctionEnd
 
 
 Function keepClicked
+  ; move a selected item from Remove to Keep
+  Push $RemoveListBox
+  Push $KeepListBox
+  Call moveSelection
+  Call adjustButtons
 FunctionEnd
 
 
 Function leaveUninstallOld
-  ${If} $CustomSetup == 1
-    ; read whether to uninstall old versions from the check box 
-;    ${NSD_GetState} $RemoveOtherVersions $RemoveOtherVersions
-  ${EndIf}
+  ; find the uninstallers for old versions to be removed
+  StrCpy $RemoveOtherVersions ""
+  SendMessage $RemoveListBox ${LB_GETCOUNT} 0 0 $1 
+  ${For} $0 0 $1
+    System::Call "user32::SendMessage(i $RemoveListBox,i ${LB_GETTEXT},i r0, t .r2)i .r4"
+    ReadRegStr $2 "HKLM" "Software\Microsoft\Windows\CurrentVersion\Uninstall\$2" "UninstallString"
+    StrCpy $RemoveOtherVersions "$RemoveOtherVersions$2$\n"
+  ${Next}
+  ${TrimNewLines} "$RemoveOtherVersions" $RemoveOtherVersions
 FunctionEnd
 
 
@@ -417,8 +448,25 @@ FunctionEnd
 Section "-Application" Application
   SectionIn RO
  
+  ; remove old versions of VASSAL, if requested
+  ${If} $RemoveOtherVersions != ""
+    ; split uninstall strings on '\n'
+    ${WordFind} "$RemoveOtherVersions" "$\n" "#" $1
+    ${For} $0 0 $1
+      ${WordFind} "$RemoveOtherVersions" "$\n" "+$0" $2
+      MessageBox MB_OK "Remove: $2"
+
+;      DetailPrint "Running $2"
+;      ClearErrors
+;      ExecWait "$2 _?=$INSTDIR"
+;      IfErrors 0 +1
+;      DetailPrint "Failed: $2"
+    ${Next}
+  ${EndIf}
+ 
   ; install a JRE, if necessary
   ${If} $InstallJRE == 1
+    DetailPrint "Downloading a JRE from ${JRE_URL}"
     StrCpy $0 "$TEMP\jre_installer.exe"
     NSISdl::download /TIMEOUT=30000 ${JRE_URL} $0
     Pop $R0 ; Get the return value
@@ -437,6 +485,7 @@ Section "-Application" Application
     ${EndIf}
 
     Delete $0
+    DetailPrint "Installed a JRE"
   ${EndIf}
 
   ; set the files to bundle
