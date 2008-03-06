@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ *
  * Copyright (c) 2000-2008 by Rodney Kinney, Joel Uckelman
  *
  * This library is free software; you can redistribute it and/or
@@ -28,8 +30,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.ZipFile;
 
 import javax.swing.Action;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -47,10 +51,11 @@ import VASSAL.configure.ShowHelpAction;
 import VASSAL.i18n.Localization;
 import VASSAL.i18n.Resources;
 import VASSAL.preferences.Prefs;
+import VASSAL.tools.ArchiveWriter;
 import VASSAL.tools.WrapLayout;
 
 public class PlayerWindow extends JFrame {
-  private static final long serialVersionUID = 1L;
+  public static final long serialVersionUID = 1L;
 
   protected static final PlayerWindow instance = new PlayerWindow();
 
@@ -174,6 +179,7 @@ public class PlayerWindow extends JFrame {
       }
     }; 
 
+/*
     final Runnable showWelcomeWizard = new Runnable() {
       public void run() {
         if (Boolean.TRUE.equals(
@@ -181,12 +187,27 @@ public class PlayerWindow extends JFrame {
         GameModule.getGameModule().getWizardSupport().showWelcomeWizard();
       }
     };
+*/
+
+    final Runnable checkUsernameAndPassword = new Runnable() {
+      public void run() {
+        final Object realName = GameModule.getGameModule()
+                                          .getPrefs()
+                                          .getValue(GameModule.REAL_NAME);
+        if (realName == null ||
+            realName.equals(Resources.getString("Prefs.newbie"))) {
+          final JDialog d = new UsernameAndPasswordDialog(PlayerWindow.this);
+          d.setVisible(true);
+        }
+      }
+    };
 
     final LoadModuleAction loadModuleAction =
       new LoadModuleAction(controlPanel);
     loadModuleAction.addAction(translateModule);
     loadModuleAction.addAction(loadExtensions);
-    loadModuleAction.addAction(showWelcomeWizard);
+//    loadModuleAction.addAction(showWelcomeWizard);
+    loadModuleAction.addAction(checkUsernameAndPassword);
 
     final Runnable toggleMenuItems = new Runnable() {
       public void run() {
@@ -278,6 +299,7 @@ public class PlayerWindow extends JFrame {
         final GameModule mod = GameModule.getGameModule();
         if (mod != null) {
           ModuleEditorWindow.getInstance().moduleLoading(mod);
+          mod.setDataArchive(new ArchiveWriter(mod.getDataArchive().getArchive()));
         }
         ModuleEditorWindow.getInstance().setVisible(true);
       }
@@ -293,28 +315,6 @@ public class PlayerWindow extends JFrame {
 
     // build Help menu
     helpMenu = new JMenu(Resources.getString("General.help"));
-/*
-   {
-      public JMenuItem add(Action a) {
-        for (int i = 0; i < getItemCount(); i++) {
-          if (getMenuComponent(i) instanceof JSeparator) {
-            return insert(a, i);
-          }
-        }
-        return super.add(a);
-      }
-
-      public JMenuItem add(JMenuItem item) {
-        for (int i = 0; i < getItemCount(); i++) {
-          if (getMenuComponent(i) instanceof JSeparator) {
-            return insert(item, i);
-          }
-        }
-        return super.add(item);
-      }
-    };
-*/
-
     helpMenu.setMnemonic(KeyEvent.VK_H);  
     menuBar.add(helpMenu);
 
@@ -345,6 +345,8 @@ public class PlayerWindow extends JFrame {
     controlPanel.setPreferredSize(new Dimension(800,600));
     add(controlPanel, BorderLayout.CENTER);
     
+    controlPanel.add(new Splash(), BorderLayout.CENTER);
+
     pack(); 
   }
 

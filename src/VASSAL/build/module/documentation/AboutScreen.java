@@ -195,13 +195,14 @@ public class AboutScreen extends AbstractConfigurable {
         val = ((File) val).getName();
       }
       fileName = (String) val;
+System.out.println("fileName == " + fileName);
 
       op = null;
       if (fileName != null) {
         fileName = fileName.trim();
         if (fileName.length() > 0) {
           op = Op.load(fileName);
-          
+/*          
           try {
             // FIXME: get the wizard to cache
             GameModule.getGameModule()
@@ -222,6 +223,7 @@ public class AboutScreen extends AbstractConfigurable {
             op = null;
             e.printStackTrace();
           }
+*/
         }
       }
 
@@ -255,16 +257,20 @@ public class AboutScreen extends AbstractConfigurable {
    * Expects to be added to a {@link Documentation}.  Adds an entry
    * to the <code>Help</code> menu */
   public void addTo(Buildable b) {
-    final Documentation d = (Documentation) b;
-    d.getHelpMenu().add(launch);
+    if (op != null) {
+      final Documentation d = (Documentation) b;
+      d.getHelpMenu().add(launch);
 // FIXME: need to do something to check whether op will produce non-null
 // output. Mabye in this case just skip this check, and complain later?
 // Or just load the image now?
-    if (op == null) {
+/*
+    if (op == null && fileName != null) {
       throw new IllegalBuildException(
         Resources.getString("AboutScreen.file_not_found", //$NON-NLS-1$
         fileName ,
         GameModule.getGameModule().getDataArchive().getName()));
+    }
+*/
     }
   }
 

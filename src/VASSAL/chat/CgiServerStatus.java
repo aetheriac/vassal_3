@@ -50,6 +50,8 @@ public class CgiServerStatus implements ServerStatus {
   };
 
   private HttpRequestWrapper request;
+
+// FIXME: cachedQuery can be very large (>1MB), maybe use a SoftReference?
   private List<String> cachedQuery;
 
   public CgiServerStatus() {
@@ -150,6 +152,7 @@ public class CgiServerStatus implements ServerStatus {
     if (cachedQuery == null) {
       try {
         cachedQuery = request.doGet("getConnectionHistory", new Properties()); //$NON-NLS-1$
+System.out.println("Hey!");
       }
       catch (IOException e) {
         e.printStackTrace();

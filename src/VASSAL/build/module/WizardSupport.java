@@ -649,8 +649,10 @@ public class WizardSupport {
       UIManager.put("wizard.sidebar.image", buffIm); //$NON-NLS-1$
     }
   }
+
   /**
-   * Wizard pages for starting a new game. One page will be added for each unfinished {@link GameSetupStep}
+   * Wizard pages for starting a new game. One page will be added for each
+   * unfinished {@link GameSetupStep}.
    * 
    * @see GameState#getUnfinishedSetupSteps()
    * @author rkinney
