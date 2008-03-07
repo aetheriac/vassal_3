@@ -86,6 +86,7 @@ public class Translation extends AbstractConfigurable
     return getDescription();
   }
 
+  @SuppressWarnings("unchecked")
   public Class[] getAllowableConfigureComponents() {
     return new Class[0];
   }
@@ -162,7 +163,9 @@ public class Translation extends AbstractConfigurable
 
     InputStream in = null;
     try {
-      in = GameModule.getGameModule().getDataArchive().getFileStream(bundle);
+      if (GameModule.getGameModule() != null) {
+        in = GameModule.getGameModule().getDataArchive().getFileStream(bundle);
+      }
     }
     catch (IOException e) {
       // properties have not been saved yet
@@ -269,5 +272,9 @@ public class Translation extends AbstractConfigurable
 
   public int compareTo(Translation o) {
     return getDescription().compareTo(o.getDescription());
+  }
+
+  public Locale getLocale() {
+    return locale;
   }
 }

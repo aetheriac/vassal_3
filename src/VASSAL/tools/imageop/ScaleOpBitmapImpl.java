@@ -1,5 +1,5 @@
 /*
- * $Id: ScaleOp.java 2734 2007-12-21 14:30:36Z uckelman $
+ * $Id$
  *
  * Copyright (c) 2007 by Joel Uckelman
  *
@@ -115,6 +115,7 @@ public class ScaleOpBitmapImpl extends AbstractTiledOpImpl
      private final ImageOp sop;
      private final int dx0, dy0, dw, dh;
      private final double scale;
+     @SuppressWarnings("unused")
      private final RenderingHints hints;
      private final int hash;
  

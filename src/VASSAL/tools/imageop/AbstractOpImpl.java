@@ -1,5 +1,5 @@
 /*
- * $Id: ImageOp.java 2747 2007-12-26 21:40:30Z uckelman $
+ * $Id$
  *
  * Copyright (c) 2007 by Joel Uckelman
  *
@@ -101,7 +101,7 @@ public abstract class AbstractOpImpl implements ImageOp {
     private Image im = null;
     private boolean done = false;  
  
-    public static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
  
     private final Sync sync =  new Sync();
   
@@ -153,7 +153,7 @@ public abstract class AbstractOpImpl implements ImageOp {
     }
    
     private static class Sync extends AbstractQueuedSynchronizer {
-      public static final long serialVersionUID = 1L;
+      private static final long serialVersionUID = 1L;
 
       protected boolean tryAcquire(int acquires) {
         if (compareAndSetState(0,1)) {

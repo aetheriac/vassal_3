@@ -16,6 +16,7 @@
  */
 package VASSAL.launch;
 
+import java.awt.Frame;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,13 +31,10 @@ import java.util.Properties;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 import VASSAL.Info;
 import VASSAL.build.GameModule;
 import VASSAL.build.module.ExtensionsLoader;
-import VASSAL.build.module.GlobalOptions;
 import VASSAL.build.module.ModuleExtension;
 import VASSAL.i18n.Localization;
 import VASSAL.i18n.Resources;
@@ -45,7 +43,7 @@ import VASSAL.tools.DataArchive;
 import VASSAL.tools.ErrorLog;
 import VASSAL.tools.JarArchive;
 
-import org.jdesktop.swinghelper.debug.EventDispatchThreadHangMonitor;
+//import org.jdesktop.swinghelper.debug.EventDispatchThreadHangMonitor;
 
 public class Main {
   protected boolean isFirstTime;
@@ -126,13 +124,9 @@ public class Main {
   }
 
   protected void initSystemProperties() {
-    //
-    // Set stderr 
-    // 
     if (System.getProperty("stderr") == null) { //$NON-NLS-1$
       System.setProperty("stderr", new File(Info.getHomeDir(), "errorLog").getPath()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
-
     if (!"null".equals(System.getProperty("stderr"))) { //$NON-NLS-1$ //$NON-NLS-2$
       try {
         System.setErr(new PrintStream(new FileOutputStream(System.getProperty("stderr")))); //$NON-NLS-1$
@@ -142,9 +136,6 @@ public class Main {
       }
     }
 
-    //
-    // Set http.proxyHost
-    //
     if (System.getProperty("http.proxyHost") == null //$NON-NLS-1$
         && System.getProperty("proxyHost") != null) { //$NON-NLS-1$
       System.setProperty("http.proxyHost", System.getProperty("proxyHost")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -155,49 +146,21 @@ public class Main {
       System.setProperty("http.proxyPort", System.getProperty("proxyPort")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    //
-    // Set OS-specific properties
-    //
-
-    final String os = System.getProperty("os.name").toLowerCase();    
-    if (os.startsWith("windows")) {
-    }
-    else if (os.startsWith("mac os x")) {
-      // put our menu on the menubar
-      System.setProperty("apple.laf.useScreenMenuBar", "true");
-
-      // put our app name on the menubar
-      System.setProperty(
-        "com.apple.mrj.application.apple.menu.about.name", "VASSAL");
-    }
-    else {
-    }
-
-    // set native LaF on Mac OS X and Windows
-    if (Info.isMacOSX || Info.isWindows) {
-      try {
-        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-      }
-      catch (ClassNotFoundException e) {
-        e.printStackTrace();
-      }
-      catch (InstantiationException e) {
-        e.printStackTrace();
-      }
-      catch (IllegalAccessException e) {
-        e.printStackTrace();
-      }
-      catch (UnsupportedLookAndFeelException e) {
-        e.printStackTrace();
-      }
-    }
-
     System.setProperty("swing.aatext", "true"); //$NON-NLS-1$ //$NON-NLS-2$
     System.setProperty("swing.boldMetal", "false"); //$NON-NLS-1$ //$NON-NLS-2$
     System.setProperty("awt.useSystemAAFontSettings", "on"); //$NON-NLS-1$ //$NON-NLS-2$
   }
 
   protected void launch() throws IOException {
+    if (isFirstTime) {
+      final JDialog d = new JDialog((Frame)null, true);
+      d.setLocationRelativeTo(ModuleManager.getInstance().getFrame());
+      d.add(new FirstTimeUserPanel().getControls());
+      d.pack();
+      d.setLocationRelativeTo(null);
+      d.setVisible(true);
+      return;
+    }
     if (builtInModule) {
       GameModule.init(createModule(createDataArchive()));
       for (String ext : autoExtensions) {
@@ -205,44 +168,25 @@ public class Main {
       }
       createExtensionsLoader().addTo(GameModule.getGameModule());
       Localization.getInstance().translate();
-//      GameModule.getGameModule().getWizardSupport().showWelcomeWizard();
-      PlayerWindow.getInstance().setVisible(true);
+      GameModule.getGameModule().getWizardSupport().showWelcomeWizard();
     }
     else if (moduleFile == null) {
-      if (editMode)
-        ModuleEditorWindow.getInstance().setVisible(true);
-
-      PlayerWindow.getInstance().setVisible(true);
-
-      if (isFirstTime) {
-        final JDialog d = new JDialog(PlayerWindow.getInstance(), true);
-        d.setLocationRelativeTo(PlayerWindow.getInstance());
-        d.add(new FirstTimeUserPanel().getControls());
-        d.pack();
-        d.setVisible(true);
-      }
+      ModuleManager.getInstance().showFrame();
     }
     else if (editMode) {
-      new EditModuleAction(null).loadModule(moduleFile);
+      new EditModuleAction(moduleFile).loadModule(moduleFile);
     }
     else {
       GameModule.init(createModule(createDataArchive()));
       createExtensionsLoader().addTo(GameModule.getGameModule());
       Localization.getInstance().translate();
-      GameModule.getGameModule().getFrame().setVisible(true);
-      if (savedGame != null)
-        GameModule.getGameModule()
-                  .getGameState().loadGameInBackground(savedGame);
-/*
       if (savedGame != null) {
         GameModule.getGameModule().getFrame().setVisible(true);
         GameModule.getGameModule().getGameState().loadGameInBackground(savedGame);
       }
       else {
-        GameModule.getGameModule().getFrame().setVisible(true);
         GameModule.getGameModule().getWizardSupport().showWelcomeWizard();
       }
-*/
     }
   }
 
@@ -301,7 +245,6 @@ public class Main {
   }
 
   public static void main(String[] args) {
-EventDispatchThreadHangMonitor.initMonitoring();
     new Main(args);
   }
 }

@@ -64,15 +64,6 @@ public class ServerStatusView extends JTabbedPane implements ChangeListener, Tre
     b.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         refresh();
-/*
-        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        try {
-          refresh();
-        }
-        finally {
-          setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-        }
-*/
       }
     });
     toolbar.add(b);
@@ -156,7 +147,6 @@ public class ServerStatusView extends JTabbedPane implements ChangeListener, Tre
 
   public void refresh() {
     refresh(0);
-//    refresh(model, status.getStatus());
   }
 
   private SwingWorker<ServerStatus.ModuleSummary[],Void> cur_request = null;
@@ -282,7 +272,7 @@ public class ServerStatusView extends JTabbedPane implements ChangeListener, Tre
   }
 
   public static class Render extends DefaultTreeCellRenderer {
-    public static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
       super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);

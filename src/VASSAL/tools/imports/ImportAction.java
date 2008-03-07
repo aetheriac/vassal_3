@@ -28,9 +28,7 @@ import VASSAL.build.GameModule;
 import VASSAL.i18n.Resources;
 import VASSAL.launch.BasicModule;
 import VASSAL.launch.EditModuleAction;
-import VASSAL.launch.LoadModuleAction;
 import VASSAL.launch.ModuleEditorWindow;
-import VASSAL.launch.PlayerWindow;
 import VASSAL.tools.ArchiveWriter;
 import VASSAL.tools.ErrorDialog;
 import VASSAL.tools.ErrorLog;
@@ -38,6 +36,7 @@ import VASSAL.tools.ExtensionFileFilter;
 import VASSAL.tools.FileChooser;
 import VASSAL.tools.FileFilter;
 import VASSAL.tools.imports.adc2.ADC2Module;
+import VASSAL.tools.imports.adc2.ADC2Utils;
 import VASSAL.tools.imports.adc2.MapBoard;
 import VASSAL.tools.imports.adc2.SymbolSet;
 
@@ -65,12 +64,16 @@ public final class ImportAction extends EditModuleAction {
 	 * The following three arrays describe the import file types that we can handle.
 	 */
 	
-	private static final String[] EXTENSIONS = { ".ops", ".map", ".set" };
+	private static final String[] EXTENSIONS = {
+		ADC2Utils.MODULE_EXTENSION,
+		ADC2Utils.MAP_EXTENSION,
+		ADC2Utils.SET_EXTENSION,
+	};
 	
     private static final String[] DESCRIPTIONS = {
-    	"ADC2 Game Module",
-    	"ADC2 Map Board",
-    	"ADC2 Symbol Set",
+    	ADC2Utils.MODULE_DESCRIPTION,
+    	ADC2Utils.MAP_DESCRIPTION,
+    	ADC2Utils.SET_DESCRIPTION,
     };
 
     /*
@@ -106,7 +109,6 @@ public final class ImportAction extends EditModuleAction {
 
 	@Override
 	protected void loadModule(File f) throws IOException {
-		GameModule.clear();
 		GameModule module = new BasicModule(new ArchiveWriter((String) null)); 
 		GameModule.init(module);
 
@@ -125,8 +127,8 @@ public final class ImportAction extends EditModuleAction {
 					}					
 					imp.importFile(this, f);
 					imp.writeToArchive();
-					PlayerWindow.getInstance().setVisible(true);
-					ModuleEditorWindow.getInstance().moduleLoading(module);
+					GameModule.getGameModule().getFrame().setVisible(true);
+					new ModuleEditorWindow(module).setVisible(true);
 				}
 				// some serious problems.
 				catch (IllegalAccessException e) {

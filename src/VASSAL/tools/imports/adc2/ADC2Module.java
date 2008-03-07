@@ -17,6 +17,7 @@
 
 package VASSAL.tools.imports.adc2;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
@@ -24,6 +25,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.InputEvent;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -39,8 +41,10 @@ import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 
 import VASSAL.build.GameModule;
+import VASSAL.build.module.DiceButton;
 import VASSAL.build.module.GlobalOptions;
 import VASSAL.build.module.Map;
 import VASSAL.build.module.PieceWindow;
@@ -64,22 +68,27 @@ import VASSAL.counters.Delete;
 import VASSAL.counters.Footprint;
 import VASSAL.counters.FreeRotator;
 import VASSAL.counters.GamePiece;
+import VASSAL.counters.Marker;
 import VASSAL.counters.MovementMarkable;
 import VASSAL.counters.Replace;
 import VASSAL.counters.ReturnToDeck;
 import VASSAL.counters.UsePrototype;
+import VASSAL.tools.ExtensionFileFilter;
 import VASSAL.tools.SequenceEncoder;
 import VASSAL.tools.imports.FileFormatException;
 import VASSAL.tools.imports.Importer;
 
 public class ADC2Module extends Importer {
 	
+	private static final String PIECE = "Pieces";
+
 	protected class Piece {
 		private final int[] values = new int[8];
 		private final ValueType[] types = new ValueType[8];
 		private final String name;
 		private final Class cl;
-		private final HideState hidden;
+		@SuppressWarnings("unused")
+    private final HideState hidden;
 		private final int flags;
 		private GamePiece gamePiece;
 		private PieceSlot pieceSlot;
@@ -201,19 +210,21 @@ public class ADC2Module extends Importer {
 					return null;
 				BasicPiece bp = new BasicPiece();
 				SequenceEncoder se = new SequenceEncoder(BasicPiece.ID, ';');
-				se.append("").append("").append(fileName).append(getName()).getValue();
+				se.append("").append("").append(fileName).append(getName());
 				bp.mySetType(se.getValue());			
-
-				// common properties
-				se = new SequenceEncoder(UsePrototype.ID.replaceAll(";", ""), ';');
-				se.append(COMMON_PROPERTIES);
-				gamePiece = new UsePrototype(se.getValue(), bp);
 
 				// facing
 				if (getPieceClass().getAllowedFacings() > 1) {
 					String type = FreeRotator.ID + getPieceClass().getAllowedFacings() + ";];[;Rotate CW;Rotate CCW;;;;";
-					gamePiece = new FreeRotator(type, gamePiece);				
+					gamePiece = new FreeRotator(type, bp);				
 				}				
+				else
+					gamePiece = bp;
+
+				// common properties
+				se = new SequenceEncoder(UsePrototype.ID.replaceAll(";", ""), ';');
+				se.append(COMMON_PROPERTIES);
+				gamePiece = new UsePrototype(se.getValue(), gamePiece);
 			}
 			return gamePiece;
 		}
@@ -222,15 +233,18 @@ public class ADC2Module extends Importer {
 			return (flags & 0x1) > 0;
 		}
 		
-		private boolean hasDefended() {
+		@SuppressWarnings("unused")
+    private boolean hasDefended() {
 			return !hasAttacked() && (flags & 0x2) > 0;
 		}
 		
-		private boolean hasMoved() {
+		@SuppressWarnings("unused")
+    private boolean hasMoved() {
 			return (flags & 0x4) > 0;
 		}
 		
-		private boolean drawOnTopOfOthers() {
+		@SuppressWarnings("unused")
+    private boolean drawOnTopOfOthers() {
 			return (flags & 0x10) > 0;
 		}
 
@@ -241,12 +255,14 @@ public class ADC2Module extends Importer {
 				return getPieceClass().getName() + " " + name;
 		}
 
-		private boolean anyUsedProperties() {
+		@SuppressWarnings("unused")
+    private boolean anyUsedProperties() {
 			for (int i = 0; i < 8; ++i)
 				if (getValue(i) != null)
 					return true;
 			return false;
 		}
+		
 		void setValue(int index, String value) {
 			byte[] b = value.getBytes();
 			int result = 0;
@@ -322,7 +338,8 @@ public class ADC2Module extends Importer {
 		static final Player ALL_PLAYERS = new Player("All Players", null, 0, 0);
 		private final String name;
 		private final SymbolSet.SymbolData hiddenSymbol;
-		private final int searchRange;
+		@SuppressWarnings("unused")
+    private final int searchRange;
 		private final int hiddenPieceOptions;
 
 		public Player(String name, SymbolSet.SymbolData hiddenSymbol, int searchRange, int hiddenPieceOptions) {
@@ -404,6 +421,7 @@ public class ADC2Module extends Importer {
 				return symbol.getFileName();
 		}
 		
+		// TODO: why is there both getPlayer() and getOwner()?
 		public Player getPlayer() {
 			return players.get(owner);
 		}
@@ -490,7 +508,8 @@ public class ADC2Module extends Importer {
 	private static final String COMMON_PROPERTIES = "Common Properties";
 	private String name;
 	private MapBoard map = null;
-	private int gameTurn = -1;
+	@SuppressWarnings("unused")
+  private int gameTurn = -1;
 	private final ArrayList<Class> classes = new ArrayList<Class>();
 	private final ArrayList<Piece> pieces = new ArrayList<Piece>();
 	private final ArrayList<Player> players = new ArrayList<Player>();
@@ -517,13 +536,14 @@ public class ADC2Module extends Importer {
 		if (header != -3 && header != -2)
 			throw new FileFormatException("Invalid Game Module Header");
 				
-		// version information
+		// version information doesn't seem to do anything
 		in.read(new byte[2]);
 		
 		String s = readWindowsFileName(in);
 		String mapFileName = forceExtension(s, "map");
 		map = new MapBoard();
-		map.importFile(action, action.getCaseInsensitiveFile(new File(mapFileName), f, true, null));
+		map.importFile(action, action.getCaseInsensitiveFile(new File(mapFileName), f, true, 
+				new ExtensionFileFilter(ADC2Utils.MAP_DESCRIPTION, new String[] {ADC2Utils.MAP_EXTENSION})));
 		
 		// bail if any of these block reads fall of the end of the file, but preserve all of the information to that point.
 		try {
@@ -596,8 +616,10 @@ public class ADC2Module extends Importer {
 		
 		/* int fastZoom = */ in.readUnsignedByte();
 		
-		int classCombatSummaryValues = in.readUnsignedByte();
-		int pieceCombatSummaryValues = in.readUnsignedByte();
+		@SuppressWarnings("unused")
+    int classCombatSummaryValues = in.readUnsignedByte();
+		@SuppressWarnings("unused")
+    int pieceCombatSummaryValues = in.readUnsignedByte();
 		/* int fastDraw = */ in.readUnsignedByte();
 	}
 
@@ -632,12 +654,15 @@ public class ADC2Module extends Importer {
 		ADC2Utils.readBlockHeader(in, "Force Pool");
 		
 		final int nForcePools = ADC2Utils.readBase250Word(in);
-		forcePoolNames = new String[nForcePools];
+		final ArrayList<String> fp = new ArrayList<String>(nForcePools);
 		for (int i = 0; i < nForcePools; ++i) {
-			forcePoolNames[i] = readNullTerminatedString(in, 25);
+			String n = readNullTerminatedString(in, 25);
 			in.read(new byte[3]); // not sure what these do
 			/* int nUnits = */ ADC2Utils.readBase250Word(in);
+			if (n.length() > 0 || i < nForcePools -1)
+				fp.add(n);
 		}
+		forcePoolNames = fp.toArray(new String[0]);
 	}
 
 	protected void readPlayerBlock(DataInputStream in) throws IOException {
@@ -675,7 +700,7 @@ public class ADC2Module extends Importer {
 	}
 
 	protected void readPieceBlock(DataInputStream in) throws IOException {
-		ADC2Utils.readBlockHeader(in, "Piece");
+		ADC2Utils.readBlockHeader(in, PIECE);
 		
 		int nPieces = ADC2Utils.readBase250Word(in);
 		for (int i = 0; i < nPieces; ++i) {
@@ -708,7 +733,6 @@ public class ADC2Module extends Importer {
 				}
 			}
 			
-			// TODO: need to do something with this hidden state stuff
 			HideState hidden;
 			switch(in.readUnsignedByte()) {
 			case 0:
@@ -758,7 +782,8 @@ public class ADC2Module extends Importer {
 		int nClasses = ADC2Utils.readBase250Word(in);
 		
 		for (int i = 0; i < nClasses; ++i) {		
-			// TODO: if symbol is null, then there's a problem
+			// TODO: if symbol is null, then there's a problem.
+			// Check what ADC2 does.
 			SymbolSet.SymbolData symbol = getSet().getGamePiece(ADC2Utils.readBase250Word(in));
 			
 			String name = readNullTerminatedString(in, 25);
@@ -790,10 +815,8 @@ public class ADC2Module extends Importer {
 			// belonging to all players (owner = 200)
 			int owner = in.readUnsignedByte();
 		
-			// TODO: handle hidden symbols
 			int hiddenSymbol = ADC2Utils.readBase250Word(in);
 		
-			// TODO: handle facing. Is this even appropriate?
 			// 0 = not used. Any value appears valid even if it's out of range
 			int facing = in.readUnsignedByte();
 			
@@ -824,7 +847,8 @@ public class ADC2Module extends Importer {
 		// set common properties
 		GamePiece gp = new BasicPiece();		
 		gp = new Delete(Delete.ID + "Delete;D", gp);
-		gp = new ReturnToDeck(ReturnToDeck.ID + "Return to Force Pool;R;;Select Force Pool", gp);
+		if (forcePoolNames != null && forcePoolNames.length > 0)
+			gp = new ReturnToDeck(ReturnToDeck.ID + "Return to Force Pool;R;;Select Force Pool", gp);
 		SequenceEncoder se = new SequenceEncoder(';');
 		Dimension modalSize = getSet().getModalSize();
 		int xOffset = modalSize.width/2;
@@ -832,23 +856,47 @@ public class ADC2Module extends Importer {
 		String movedIcon = "/images/moved.gif";
 		se.append(movedIcon).append(xOffset).append(yOffset);
 		gp = new MovementMarkable(MovementMarkable.ID + se.getValue(), gp);
-		gp = new Footprint(Footprint.ID, gp);
+		se = new SequenceEncoder(';');
+		se.append(KeyStroke.getKeyStroke('T', InputEvent.CTRL_MASK))
+			.append("Movement Trail")
+			.append(false)
+			.append(false)
+			.append(10)
+			.append(Color.WHITE)
+			.append(Color.BLACK)
+			.append(100)
+			.append(0);
+		gp = new Footprint(Footprint.ID + se.getValue(), gp);
+		se = new SequenceEncoder(',');
+		se.append(ADC2Utils.TYPE);
+		gp = new Marker(Marker.ID + se.getValue(), gp);
+		gp.setProperty(ADC2Utils.TYPE, PIECE);
 		
 		def.setPiece(gp);		
 	}
 	
 	@Override
 	public void writeToArchive() throws IOException {
-		GameModule.getGameModule().setAttribute(GameModule.MODULE_NAME, name);
+		GameModule gameModule = GameModule.getGameModule();
+		gameModule.setAttribute(GameModule.MODULE_NAME, name);
 
 		// prototype definitions
 		writePrototypesToArchive();
 		getMap().writeToArchive();	
 		writeClassesToArchive();
-		if (!forcePools.isEmpty())
+		if (forcePoolNames.length != 0)
 			writeForcePoolsToArchive();
 		writeSetupStacksToArchive();		
 		writePlayersToArchive();
+		
+		// dice
+		DiceButton dice = new DiceButton();
+		dice.setAttribute(DiceButton.NAME, "Roll");
+		dice.setAttribute(DiceButton.PROMPT_ALWAYS, Boolean.TRUE);
+		dice.setAttribute(DiceButton.TOOLTIP, "Roll the dice");
+		dice.setAttribute(DiceButton.BUTTON_TEXT, "Roll");
+		dice.addTo(gameModule);
+		gameModule.add(dice);
 	}
 
 	protected void writeClassesToArchive() throws IOException {
@@ -990,9 +1038,10 @@ public class ADC2Module extends Importer {
 			p.translate(offset.x, offset.y);
 			String location = mainMap.locationName(p);
 			stack.setAttribute(SetupStack.NAME, location);
-			stack.setAttribute(SetupStack.OWNING_BOARD, getMap().getBoard().getConfigureName());
+			Board board = getMap().getBoard();
+			stack.setAttribute(SetupStack.OWNING_BOARD, board.getConfigureName());
 			
-			MapGrid mg = getMap().getBoard().getGrid();
+			MapGrid mg = board.getGrid();
 			Zone z = null;
 			if (mg instanceof ZonedGrid)
 				z = ((ZonedGrid) mg).findZone(p);				
@@ -1001,7 +1050,7 @@ public class ADC2Module extends Importer {
 			if (z != null) {
 				try {
 					if (mg.getLocation(location) != null) {						
-						//assert(mg.locationName(mg.getLocation(location)).equals(location));
+						assert(mg.locationName(mg.getLocation(location)).equals(location));
 						stack.setAttribute(SetupStack.USE_GRID_LOCATION, true);
 						stack.setAttribute(SetupStack.LOCATION, location);
 					}

@@ -32,7 +32,7 @@ import VASSAL.tools.VersionTokenizer;
  * Class for storing release-related information
  */
 public final class Info {
-  private static final String VERSION = "3.1.0-svn3164"; //$NON-NLS-1$
+  private static final String VERSION = "3.1.0-svn3190"; //$NON-NLS-1$
   private static File homeDir;
   private static Boolean is2dEnabled;
   private static Boolean isDndEnabled;
@@ -89,15 +89,6 @@ public final class Info {
     bounds.setSize(bounds.width - insets.left - insets.right,
                    bounds.height - insets.top - insets.bottom);
     return bounds;
-  }
-
-  public static final boolean isMacOSX; 
-  public static final boolean isWindows;
-
-  static {
-    final String os = System.getProperty("os.name").toLowerCase(); //$NON-NLS-1$
-    isMacOSX = os.startsWith("mac os x");
-    isWindows = os.startsWith("windows"); 
   }
 
   public static boolean isMacOsX() {

@@ -29,13 +29,11 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.AbstractListModel;
@@ -56,6 +54,7 @@ import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
@@ -580,6 +579,8 @@ public class Zoomer extends AbstractConfigurable implements GameComponent {
      * A {@link ListModel} built on the {@link State}.
      */
     protected class LevelModel extends AbstractListModel {
+      private static final long serialVersionUID = 1L;
+    
       public void updateModel() {
         fireContentsChanged(this, 0, z.state.getLevelCount()-1);
       }
@@ -874,7 +875,7 @@ public class Zoomer extends AbstractConfigurable implements GameComponent {
     private static final String FIT_HEIGHT = "Fit Height";
     private static final String FIT_VISIBLE = "Fit Visible";
 
-    public static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     public ZoomMenu() {
       super();
@@ -1002,7 +1003,7 @@ public class Zoomer extends AbstractConfigurable implements GameComponent {
     protected final SpinnerNumberModel percentModel;
     protected final JButton okButton;   
 
-    public static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
  
     public ZoomDialog(Frame owner, String title, boolean modal) {
       super(owner, title, modal);

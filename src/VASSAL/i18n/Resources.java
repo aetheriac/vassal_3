@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -49,21 +50,29 @@ public class Resources {
    */
   protected static BundleHelper vassalBundle;
   protected static BundleHelper editorBundle;
+  private static VassalPropertyClassLoader bundleLoader = new VassalPropertyClassLoader();
   public static final String LOCALE_PREF_KEY = "Locale"; // Preferences key for the user's Locale
-  protected static final Collection<Locale> supportedLocales = Arrays.asList(new Locale[]{Locale.ENGLISH, Locale.GERMAN, Locale.FRENCH, Locale.ITALIAN,
-                                                                                          Locale.JAPANESE});
+  protected static final List<Locale> supportedLocales = new ArrayList<Locale>(Arrays.asList(new Locale[]{Locale.ENGLISH, Locale.GERMAN, Locale.FRENCH, Locale.ITALIAN,
+                                                                                          new Locale("Spanish"), Locale.JAPANESE}));
   protected static Locale locale = Locale.getDefault();
   static {
+    // If the user has a resource bundle for their default language on their local machine, add it to the list of supported locales
+    if (ResourceBundle.getBundle("VASSAL.i18n.VASSAL", Locale.getDefault(), bundleLoader).getLocale().getLanguage().equals(Locale.getDefault().getLanguage())) {
+      addSupportedLocale(Locale.getDefault());
+    }
     ArrayList<String> languages = new ArrayList<String>();
     for (Locale l : getSupportedLocales()) {
       languages.add(l.getLanguage());
     }
+    Locale myLocale = Locale.getDefault();
     String savedLocale = Prefs.getGlobalPrefs().getStoredValue(LOCALE_PREF_KEY);
-    Locale preferredLocale = new Locale(savedLocale == null ? Locale.getDefault().getLanguage() : savedLocale);
-    if (!Resources.getSupportedLocales().contains(preferredLocale)) {
-      preferredLocale = Locale.ENGLISH;
+    if (savedLocale == null) {
+      myLocale = supportedLocales.iterator().next();
     }
-    Resources.setLocale(preferredLocale);
+    else {
+      myLocale = new Locale(savedLocale);
+    }
+    Resources.setLocale(myLocale);
     StringEnumConfigurer localeConfig = new StringEnumConfigurer(Resources.LOCALE_PREF_KEY, getString("Prefs.language"), languages.toArray(new String[languages
         .size()])) {
       public Component getControls() {
@@ -91,6 +100,19 @@ public class Resources {
 
   public static Collection<Locale> getSupportedLocales() {
     return supportedLocales;
+  }
+  
+  public static void addSupportedLocale(Locale l) {
+    l = new Locale(l.getLanguage());
+    if (!supportedLocales.contains(l)) {
+      supportedLocales.add(0,l);
+      StringEnumConfigurer config = (StringEnumConfigurer) Prefs.getGlobalPrefs().getOption(LOCALE_PREF_KEY);
+      if (config != null) {
+        ArrayList<String> valid = new ArrayList<String>(Arrays.asList(config.getValidValues()));
+        valid.add(0,l.getLanguage());
+        config.setValidValues(valid.toArray(new String[valid.size()]));
+      }
+    }
   }
 
   public static Collection<String> getVassalKeys() {
@@ -166,14 +188,14 @@ public class Resources {
 
   protected static BundleHelper getEditorBundle() {
     if (editorBundle == null) {
-      editorBundle = new BundleHelper(ResourceBundle.getBundle("VASSAL.i18n.Editor", locale, new VassalPropertyClassLoader()));
+      editorBundle = new BundleHelper(ResourceBundle.getBundle("VASSAL.i18n.Editor", locale, bundleLoader));
     }
     return editorBundle;
   }
 
   protected static BundleHelper getVassalBundle() {
     if (vassalBundle == null) {
-      vassalBundle = new BundleHelper(ResourceBundle.getBundle("VASSAL.i18n.VASSAL", locale, new VassalPropertyClassLoader()));
+      vassalBundle = new BundleHelper(ResourceBundle.getBundle("VASSAL.i18n.VASSAL", locale, bundleLoader));
     }
     return vassalBundle;
   }

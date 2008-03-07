@@ -55,7 +55,6 @@ import javax.swing.ImageIcon;
 
 import sun.applet.AppletAudioClip;
 import VASSAL.build.module.documentation.HelpFile;
-import VASSAL.configure.BooleanConfigurer;
 import VASSAL.tools.imageop.ImageOp;
 import VASSAL.tools.imageop.Op;
 import VASSAL.tools.imageop.RotateScaleOp;
@@ -438,9 +437,6 @@ public class DataArchive extends SecureClassLoader {
     }
   }
 
-  ////////////////////////////// Deprecated ////////////////////////////////
-  @Deprecated private BooleanConfigurer smoothPrefs;
-
   /**
    * Does the actual work of transforming an image.
    */
@@ -740,4 +736,11 @@ public class DataArchive extends SecureClassLoader {
     prod = new FilteredImageSource(img.getSource(), filter);
     return Toolkit.getDefaultToolkit().createImage(prod);
   }
+  
+  public void close() throws IOException {
+    if (archive != null) {
+      archive.close();
+    }
+  }
+
 }

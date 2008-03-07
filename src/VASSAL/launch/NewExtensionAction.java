@@ -39,6 +39,6 @@ public class NewExtensionAction extends GameModuleAction {
   public void performAction(ActionEvent e) {
     ModuleExtension ext = new ModuleExtension(new ArchiveWriter((String) null));
     ext.build();
-    ExtensionEditorWindow.getInstance().moduleLoading(GameModule.getGameModule(), ext);
+    new ExtensionEditorWindow(GameModule.getGameModule(), ext).setVisible(true);
   }
 }

@@ -78,8 +78,6 @@ import VASSAL.configure.CompoundValidityChecker;
 import VASSAL.configure.MandatoryComponent;
 import VASSAL.counters.GamePiece;
 import VASSAL.i18n.Resources;
-import VASSAL.launch.EditorWindow;
-import VASSAL.launch.ModuleEditorWindow;
 import VASSAL.launch.PlayerWindow;
 import VASSAL.preferences.Prefs;
 import VASSAL.tools.ArchiveWriter;
@@ -127,9 +125,8 @@ public abstract class GameModule extends AbstractConfigurable implements Command
     }
   };
 
-  protected PlayerWindow frame = PlayerWindow.getInstance();
+  protected PlayerWindow frame = new PlayerWindow();
   protected JPanel controlPanel = frame.getControlPanel();
-  protected JToolBar toolBar = frame.getToolBar();
 
   protected GameState theState;
   protected DataArchive archive;
@@ -180,16 +177,6 @@ public abstract class GameModule extends AbstractConfigurable implements Command
         quit();
       }
     });
-
-    if (EditorWindow.hasInstance()) {
-      final EditorWindow ew = ModuleEditorWindow.getInstance();
-      ew.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-      ew.addWindowListener(new WindowAdapter() {
-        public void windowClosing(WindowEvent e) {
-          quit();
-        }
-      });
-    }
 
     addKeyStrokeSource
         (new KeyStrokeSource
@@ -609,7 +596,7 @@ public abstract class GameModule extends AbstractConfigurable implements Command
    * @return the JToolBar of the command window
    */
   public JToolBar getToolBar() {
-    return toolBar;
+    return frame.getToolBar();
   }
 
   /**
@@ -617,13 +604,6 @@ public abstract class GameModule extends AbstractConfigurable implements Command
    */
   public JMenu getFileMenu() {
     return frame.getFileMenu();
-  }
-
-  /**
-   * @return the Tools menu of the command window
-   */
-  public JMenu getToolsMenu() {
-    return frame.getToolsMenu();
   }
 
   /**
@@ -650,48 +630,73 @@ public abstract class GameModule extends AbstractConfigurable implements Command
   }
 
   /**
-   * Deletes the current module.
-   *
-   */
-  public static void clear() {
-	  theModule = null;
-  }
-  
-  /**
    * Exit the application, prompting user to save if necessary
    */
   public void quit() {
-    boolean cancelled = false;
-    try {
-      getGameState().setup(false);
-      cancelled = getGameState().isGameStarted();
-      if (!cancelled) {
+    if (shutDown()) {
+      System.exit(0);
+    }
+  }
+
+  /**
+   * Prompt user to save open game and modules/extensions being edited 
+   * @return true if shutDown should proceed, i.e. user did not cancel
+   * @throws IOException on error while attempting to save
+   */
+  public boolean shutDown() {
+    boolean cancelled;
+    getGameState().setup(false);
+    cancelled = getGameState().isGameStarted();
+    if (!cancelled) {
+      if (getDataArchive() instanceof ArchiveWriter
+          && !buildString().equals(lastSavedConfiguration)) {
+        switch (JOptionPane.showConfirmDialog(frame,
+          Resources.getString("GameModule.save_module"),  //$NON-NLS-1$
+             "", JOptionPane.YES_NO_CANCEL_OPTION)) {  //$NON-NLS-1$
+        case JOptionPane.YES_OPTION:
+          save();
+          break;
+        case JOptionPane.CANCEL_OPTION:
+          cancelled = true;
+        }
+      }
+      for (ModuleExtension ext : getComponentsOf(ModuleExtension.class)) {
+        cancelled = !ext.confirmExit();
+      }
+    }
+    if (!cancelled) {
+      try {
         getPrefs().write();
-        if (getDataArchive() instanceof ArchiveWriter
-            && !buildString().equals(lastSavedConfiguration)) {
-          switch (JOptionPane.showConfirmDialog(frame,
-            Resources.getString("GameModule.save_module"),  //$NON-NLS-1$
-               "", JOptionPane.YES_NO_CANCEL_OPTION)) {  //$NON-NLS-1$
-          case JOptionPane.YES_OPTION:
-            save();
-            break;
-          case JOptionPane.CANCEL_OPTION:
-            cancelled = true;
-          }
-        }
-        for (ModuleExtension ext : getComponentsOf(ModuleExtension.class)) {
-          cancelled = !ext.confirmExit();
-        }
+      }
+      catch (IOException e) {
+        e.printStackTrace();
+      }
+      try {
+        getPrefs().close();
+      }
+      catch (IOException e) {
+        e.printStackTrace();
+      }
+      try {
+        Prefs.getGlobalPrefs().write();
+      }
+      catch (IOException e) {
+        e.printStackTrace();
+      }
+      try {
+        Prefs.getGlobalPrefs().close();
+      }
+      catch (IOException e) {
+        e.printStackTrace();
+      }
+      try {
+        getDataArchive().close();
+      }
+      catch (IOException e) {
+        e.printStackTrace();
       }
     }
-    catch (IOException ex) {
-      ex.printStackTrace();
-    }
-    finally {
-      if (!cancelled) {
-        System.exit(0);
-      }
-    }
+    return !cancelled;
   }
 
   /**
@@ -770,6 +775,17 @@ public abstract class GameModule extends AbstractConfigurable implements Command
       plugin.init();
     }
   }
+  
+  /**
+   * Unload the module 
+   */
+  public static void unload() {
+    if (theModule != null) {
+      if (theModule.shutDown()) {
+        theModule = null;
+      }
+    }
+  }
 
   public String generateGpId() {
     return String.valueOf(nextGpId++);
@@ -790,15 +806,6 @@ public abstract class GameModule extends AbstractConfigurable implements Command
     return archive;
   }
   
-  /**
-   * Set the data archive for the module.
-   *  
-   * @param archive - the data archive.
-   */
-  public void setDataArchive(DataArchive archive) {
-	  this.archive = archive;
-  }
-
   /**
    * If the module is being edited, return the writeable archive for the module
    */
