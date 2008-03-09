@@ -37,6 +37,7 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
 
 import VASSAL.build.GameModule;
 import VASSAL.build.module.Documentation;
@@ -58,10 +59,11 @@ public class FirstTimeUserPanel {
   protected void initComponents() {
     panel = new JPanel();
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-
+    panel.setBorder(new EmptyBorder(5,5,5,5));
+    
     final JLabel l = new JLabel();
     l.setFont(new Font("SansSerif", 1, 40));  //$NON-NLS-1$
-    l.setText(" " + Resources.getString("Main.welcome") + " ");  //$NON-NLS-1$
+    l.setText(Resources.getString("Main.welcome"));  //$NON-NLS-1$
     l.setForeground(Color.black);
     l.setAlignmentX(0.5F);
     panel.add(l);
