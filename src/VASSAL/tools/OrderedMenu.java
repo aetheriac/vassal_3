@@ -39,6 +39,8 @@ import VASSAL.i18n.Resources;
  * @since 3.1.0 
  */
 public class OrderedMenu extends JMenu {
+  private static final long serialVersionUID = 1L;
+
   private List<String> items;
 
   private OrderedMenu(String title, List<String> items) {
