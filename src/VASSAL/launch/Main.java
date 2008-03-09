@@ -17,6 +17,8 @@
 package VASSAL.launch;
 
 import java.awt.Frame;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -58,9 +60,9 @@ public class Main {
     initSystemProperties();
     System.err.println("-- OS " + System.getProperty("os.name")); //$NON-NLS-1$ //$NON-NLS-2$
     System.err.println("-- Java version " + System.getProperty("java.version")); //$NON-NLS-1$ //$NON-NLS-2$
-    String v = getVersion();
-    System.err.println("-- VASSAL version " + v); //$NON-NLS-1$
-    final Thread t = new Thread(new ErrorLog.Group(), "Main Thread") { //$NON-NLS-1$
+    System.err.println("-- VASSAL version " + Info.getVersion()); //$NON-NLS-1$
+
+    new Thread(new ErrorLog.Group(), "Main Thread") { //$NON-NLS-1$
       public void run() {
         Runnable runnable = new Runnable() {
           public void run() {
@@ -75,8 +77,7 @@ public class Main {
         };
         SwingUtilities.invokeLater(runnable);
       }
-    };
-    t.start();
+    }.start();
   }
 
   protected void extractResourcesAndLaunch(final int resourceIndex) throws IOException {
@@ -156,6 +157,14 @@ public class Main {
       final JDialog d = new JDialog((Frame)null, true);
       d.setLocationRelativeTo(ModuleManager.getInstance().getFrame());
       d.add(new FirstTimeUserPanel().getControls());
+
+      d.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+      d.addWindowListener(new WindowAdapter() {
+        public void windowClosing(WindowEvent e) {
+          System.exit(0);
+        }
+      });
+
       d.pack();
       d.setLocationRelativeTo(null);
       d.setVisible(true);
@@ -211,6 +220,8 @@ public class Main {
     return new BasicModule(archive);
   }
 
+  /** @deprecated Use {@link Info.getVersion()} instead. */
+  @Deprecated
   protected String getVersion() {
     return VASSAL.Info.getVersion();
   }
