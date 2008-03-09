@@ -32,7 +32,7 @@ import VASSAL.tools.VersionTokenizer;
  * Class for storing release-related information
  */
 public final class Info {
-  private static final String VERSION = "3.1.0-svn3246"; //$NON-NLS-1$
+  private static final String VERSION = "3.1.0-svn3251"; //$NON-NLS-1$
   private static File homeDir;
 
   private static final boolean isWindows;
@@ -132,6 +132,15 @@ public final class Info {
     return tok0.hasNext() ? -1 : (tok1.hasNext() ? 1 : 0);
   }
 
+  /**
+   * Returns the directory where VASSAL is installed.
+   *
+   * @return a {@link File} representing the directory
+   */
+  public static File getBaseDir() {
+    return new File(System.getProperty("user.dir"));
+  }
+
   public static File getHomeDir() {
     if (homeDir == null) {
       homeDir = new File(System.getProperty("user.home"), "VASSAL"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -139,6 +148,7 @@ public final class Info {
         homeDir.mkdir();
       }
       else if (!homeDir.isDirectory()) {
+// FIXME: Is this a good idea?!!
         homeDir.delete();
         homeDir.mkdir();
       }
