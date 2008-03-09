@@ -43,7 +43,6 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 
 import VASSAL.build.GameModule;
@@ -52,7 +51,14 @@ import VASSAL.configure.ShowHelpAction;
 import VASSAL.i18n.Resources;
 import VASSAL.tools.DataArchive;
 
+/**
+ * A dialog for first-time users.
+ *
+ * @since 3.1.0
+ */
 public class FirstTimeDialog extends JDialog {
+  private static final long serialVersionUID = 1L;
+
   public FirstTimeDialog() {
     super((Frame) null, true);
     setLocationRelativeTo(ModuleManager.getInstance().getFrame());
@@ -64,30 +70,38 @@ public class FirstTimeDialog extends JDialog {
       }
     });
 
+    final JPanel b = new JPanel();
+    b.setLayout(new BoxLayout(b, BoxLayout.Y_AXIS));
+
+    final JLabel about = new JLabel(
+      new ImageIcon(getClass().getResource("/images/Splash.png")));
+    about.setAlignmentX(0.5F);
+    b.add(about);
+
+    b.add(getControls());
+
+    add(b);
+    pack();
+
+    setLocationRelativeTo(null);
+  }
+
+  private JPanel getControls() {
     final File tourModule = new File(
       Documentation.getDocumentationBaseDir(), "tour.mod");  //$NON-NLS-1$
     final File tourLogFile = new File(
       Documentation.getDocumentationBaseDir(), "tour.log");  //$NON-NLS-1$
 
     final JPanel panel = new JPanel();
+    panel.setBorder(new EmptyBorder(5,5,5,5));
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-
-    final JLabel about = new JLabel(
-      new ImageIcon(getClass().getResource("/images/Splash.png")));
-    about.setAlignmentX(0.5F);
-    panel.add(about);
-
-    final JPanel c = new JPanel();
-    c.setBorder(new EmptyBorder(5,5,5,5));
-    c.setLayout(new BoxLayout(c, BoxLayout.Y_AXIS));
-    panel.add(c);
 
     final JLabel l = new JLabel();
     l.setFont(new Font("SansSerif", 1, 40));  //$NON-NLS-1$
     l.setText(Resources.getString("Main.welcome"));  //$NON-NLS-1$
     l.setForeground(Color.black);
     l.setAlignmentX(0.5F);
-    c.add(l);
+    panel.add(l);
 
     Box b = Box.createHorizontalBox();
     final JButton tour =
@@ -101,7 +115,7 @@ public class FirstTimeDialog extends JDialog {
 
     final JPanel p = new JPanel();
     p.add(b);
-    c.add(p);
+    panel.add(p);
 
     tour.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent evt) {
@@ -111,7 +125,7 @@ public class FirstTimeDialog extends JDialog {
           GameModule.getGameModule().getFrame().setVisible(true);
           GameModule.getGameModule()
                     .getGameState().loadGameInBackground(tourLogFile);
-          SwingUtilities.getWindowAncestor(panel).dispose();
+          FirstTimeDialog.this.dispose();
         }
         catch (Exception e) {
           e.printStackTrace();
@@ -126,7 +140,7 @@ public class FirstTimeDialog extends JDialog {
 
     jump.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent evt) {
-        SwingUtilities.getWindowAncestor(panel).dispose();
+        FirstTimeDialog.this.dispose();
         ModuleManager.getInstance().showFrame();
       }
     });
@@ -149,7 +163,7 @@ public class FirstTimeDialog extends JDialog {
 
       public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
         super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-        setText(((Locale)value).getDisplayName());
+        setText(((Locale) value).getDisplayName());
         return this;
       }
     });
@@ -160,16 +174,13 @@ public class FirstTimeDialog extends JDialog {
         Resources.setLocale((Locale) box.getSelectedItem());
         final Container parent = panel.getParent();
         parent.remove(panel);
-        parent.add(new FirstTimeUserPanel().getControls());
-        SwingUtilities.getWindowAncestor(parent).pack();
+        parent.add(getControls());
+        FirstTimeDialog.this.pack();
       }
     });
     b.add(box);
-    c.add(b);
+    panel.add(b);
 
-    add(panel);
-    pack();
-
-    setLocationRelativeTo(null);
+    return panel;
   }
 }
