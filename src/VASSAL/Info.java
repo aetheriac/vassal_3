@@ -32,17 +32,27 @@ import VASSAL.tools.VersionTokenizer;
  * Class for storing release-related information
  */
 public final class Info {
-  private static final String VERSION = "3.1.0-svn3190"; //$NON-NLS-1$
+  private static final String VERSION = "3.1.0-svn3246"; //$NON-NLS-1$
   private static File homeDir;
-  private static Boolean is2dEnabled;
-  private static Boolean isDndEnabled;
+
+  private static final boolean isWindows;
+  private static final boolean isMacOSX; 
+
+  static {
+    // set the OS flags
+    final String os = System.getProperty("os.name").toLowerCase();
+    isWindows =  os.startsWith("windows");
+    isMacOSX = os.startsWith("mac os x");
+  }
 
   /** This class should not be instantiated */
   private Info() { }
 
   /**
-   * A valid version format is "w.x.[y|bz]", where 'w','x','y', and 'z' are integers. In the version number, w.x are the
-   * major/minor release number, y is the bug-fix release number, and the 'b' indicates a beta release, e.g. 3.0b2
+   * A valid version format is "w.x.[y|bz]", where 'w','x','y', and 'z' are
+   * integers. In the version number, w.x are the major/minor release number,
+   * y is the bug-fix release number, and the 'b' indicates a beta release,
+   * e.g. 3.0b2.
    * 
    * @return the version of the VASSAL engine.
    */
@@ -51,20 +61,13 @@ public final class Info {
   }
 
   /**
-   * The major/minor portion of the release version. If the version is a beta-release number, a 'beta' is appended. For
-   * example, the minor version of 3.0.2 is 3.0, and the minor version of 3.0b3 is 3.0beta
+   * The major/minor portion of the release version. If the version is a
+   * beta-release number, a 'beta' is appended. For example, the minor
+   * version of 3.0.2 is 3.0, and the minor version of 3.0b3 is 3.0beta.
    * 
    * @return
    */
   public static String getMinorVersion() {
-/*
-    StringTokenizer st = new StringTokenizer(VERSION, ".b", true); //$NON-NLS-1$
-    String minorVersion = st.nextToken() + st.nextToken() + st.nextToken();
-    if (st.hasMoreTokens() && "b".equals(st.nextToken())) {
-      minorVersion += "beta";
-    }
-    return minorVersion;
-*/
 // FIXME: check where this is used. maybe we can deprecate?
     final VersionTokenizer tok = new VersionTokenizer(VERSION);
     try {
@@ -92,13 +95,11 @@ public final class Info {
   }
 
   public static boolean isMacOsX() {
-    String os = System.getProperty("os.name"); //$NON-NLS-1$
-    return os.toLowerCase().indexOf("mac") >= 0 //$NON-NLS-1$
-        && os.toLowerCase().indexOf("x") > 0; //$NON-NLS-1$
+    return isMacOSX;
   }
   
   public static boolean isWindows() {
-    return System.getProperty("os.name").toLowerCase().startsWith("windows");
+    return isWindows;
   }
 
   /**
@@ -151,16 +152,7 @@ public final class Info {
    */
   @Deprecated
   public static boolean isDndEnabled() {
-    if (isDndEnabled == null) {
-      try {
-        Class.forName("java.awt.dnd.DropTarget"); //$NON-NLS-1$
-        isDndEnabled = Boolean.TRUE;
-      }
-      catch (ClassNotFoundException e) {
-        isDndEnabled = Boolean.FALSE;
-      }
-    }
-    return isDndEnabled.booleanValue();
+    return true;
   }
 
   /**
@@ -169,15 +161,6 @@ public final class Info {
    */
   @Deprecated
   public static boolean is2dEnabled() {
-    if (is2dEnabled == null) {
-      try {
-        Class.forName("java.awt.Graphics2D"); //$NON-NLS-1$
-        is2dEnabled = Boolean.TRUE;
-      }
-      catch (ClassNotFoundException e) {
-        is2dEnabled = Boolean.FALSE;
-      }
-    }
-    return is2dEnabled.booleanValue();
+    return true;
   }
 }
