@@ -16,9 +16,6 @@
  */
 package VASSAL.launch;
 
-import java.awt.Frame;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,7 +27,6 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Properties;
 
-import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
@@ -154,23 +150,9 @@ public class Main {
 
   protected void launch() throws IOException {
     if (isFirstTime) {
-      final JDialog d = new JDialog((Frame)null, true);
-      d.setLocationRelativeTo(ModuleManager.getInstance().getFrame());
-      d.add(new FirstTimeUserPanel().getControls());
-
-      d.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-      d.addWindowListener(new WindowAdapter() {
-        public void windowClosing(WindowEvent e) {
-          System.exit(0);
-        }
-      });
-
-      d.pack();
-      d.setLocationRelativeTo(null);
-      d.setVisible(true);
-      return;
+      new FirstTimeDialog().setVisible(true);
     }
-    if (builtInModule) {
+    else if (builtInModule) {
       GameModule.init(createModule(createDataArchive()));
       for (String ext : autoExtensions) {
         createExtension(ext).build();

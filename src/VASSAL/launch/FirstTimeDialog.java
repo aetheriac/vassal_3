@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2000-2007 by Rodney Kinney
+ * $Id$
+ *
+ * Copyright (c) 2000-2008 by Rodney Kinney, Joel Uckelman
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,8 +22,11 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.util.Locale;
@@ -29,9 +34,11 @@ import java.util.Locale;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -45,30 +52,42 @@ import VASSAL.configure.ShowHelpAction;
 import VASSAL.i18n.Resources;
 import VASSAL.tools.DataArchive;
 
-/** @deprecated Use {@link FirstTimeDialog} instead. */
-@Deprecated
-public class FirstTimeUserPanel {
-  private JPanel panel;
-  private File tourModule;
-  private File tourLogFile;
- 
-  public FirstTimeUserPanel() {
-    tourModule = new File(Documentation.getDocumentationBaseDir(), "tour.mod");  //$NON-NLS-1$
-    tourLogFile = new File(Documentation.getDocumentationBaseDir(), "tour.log");  //$NON-NLS-1$
-    initComponents();
-  }
+public class FirstTimeDialog extends JDialog {
+  public FirstTimeDialog() {
+    super((Frame) null, true);
+    setLocationRelativeTo(ModuleManager.getInstance().getFrame());
 
-  protected void initComponents() {
-    panel = new JPanel();
+    setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+    addWindowListener(new WindowAdapter() {
+      public void windowClosing(WindowEvent e) {
+        System.exit(0);
+      }
+    });
+
+    final File tourModule = new File(
+      Documentation.getDocumentationBaseDir(), "tour.mod");  //$NON-NLS-1$
+    final File tourLogFile = new File(
+      Documentation.getDocumentationBaseDir(), "tour.log");  //$NON-NLS-1$
+
+    final JPanel panel = new JPanel();
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-    panel.setBorder(new EmptyBorder(5,5,5,5));
-    
+
+    final JLabel about = new JLabel(
+      new ImageIcon(getClass().getResource("/images/Splash.png")));
+    about.setAlignmentX(0.5F);
+    panel.add(about);
+
+    final JPanel c = new JPanel();
+    c.setBorder(new EmptyBorder(5,5,5,5));
+    c.setLayout(new BoxLayout(c, BoxLayout.Y_AXIS));
+    panel.add(c);
+
     final JLabel l = new JLabel();
     l.setFont(new Font("SansSerif", 1, 40));  //$NON-NLS-1$
     l.setText(Resources.getString("Main.welcome"));  //$NON-NLS-1$
     l.setForeground(Color.black);
     l.setAlignmentX(0.5F);
-    panel.add(l);
+    c.add(l);
 
     Box b = Box.createHorizontalBox();
     final JButton tour =
@@ -82,14 +101,16 @@ public class FirstTimeUserPanel {
 
     final JPanel p = new JPanel();
     p.add(b);
-    panel.add(p);
+    c.add(p);
 
     tour.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent evt) {
         try {
-          GameModule.init(new BasicModule(new DataArchive(tourModule.getPath())));
+          GameModule.init(
+            new BasicModule(new DataArchive(tourModule.getPath())));
           GameModule.getGameModule().getFrame().setVisible(true);
-          GameModule.getGameModule().getGameState().loadGameInBackground(tourLogFile);
+          GameModule.getGameModule()
+                    .getGameState().loadGameInBackground(tourLogFile);
           SwingUtilities.getWindowAncestor(panel).dispose();
         }
         catch (Exception e) {
@@ -121,9 +142,11 @@ public class FirstTimeUserPanel {
 
     b = Box.createHorizontalBox();
     b.add(new JLabel(Resources.getString("Prefs.language")+":  "));
-    final JComboBox box = new JComboBox(Resources.getSupportedLocales().toArray());
+    final JComboBox box =
+      new JComboBox(Resources.getSupportedLocales().toArray());
     box.setRenderer(new DefaultListCellRenderer() {
       private static final long serialVersionUID = 1L;
+
       public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
         super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         setText(((Locale)value).getDisplayName());
@@ -142,10 +165,11 @@ public class FirstTimeUserPanel {
       }
     });
     b.add(box);
-    panel.add(b);
-  }
+    c.add(b);
 
-  public JComponent getControls() {
-    return panel;
+    add(panel);
+    pack();
+
+    setLocationRelativeTo(null);
   }
 }
