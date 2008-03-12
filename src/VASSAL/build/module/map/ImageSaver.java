@@ -50,9 +50,13 @@ import VASSAL.build.module.documentation.HelpFile;
 import VASSAL.configure.Configurer;
 import VASSAL.configure.ConfigurerFactory;
 import VASSAL.configure.IconConfigurer;
-import VASSAL.tools.BackgroundTask;
 import VASSAL.tools.FileChooser;
 import VASSAL.tools.LaunchButton;
+
+// FIXME: switch back to javax.swing.SwingWorker on move to Java 1.6
+//import javax.swing.SwingWorker;
+import org.jdesktop.swingworker.SwingWorker;
+
 
 /**
  * This allows the user to capture a snapshot of the entire map into a PNG file
@@ -177,7 +181,77 @@ public class ImageSaver extends AbstractConfigurable {
       w.add(text);
       w.pack();
       Rectangle r = map.getView().getTopLevelAncestor().getBounds();
-      w.setLocation(r.x + r.width / 2 - w.getSize().width / 2, r.y + r.height / 2 - w.getSize().height / 2);
+      w.setLocation(r.x + r.width / 2 - w.getSize().width / 2,
+                    r.y + r.height / 2 - w.getSize().height / 2);
+
+      final SwingWorker<Void,Void> task = new SwingWorker<Void,Void>() {
+        @Override
+        public Void doInBackground() throws Exception {
+          // FIXME: Don't open all of the file handles at once.
+          // Open, write, close, repeat instead.
+          final FileOutputStream[] p = new FileOutputStream[sectionCount];
+          try {
+            for (int i = 0; i < sectionCount; ++i) {
+              String sectionName = fileName;
+              if (sectionCount > 1) {
+                if (fileName.lastIndexOf(".") >= 0) {
+                  sectionName =
+                    fileName.substring(0, fileName.lastIndexOf(".")) +
+                    (i + 1) + fileName.substring(fileName.lastIndexOf("."));
+                }
+                else {
+                  sectionName = fileName + (i + 1);
+                }
+              }
+              p[i] = new FileOutputStream(sectionName);
+            }
+            writeImage(p);
+          }
+          finally {
+            for (FileOutputStream out : p) {
+              try {
+                out.close();
+              }
+              catch (IOException e) {
+                e.printStackTrace();
+              }
+            }
+          }
+      
+          return null;
+        }
+
+        @Override
+        protected void done() {
+          try { get(); }
+          catch (OutOfMemoryError e) {
+            e.printStackTrace();
+
+            final String msg = "Insufficient memory\n" + "Zooming out will reduce memory requirements\n" + "Otherwise, try again and you will be prompted to split the map\n" + "into a number of sections";
+
+
+            JOptionPane.showMessageDialog(
+              map.getView().getTopLevelAncestor(),
+              msg, "Error saving map image", JOptionPane.ERROR_MESSAGE);
+
+            promptToSplit = true;
+          }
+          catch (Exception e) {
+            e.printStackTrace();
+            String msg = e.getMessage();
+            if (msg == null || msg.length() == 0) {
+              msg = e.getClass().getName();
+              msg = msg.substring(msg.lastIndexOf(".") + 1);
+            }
+
+            JOptionPane.showMessageDialog(map.getView().getTopLevelAncestor(),
+              msg, "Error saving map image", JOptionPane.ERROR_MESSAGE);
+          }
+          w.dispose();
+        }
+      };
+
+/*
       BackgroundTask task = new BackgroundTask() {
         private Throwable error;
 
@@ -238,6 +312,7 @@ public class ImageSaver extends AbstractConfigurable {
           w.dispose();
         }
       };
+*/
 
       final Timer t = new Timer(1000, new ActionListener() {
         boolean toggle;
@@ -254,7 +329,8 @@ public class ImageSaver extends AbstractConfigurable {
       });
 
       w.setVisible(true);
-      task.start();
+//      task.start();
+      task.execute();
       t.start();
     }
   }
