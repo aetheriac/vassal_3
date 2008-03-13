@@ -147,6 +147,16 @@ public final class Info {
     return new File(System.getProperty("user.dir"));
   }
 
+  /**
+   * Returns the directory where the VASSAL documentation is installed.
+   * 
+   * @return a {@link File} representing the directory
+   */
+  public static File getDocsDir() {
+    final String d = isMacOSX ? "Contents/Resources/doc" : "doc";
+    return new File(getBaseDir(), d);
+  }
+
   public static File getHomeDir() {
     if (homeDir == null) {
       homeDir = new File(System.getProperty("user.home"), "VASSAL"); //$NON-NLS-1$ //$NON-NLS-2$
