@@ -18,9 +18,7 @@
  */
 package VASSAL.build.module.map;
 
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -33,14 +31,16 @@ import java.awt.image.RenderedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriter;
 import javax.imageio.event.IIOWriteProgressListener;
 import javax.imageio.stream.ImageOutputStream;
-import javax.imageio.stream.MemoryCacheImageOutputStream;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -71,13 +71,16 @@ import org.jdesktop.swingworker.SwingWorker;
 
 
 /**
- * This allows the user to capture a snapshot of the entire map into a PNG file
+ * This allows the user to capture a snapshot of the entire map into
+ * a PNG file.
  */
 public class ImageSaver extends AbstractConfigurable {
   protected LaunchButton launch;
   protected Map map;
   protected boolean promptToSplit = false;
   protected static final String DEFAULT_ICON = "/images/camera.gif";
+
+  protected static ProgressDialog dialog;
 
   public ImageSaver() {
     final ActionListener al = new ActionListener() {
@@ -90,7 +93,7 @@ public class ImageSaver extends AbstractConfigurable {
       new LaunchButton(null, TOOLTIP, BUTTON_TEXT, HOTKEY, ICON_NAME, al);
 
     // Set defaults for backward compatibility
-    launch.setAttribute(TOOLTIP, "Save Map as PNG file");
+    launch.setAttribute(TOOLTIP, "Save Map as PNG image");
     launch.setAttribute(BUTTON_TEXT, "");
     launch.setAttribute(ICON_NAME, DEFAULT_ICON);
   }
@@ -161,7 +164,84 @@ public class ImageSaver extends AbstractConfigurable {
     return launch.getAttributeValueString(key);
   }
 
+  /**
+   * Write a PNG-encoded snapshot of the map.
+   */
+  public void writeMapAsImage() {
+    // prompt user for image filename
+    final FileChooser fc = GameModule.getGameModule().getFileChooser();
+    fc.setSelectedFile(new File(fc.getCurrentDirectory(),
+      GameModule.getGameModule().getGameName() + "Map.png"));
+
+    if (fc.showSaveDialog(map.getView()) != FileChooser.APPROVE_OPTION) return; 
+   
+    final File file = fc.getSelectedFile();
+
+    dialog = new ProgressDialog(
+      (Frame) SwingUtilities.getAncestorOfClass(Frame.class, map.getView()),
+      "Saving Map Image");
+
+    // force the dialog to be a reasonable width
+    // FIXME: this is not really a good way to do this---should do
+    // something with the minimum size or font metrics
+    final int l = "Saving map image as ".length() + file.getName().length() + 6;
+    final StringBuilder b = new StringBuilder();
+    for (int i = 0; i < l; i++) b.append("N"); 
+    dialog.setLabel(b.toString());
+
+    dialog.pack();
+    dialog.setLabel("Saving map image as ");
+
+    dialog.setIndeterminate(true);
+
+    final Dimension s = map.mapSize();
+    s.width *= map.getZoom();
+    s.height *= map.getZoom();
+    writeMapRectAsImage(file, 0, 0, s.width, s.height);
+
+    dialog.setVisible(true);
+  }
+
+  /**
+   * Helper method for writing images.
+   *
+   * @param file the file to write
+   * @param x the left edge of the map area to write
+   * @param y the top edge of the map area to write
+   * @param w the width of the map area to write
+   * @param h the height of the map area to write
+   */
+  protected void writeMapRectAsImage(File file, int x, int y, int w, int h) {
+    final SnapshotTask task = new SnapshotTask(file, x, y, w, h);
+
+    task.addPropertyChangeListener(new PropertyChangeListener() {
+      public void propertyChange(PropertyChangeEvent e) {
+        if ("progress".equals(e.getPropertyName())) {
+          dialog.setProgress((Integer) e.getNewValue());
+        }
+        else if ("state".equals(e.getPropertyName())) {
+          if ((SwingWorker.StateValue) e.getNewValue() ==
+              SwingWorker.StateValue.DONE) {
+            // close the dialog on cancellation or completion
+            dialog.setVisible(false);
+            dialog.dispose();
+          }
+        }
+      }
+    });
+
+    dialog.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        task.cancel(true);
+      }
+    });
+
+    task.execute();
+  }
+
   private static class ProgressDialog extends JDialog {
+    private static final long serialVersionUID = 1L;
+
     private final JLabel label;
     private final JProgressBar progbar;
     private final JButton cancel;
@@ -201,6 +281,10 @@ public class ImageSaver extends AbstractConfigurable {
       label.setText(text);
     }
 
+    public void setIndeterminate(boolean indet) {
+      progbar.setIndeterminate(indet);
+    }
+
     public void setProgress(int percent) {
       progbar.setValue(percent);
     }
@@ -211,46 +295,52 @@ public class ImageSaver extends AbstractConfigurable {
   }
 
   private class SnapshotTask extends SwingWorker<Void,Void> {
-    private ImageWriter iw;
-    private ImageOutputStream os;
+    private int tiles;
+    private int tilesDone = 0;
 
-    private final String filename;
+    private final File file;
     private final int x;
     private final int y;
     private final int w;
     private final int h;
 
-    public SnapshotTask(String filename, int x, int y, int w, int h) {
-      this.filename = filename;
+    private final List<File> files = new ArrayList<File>();
+
+    public SnapshotTask(File file, int x, int y, int w, int h) {
+      this.file = file;
       this.x = x;
       this.y = y;
       this.w = w;
       this.h = h;
     }
 
-    @Override
-    public Void doInBackground() throws Exception {
-      setProgress(0);
+    private void writeImage(File f, BufferedImage img, Rectangle r)
+      throws IOException {
 
-      final BufferedImage img =
-        new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+      files.add(f);
+
+      dialog.setLabel("Saving map image as " + f.getName() + ":");
+      dialog.setIndeterminate(true);
 
       final Graphics2D g = img.createGraphics();
-      map.paintSynchronously(g, x, y);
+      g.translate(-r.x, -r.y);
+      map.paintRegion(g, r, null);
       g.dispose();
 
-      iw = ImageIO.getImageWritersByFormatName("png").next();
+      dialog.setIndeterminate(false);
+
+      final ImageWriter iw = ImageIO.getImageWritersByFormatName("png").next();
       iw.addIIOWriteProgressListener(new IIOWriteProgressListener() {
         public void imageComplete(ImageWriter source) { }
       
         public void imageProgress(ImageWriter source, float percentageDone) {
-          setProgress(Math.round(percentageDone));
+          setProgress(Math.round((100*tilesDone + percentageDone)/tiles));
         }
 
         public void imageStarted(ImageWriter source, int imageIndex) { }
 
         public void thumbnailComplete(ImageWriter source) { }
-
+  
         public void thumbnailProgress(ImageWriter source,
                                       float percentageDone) { }
 
@@ -260,9 +350,79 @@ public class ImageSaver extends AbstractConfigurable {
         public void writeAborted(ImageWriter source) { }
       });
 
-      os = new MemoryCacheImageOutputStream(new FileOutputStream(filename));
-      iw.setOutput(os);
-      iw.write(img);
+      final ImageOutputStream os = ImageIO.createImageOutputStream(f); 
+      try {
+        iw.setOutput(os);
+        iw.write(img);
+      }
+      finally {
+        os.flush();
+        iw.dispose();
+        try {
+          os.close();
+        }
+        catch (IOException e) {
+          ErrorLog.warn(e);
+        }
+      }
+    }
+
+    @Override
+    public Void doInBackground() throws Exception {
+      setProgress(0);
+
+      int iw = w;
+      int ih = h;
+      BufferedImage img = null;
+
+      // find a size of BufferedImage we can allocate successfully
+      while (img == null) {
+        try {
+          img = new BufferedImage(iw, ih, BufferedImage.TYPE_INT_ARGB);
+        }
+        catch (OutOfMemoryError e) {
+          if (iw > ih) iw = (int) Math.ceil(iw/2.0);
+          else ih = (int) Math.ceil(ih/2.0);
+        }
+      }
+
+      if (iw == w && ih == h) {
+        // write the whole map as one image
+        tiles = 1;
+        writeImage(file, img, new Rectangle(0, 0, w, h));
+      }
+      else {
+        // get the base name of the files to write 
+        final String base;
+        final String suffix; 
+        final String s = file.getName();
+        if (s.endsWith(".png")) {
+          base = s.substring(0, s.lastIndexOf("."));
+          suffix = ".png";
+        }
+        else {
+          base = s;
+          suffix = "";
+        }
+
+        // calculate total tiles 
+        tiles = (int) (Math.ceil((double)w/iw) * Math.ceil((double)h/ih));
+
+        // tile across the map with images of size iw by ih.
+        for (int ix = 0; ix < w; ix += iw) {
+          for (int iy = 0; iy < h; iy += ih) {
+            final File f = new File(file.getParent(),
+              base + "." + (ix/iw) + "." + (iy/iw) + suffix);
+  
+            final Rectangle r = new Rectangle(ix, iy,
+              Math.min(w-ix, iw), Math.min(h-iy, ih));
+  
+            writeImage(f, img, r);
+            tilesDone++;
+          }
+        }
+      }
+
       return null;
     }
 
@@ -271,259 +431,18 @@ public class ImageSaver extends AbstractConfigurable {
       try {
         get();
       }
-      catch (OutOfMemoryError e) {
-        iw.abort();
-        ErrorLog.warn(e);
-// FIXME: add code here to prompt for splitting         
+      catch (CancellationException e) {
+        // on cancellation, remove all files we created
+        for (File f : files) f.delete();
       }
-      catch (Exception e) {
-        iw.abort();
+      catch (InterruptedException e) {
         ErrorLog.warn(e);
       }
-      finally {
-        if (iw != null) iw.dispose();
-
-        if (os != null) {
-          try {
-            os.close();
-          }
-          catch (IOException e) {
-            ErrorLog.warn(e);
-          }
-        }
+      catch (ExecutionException e) {
+        ErrorLog.warn(e);
       }
     } 
   }
-
-  public void writeMapAsImage() {
-    final Dimension s = map.mapSize();
-    s.width *= map.getZoom();
-    s.height *= map.getZoom();
-    writeMapRectAsImage(0, 0, s.width, s.height);
-  }
-
-  protected void writeMapRectAsImage(int x, int y, int w, int h) {
-    // prompt user for image filename
-    final FileChooser fc = GameModule.getGameModule().getFileChooser();
-    fc.setSelectedFile(new File(fc.getCurrentDirectory(),
-      GameModule.getGameModule().getGameName() + "Map.png"));
-
-    if (fc.showSaveDialog(map.getView()) != FileChooser.APPROVE_OPTION) return; 
-   
-    final String filename = fc.getSelectedFile().getPath();
-
-    final ProgressDialog pd = new ProgressDialog(
-      (Frame) SwingUtilities.getAncestorOfClass(Frame.class, map.getView()),
-      "Progress");
-    
-    final SnapshotTask task = new SnapshotTask(filename, 0, 0, w, h);
-
-    task.addPropertyChangeListener(new PropertyChangeListener() {
-      public void propertyChange(PropertyChangeEvent e) {
-        if ("progress".equals(e.getPropertyName())) {
-          final int pct = (Integer) e.getNewValue();
-          pd.setProgress(pct);
-        }
-        else if ("state".equals(e.getPropertyName())) {
-          if ((SwingWorker.StateValue) e.getNewValue() ==
-              SwingWorker.StateValue.DONE) {
-            pd.setVisible(false);
-            pd.dispose();
-          }
-        }
-      }
-    });
-
-    pd.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        task.cancel(true);
-      }
-    });
-
-    task.execute();
-
-    pd.pack();
-    pd.setVisible(true);
-  }
-
-  /**
-   * Outputs a snapshot of the Map to a PNG file. Displays a file dialog to
-   * prompt the user for the file
-   */
-/*
-  public void writeMapAsImage() {
-    int sections = 1;
-    if (promptToSplit) {
-      final String s = JOptionPane.showInputDialog("Divide map into how many sections?\n(Using more sections requires less memory)");
-      if (s == null) {
-        return;
-      }
-      try {
-        sections = Integer.parseInt(s);
-      }
-      catch (NumberFormatException ex) {
-// FIXME: should do proper validation here
-      }
-    }
-
-    final FileChooser fc = GameModule.getGameModule().getFileChooser();
-    fc.setSelectedFile(
-      new File(fc.getCurrentDirectory(),
-               GameModule.getGameModule().getGameName() + "Map.png"));
-    
-    if (fc.showSaveDialog(map.getView()) != FileChooser.APPROVE_OPTION) return; 
-
-    final int sectionCount = sections;
-    final String fileName = fc.getSelectedFile().getPath();
-
-    final ProgressDialog pd = new ProgressDialog(
-      (Frame) SwingUtilities.getAncestorOfClass(Frame.class, map.getView()),
-      "Progress");
-
-    final SwingWorker<Void,Void> task = new SwingWorker<Void,Void>() {
-      private ImageWriter iw;
-
-      @Override
-      public Void doInBackground() throws Exception {
-
-        final Dimension buffer = map.getEdgeBuffer();
-        final int totalWidth =
-          (int) ((map.mapSize().width - 2 * buffer.width) * map.getZoom());
-        final int totalHeight =
-          (int) ((map.mapSize().height - 2 * buffer.height) * map.getZoom());
-
-        for (int i = 0; i < sectionCount; ++i) {
-          setProgress(0);
-
-          String sectionName = fileName;
-          if (sectionCount > 1) {
-            if (fileName.lastIndexOf(".") >= 0) {
-              sectionName =
-                fileName.substring(0, fileName.lastIndexOf(".")) +
-                (i + 1) + fileName.substring(fileName.lastIndexOf("."));
-            }
-            else {
-              sectionName = fileName + (i + 1);
-            }
-          }
-
-          final ImageOutputStream os = new MemoryCacheImageOutputStream(
-            new FileOutputStream(sectionName));
-
-          final int height = totalHeight / sectionCount;
-
-          final BufferedImage output =
-            new BufferedImage(totalWidth, height, BufferedImage.TYPE_INT_ARGB);
-
-          final Graphics2D gg = output.createGraphics();
-
-          map.paintSynchronously(gg,
-            -(int) (map.getZoom() * buffer.width),
-            -(int) (map.getZoom() * buffer.height) + height * i);
-          gg.dispose();
-
-          iw = ImageIO.getImageWritersByFormatName("png").next();
-          iw.addIIOWriteProgressListener(new IIOWriteProgressListener() {
-            public void imageComplete(ImageWriter source) {
-              pd.setVisible(false);
-              pd.dispose(); 
-            }
-      
-            public void imageProgress(ImageWriter source,
-                                      float percentageDone) {
-              setProgress(Math.round(percentageDone));
-            }
-
-            public void imageStarted(ImageWriter source, int imageIndex) {
-            }
-
-            public void thumbnailComplete(ImageWriter source) {
-            }
-
-            public void thumbnailProgress(ImageWriter source,
-                                          float percentageDone) {
-            }
-
-            public void thumbnailStarted(ImageWriter source,
-                                         int imageIndex, int thumbnailIndex) {
-            }
-  
-            public void writeAborted(ImageWriter source) {
-              pd.setVisible(false);
-              pd.dispose();
-            }
-          });
-
-          iw.setOutput(os);
-
-          try {
-            iw.write(output);
-          }     
-          finally {
-            try {
-              iw.dispose();
-              os.close();
-            }
-            catch (IOException e) {
-              e.printStackTrace();
-            }
-          }
-        }
-          
-        return null;
-      }
-
-      @Override
-      protected void done() {
-        try { get(); }
-        catch (OutOfMemoryError e) {
-          e.printStackTrace();
-
-          final String msg = "Insufficient memory\n" + "Zooming out will reduce memory requirements\n" + "Otherwise, try again and you will be prompted to split the map\n" + "into a number of sections";
-
-          JOptionPane.showMessageDialog(
-            map.getView().getTopLevelAncestor(),
-            msg, "Error saving map image", JOptionPane.ERROR_MESSAGE);
-
-          promptToSplit = true;
-        }
-        catch (Exception e) {
-          iw.abort();
-
-          e.printStackTrace();
-          String msg = e.getMessage();
-          if (msg == null || msg.length() == 0) {
-            msg = e.getClass().getName();
-            msg = msg.substring(msg.lastIndexOf(".") + 1);
-          }
-
-          JOptionPane.showMessageDialog(map.getView().getTopLevelAncestor(),
-            msg, "Error saving map image", JOptionPane.ERROR_MESSAGE);
-        }
-      }
-    };
-
-    task.addPropertyChangeListener(new PropertyChangeListener() {
-      public void propertyChange(PropertyChangeEvent e) {
-        if ("progress".equals(e.getPropertyName())) {
-          final int pct = (Integer) e.getNewValue();
-          pd.setProgress(pct);
-        }
-      }
-    });
-
-    pd.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        task.cancel(true);
-      }
-    });
-
-    task.execute();
-
-    pd.pack();
-    pd.setVisible(true);
-  }
-*/
 
   /**
    * Write a PNG-encoded snapshot of the map to the given OutputStreams,
@@ -546,9 +465,11 @@ public class ImageSaver extends AbstractConfigurable {
 
       Image output = map.getView().createImage(totalWidth, height);
       Graphics2D gg = (Graphics2D) output.getGraphics();
-      map.paintSynchronously(gg,
+      
+      map.paintRegion(gg, new Rectangle(
         -(int) (map.getZoom() * buffer.width),
-        -(int) (map.getZoom() * buffer.height) + height * i);
+        -(int) (map.getZoom() * buffer.height) + height * i,
+        totalWidth, totalHeight), null);
       gg.dispose();
       try {
         MediaTracker t = new MediaTracker(map.getView());
