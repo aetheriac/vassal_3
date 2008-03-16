@@ -173,13 +173,14 @@ public class ImageSaver extends AbstractConfigurable {
     fc.setSelectedFile(new File(fc.getCurrentDirectory(),
       GameModule.getGameModule().getGameName() + "Map.png"));
 
-    if (fc.showSaveDialog(map.getView()) != FileChooser.APPROVE_OPTION) return; 
+    final Frame frame =
+      (Frame) SwingUtilities.getAncestorOfClass(Frame.class, map.getView());
+
+    if (fc.showSaveDialog(frame) != FileChooser.APPROVE_OPTION) return; 
    
     final File file = fc.getSelectedFile();
 
-    dialog = new ProgressDialog(
-      (Frame) SwingUtilities.getAncestorOfClass(Frame.class, map.getView()),
-      "Saving Map Image");
+    dialog = new ProgressDialog(frame, "Saving Map Image");
 
     // force the dialog to be a reasonable width
     // FIXME: this is not really a good way to do this---should do
@@ -193,6 +194,7 @@ public class ImageSaver extends AbstractConfigurable {
     dialog.setLabel("Saving map image as ");
 
     dialog.setIndeterminate(true);
+    dialog.setLocationRelativeTo(frame);
 
     final Dimension s = map.mapSize();
     s.width *= map.getZoom();
