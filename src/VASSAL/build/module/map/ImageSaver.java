@@ -316,20 +316,31 @@ public class ImageSaver extends AbstractConfigurable {
       this.h = h;
     }
 
-    private void writeImage(File f, BufferedImage img, Rectangle r)
+    private void writeImage(final File f, BufferedImage img, Rectangle r)
       throws IOException {
 
       files.add(f);
 
-      dialog.setLabel("Saving map image as " + f.getName() + ":");
-      dialog.setIndeterminate(true);
+      // update the dialog on the EDT
+      SwingUtilities.invokeLater(new Runnable() {
+        public void run() {
+          dialog.setLabel("Saving map image as " + f.getName() + ":");
+          dialog.setIndeterminate(true);
+        }
+      });
 
+      // FIXME: do something to estimate how long painting will take
       final Graphics2D g = img.createGraphics();
       g.translate(-r.x, -r.y);
       map.paintRegion(g, r, null);
       g.dispose();
 
-      dialog.setIndeterminate(false);
+      // update the dialog on the EDT
+      SwingUtilities.invokeLater(new Runnable() {
+        public void run() {
+          dialog.setIndeterminate(false);
+        }
+      });
 
       final ImageWriter iw = ImageIO.getImageWritersByFormatName("png").next();
       iw.addIIOWriteProgressListener(new IIOWriteProgressListener() {
