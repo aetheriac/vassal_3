@@ -25,12 +25,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+
 import VASSAL.build.AbstractConfigurable;
 import VASSAL.build.Buildable;
 import VASSAL.build.GameModule;
 import VASSAL.build.module.documentation.HelpFile;
 import VASSAL.configure.VisibilityCondition;
 import VASSAL.i18n.Resources;
+import VASSAL.tools.MenuManager;
 
 /**
  * Defines a saved game that is accessible from the File menu.
@@ -196,10 +198,15 @@ public class PredefinedSetup extends AbstractConfigurable {
 
   public void addTo(Buildable parent) {
     if (parent instanceof GameModule) {
+      final MenuManager mm = MenuManager.getInstance();
+      originalItem = mm.getMenuItem("GameState.new_game");
+      mm.addMenuItem("GameState.new_game", getMenuInUse());
+/*
       JMenu fileMenu = GameModule.getGameModule().getFileMenu();
       originalItem = (JMenuItem) fileMenu.getMenuComponent(0);
       fileMenu.insert(getMenuInUse(), 0);
       fileMenu.remove(originalItem);
+*/
     }
     else if (parent instanceof PredefinedSetup) {
       PredefinedSetup setup = (PredefinedSetup) parent;
@@ -222,9 +229,13 @@ public class PredefinedSetup extends AbstractConfigurable {
 
   public void removeFrom(Buildable parent) {
     if (parent instanceof GameModule) {
+      final MenuManager mm = MenuManager.getInstance();
+      mm.addMenuItem("GameState.new_game", originalItem);
+/*
       JMenu fileMenu = GameModule.getGameModule().getFileMenu();
       fileMenu.insert(originalItem, 0);
       fileMenu.remove(getMenuInUse());
+*/
     }
     else if (parent instanceof PredefinedSetup) {
       PredefinedSetup setup = (PredefinedSetup) parent;

@@ -55,6 +55,7 @@ import VASSAL.tools.ArchiveWriter;
 import VASSAL.tools.BridgeStream;
 import VASSAL.tools.FileChooser;
 import VASSAL.tools.KeyStrokeListener;
+import VASSAL.tools.MenuManager;
 import VASSAL.tools.Obfuscator;
 
 public class BasicLogger implements Logger, Buildable, GameComponent, CommandEncoder {
@@ -98,8 +99,11 @@ public class BasicLogger implements Logger, Buildable, GameComponent, CommandEnc
     mod.addCommandEncoder(this);
     mod.getGameState().addGameComponent(this);
 
-    GameModule.getGameModule().getFileMenu().add(newLogAction);
-    GameModule.getGameModule().getFileMenu().add(endLogAction);
+    final MenuManager mm = MenuManager.getInstance();
+    mm.getInstance().addAction("BasicLogger.begin_logfile", newLogAction);
+    mm.getInstance().addAction("BasicLogger.end_logfile", endLogAction);
+//    GameModule.getGameModule().getFileMenu().add(newLogAction);
+//    GameModule.getGameModule().getFileMenu().add(endLogAction);
 
     JButton button = mod.getToolBar().add(undoAction);
     button.setToolTipText(Resources.getString("BasicLogger.undo_last_move"));  //$NON-NLS-1$
@@ -366,7 +370,9 @@ public class BasicLogger implements Logger, Buildable, GameComponent, CommandEnc
     }
     return null;
   }
+
   protected Action undoAction = new UndoAction();
+
   protected Action endLogAction = new AbstractAction(Resources.getString("BasicLogger.end_logfile")) {  //$NON-NLS-1$
     private static final long serialVersionUID = 1L;
 
@@ -387,6 +393,7 @@ public class BasicLogger implements Logger, Buildable, GameComponent, CommandEnc
       }
     }
   };
+
   protected Action newLogAction = new AbstractAction(Resources.getString("BasicLogger.begin_logfile")) {  //$NON-NLS-1$
     private static final long serialVersionUID = 1L;
 

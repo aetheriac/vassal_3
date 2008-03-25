@@ -35,6 +35,7 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -81,7 +82,9 @@ import VASSAL.preferences.Prefs;
 import VASSAL.tools.ComponentSplitter;
 import VASSAL.tools.BrowserSupport;
 import VASSAL.tools.DataArchive;
+import VASSAL.tools.ErrorLog;
 import VASSAL.tools.FileChooser;
+import VASSAL.tools.MenuManager;
 import VASSAL.tools.OrderedMenu;
 import VASSAL.tools.imports.ImportAction;
 
@@ -141,27 +144,66 @@ public class ModuleManager {
   public void showFrame() {
     if (theFrame == null) {
       theFrame = new JFrame("VASSAL");
-      theFrame.setLayout(new BoxLayout(theFrame.getContentPane(), BoxLayout.X_AXIS));
-      JMenuBar menuBar = new JMenuBar();
-      theFrame.setJMenuBar(menuBar);
-      menuBar.add(buildFileMenu());
-      menuBar.add(buildToolsMenu());
-      menuBar.add(buildHelpMenu());
+      theFrame.setLayout(
+        new BoxLayout(theFrame.getContentPane(), BoxLayout.X_AXIS));
+
+      // setup menubar and actions
+      final MenuManager mm = MenuManager.getInstance();
+      theFrame.setJMenuBar(mm.getMenuBar(MenuManager.MANAGER));
+
+      mm.addAction("Main.play_module", new LoadModuleAction(theFrame));
+      mm.addAction("Main.edit_module", new EditModuleAction(theFrame));
+      mm.addAction("Main.new_module", new CreateModuleAction(theFrame));
+      mm.addAction("Editor.import_module", new ImportAction(theFrame));
+      mm.addAction("General.quit", new ShutDownAction());
+
+      mm.addAction("Chat.server_status", new AbstractAction(
+                   Resources.getString("Chat.server_status")) {
+        private static final long serialVersionUID = 1L;
+
+        public void actionPerformed(ActionEvent e) {
+          serverStatusView.toggleVisibility();
+          BooleanConfigurer config = (BooleanConfigurer)
+            Prefs.getGlobalPrefs().getOption(SHOW_STATUS_KEY);
+          if (config != null) {
+            config.setValue(
+              config.booleanValue() ? Boolean.FALSE : Boolean.TRUE);
+          }
+        }
+      });
+      mm.addAction("Editor.ModuleEditor.translate_vassal",
+                   new TranslateVassalAction(theFrame));
+
+      mm.addAction("AboutScreen.about_vassal", AboutVASSAL.getAction());
+      URL url = null; 
+      try {
+        url = new File(Documentation.getDocumentationBaseDir(),
+                       "README.html").toURI().toURL();
+      }
+      catch (MalformedURLException e) {
+        ErrorLog.warn(e);
+      }
+      mm.addAction("General.help", new ShowHelpAction(url, null));
+
+      // set up panes
       JSplitPane modAndExtControls = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
       modAndExtControls.setResizeWeight(1.0);
       theFrame.add(modAndExtControls);
       modAndExtControls.add(buildModuleControls());
       extensionsControls = buildExtensionsControls();
       modAndExtControls.add(extensionsControls);
+
       JPanel allControls = new JPanel(new BorderLayout());
       JComponent serverStatusControls = buildServerStatusControls();
       allControls.add(modAndExtControls, BorderLayout.CENTER);
       theFrame.add(allControls);
+
       serverStatusView = new ComponentSplitter().splitRight(allControls, serverStatusControls, false);
       serverStatusView.revalidate();
       Rectangle r = Info.getScreenBounds(theFrame);
       extensionsControls.setPreferredSize(new Dimension(0, r.height / 4));
       serverStatusControls.setPreferredSize(new Dimension((int) (r.width / 3.5), 0));
+
       theFrame.setSize(3 * r.width / 4, 3 * r.height / 4);
       theFrame.setLocation(r.width / 8, r.height / 8);
       theFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -172,7 +214,9 @@ public class ModuleManager {
         }
       });
     }
-    BooleanConfigurer config = new BooleanConfigurer(SHOW_STATUS_KEY, null, true);
+
+    BooleanConfigurer config =
+      new BooleanConfigurer(SHOW_STATUS_KEY, null, true);
     Prefs.getGlobalPrefs().addOption(null, config);
     if (config.booleanValue()) {
       SwingUtilities.invokeLater(new Runnable() {
@@ -181,6 +225,7 @@ public class ModuleManager {
         }
       });
     }
+
     theFrame.setVisible(true);
   }
 

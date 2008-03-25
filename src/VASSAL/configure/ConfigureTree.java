@@ -18,6 +18,8 @@
  */
 package VASSAL.configure;
 
+import java.awt.Component;
+import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -70,6 +72,7 @@ import VASSAL.build.widget.PieceSlot;
 import VASSAL.i18n.Resources;
 import VASSAL.i18n.TranslateAction;
 import VASSAL.launch.EditorWindow;
+import VASSAL.tools.MenuManager;
 
 /**
  * This is the Configuration Tree that appears in the Configuration window
@@ -112,6 +115,7 @@ public class ConfigureTree extends JTree implements PropertyChangeListener, Mous
   protected Action propertiesAction;
   protected Action translateAction;
   protected Action helpAction;
+/*
   protected JMenuItem cutItem;
   protected JMenuItem copyItem;
   protected JMenuItem pasteItem;
@@ -119,8 +123,9 @@ public class ConfigureTree extends JTree implements PropertyChangeListener, Mous
   protected JMenuItem moveItem;
   protected JMenuItem propertiesItem;
   protected JMenuItem translateItem;
-  public static java.awt.Font POPUP_MENU_FONT =
-    new java.awt.Font("Dialog", 0, 11);
+*/
+
+  public static Font POPUP_MENU_FONT = new Font("Dialog", 0, 11);
   protected static List<AdditionalComponent> additionalComponents =
     new ArrayList<AdditionalComponent>();
   
@@ -681,7 +686,7 @@ public class ConfigureTree extends JTree implements PropertyChangeListener, Mous
     public Renderer() {
     }
 
-    public java.awt.Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+    public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
       Configurable c = null;
       if (value instanceof DefaultMutableTreeNode) {
         c = (Configurable) ((DefaultMutableTreeNode) value).getUserObject();
@@ -855,6 +860,17 @@ public class ConfigureTree extends JTree implements PropertyChangeListener, Mous
   }
 
   public void populateEditMenu(EditorWindow ew) {
+    final MenuManager mm = MenuManager.getInstance();
+    
+    mm.addAction("Editor.delete", deleteAction);
+    mm.addAction("Editor.cut", cutAction);
+    mm.addAction("Editor.copy", copyAction);
+    mm.addAction("Editor.paste", pasteAction);
+    mm.addAction("Editor.move", moveAction);
+    mm.addAction("Editor.ModuleEditor.properties", propertiesAction);
+    mm.addAction("Editor.ModuleEditor.translate", translateAction);
+
+/*
     ew.setMenuItem(EditorWindow.MenuKey.DELETE, deleteAction);
     ew.setMenuItem(EditorWindow.MenuKey.CUT, cutAction);
     ew.setMenuItem(EditorWindow.MenuKey.COPY, copyAction);
@@ -870,6 +886,7 @@ public class ConfigureTree extends JTree implements PropertyChangeListener, Mous
     moveItem = ew.getMenuItem(EditorWindow.MenuKey.MOVE);
     propertiesItem = ew.getMenuItem(EditorWindow.MenuKey.PROPERTIES);
     translateItem = ew.getMenuItem(EditorWindow.MenuKey.TRANSLATE);
+*/
 
     updateEditMenu(); 
   }

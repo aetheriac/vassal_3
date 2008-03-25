@@ -31,7 +31,6 @@ import java.util.Random;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
@@ -283,7 +282,10 @@ public abstract class GameModule extends AbstractConfigurable implements Command
   }
 
   public String[] getAttributeDescriptions() {
-    return new String[]{Resources.getString("Editor.GameModule.name_label"), Resources.getString("Editor.GameModule.version_label")}; //$NON-NLS-1$ //$NON-NLS-2$
+    return new String[]{
+      Resources.getString("Editor.GameModule.name_label"),   //$NON-NLS-1$
+      Resources.getString("Editor.GameModule.version_label") //$NON-NLS-1$
+    };
   }
 
   public Class<?>[] getAttributeTypes() {
@@ -601,20 +603,6 @@ public abstract class GameModule extends AbstractConfigurable implements Command
   }
 
   /**
-   * @return the File menu of the command window
-   */
-  public JMenu getFileMenu() {
-    return frame.getFileMenu();
-  }
-
-  /**
-   * @return the Help menu of the command window
-   */
-  public JMenu getHelpMenu() {
-    return frame.getHelpMenu();
-  }
-
-  /**
    * Append the string to the title of the controls window and all Map windows
    * @param s If null, set the title to the default.
    */
@@ -929,5 +917,4 @@ public abstract class GameModule extends AbstractConfigurable implements Command
       return getProperty(key);
     }
   }
-  
 }

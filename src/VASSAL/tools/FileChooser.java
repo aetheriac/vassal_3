@@ -68,7 +68,7 @@ public abstract class FileChooser {
    */
   public static FileChooser createFileChooser(Component parent, DirectoryConfigurer prefs, int mode) {
     FileChooser fc;
-    if (Info.isMacOsX()) {
+    if (Info.isMacOSX()) {
       // Mac has a good native file dialog
       fc = new NativeFileChooser(parent, prefs, mode);
     }

@@ -24,12 +24,13 @@ import java.awt.FlowLayout;
 
 import javax.swing.Action;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
+//import javax.swing.JMenu;
+//import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
 
-import VASSAL.tools.OrderedMenu;
+import VASSAL.tools.MenuManager;
+//import VASSAL.tools.OrderedMenu;
 import VASSAL.tools.WrapLayout;
 
 public class PlayerWindow extends JFrame {
@@ -42,6 +43,8 @@ public class PlayerWindow extends JFrame {
   public JPanel getControlPanel() {
     return controlPanel;
   }
+
+/*
   protected final JMenuBar menuBar = new JMenuBar();
 
   public JMenu getFileMenu() {
@@ -54,14 +57,25 @@ public class PlayerWindow extends JFrame {
 
   protected final JMenu fileMenu;
   protected final JMenu helpMenu;
+*/
+
   protected final JToolBar toolBar = new JToolBar();
   protected final JPanel controlPanel = new JPanel();
 
   public PlayerWindow() {
     setTitle("VASSAL");
     setLayout(new BorderLayout());
-    setJMenuBar(menuBar);
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+    // setup menubar and actions
+    final MenuManager mm = MenuManager.getInstance();
+    setJMenuBar(mm.getMenuBar(MenuManager.PLAYER));
+
+    mm.addAction("General.quit", new ShutDownAction());
+  
+    mm.addAction("AboutScreen.about_vassal", AboutVASSAL.getAction());
+
+/*
     // build File menu
     fileMenu = OrderedMenu.builder("General.file")
                           .appendItem("GameState.new_game")
@@ -78,7 +92,6 @@ public class PlayerWindow extends JFrame {
                           .create();
     fileMenu.add(new ShutDownAction());
     menuBar.add(fileMenu);
-    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     // build Help menu
     helpMenu = OrderedMenu.builder("General.help")
@@ -87,6 +100,7 @@ public class PlayerWindow extends JFrame {
     menuBar.add(helpMenu);
     final Action aboutVASSAL = AboutVASSAL.getAction();
     helpMenu.add(aboutVASSAL);
+*/
 
     // build toolbar
     toolBar.setLayout(new WrapLayout(FlowLayout.LEFT, 0, 0));

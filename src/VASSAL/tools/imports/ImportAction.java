@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ *
  * Copyright (c) 2008 by Michael Kiefte
  *
  * This library is free software; you can redistribute it and/or

@@ -27,9 +27,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-
+import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -52,6 +53,7 @@ import VASSAL.configure.ValidationReport;
 import VASSAL.configure.ValidationReportDialog;
 import VASSAL.i18n.Resources;
 import VASSAL.i18n.TranslateVassalWindow;
+import VASSAL.tools.MenuManager;
 import VASSAL.tools.OrderedMenu;
 
 /**
@@ -67,7 +69,8 @@ public abstract class EditorWindow extends JFrame {
   protected SaveAction saveAction;
   protected SaveAsAction saveAsAction;
   protected JMenuItem componentHelpItem;
-  protected JMenuItem createUpdater;
+//  protected JMenuItem createUpdater;
+  protected Action createUpdater;
   protected JMenuItem close;
 
   protected final HelpWindow helpWindow = new HelpWindow(
@@ -79,13 +82,14 @@ public abstract class EditorWindow extends JFrame {
   
   public abstract String getEditorType();
 
+  protected final JToolBar toolBar = new JToolBar();
+
+/*
   private final Map<MenuKey,JMenuItem> menuItems =
     new HashMap<MenuKey,JMenuItem>();
 
   protected final JMenuBar menuBar = new JMenuBar();
   
-  protected final JToolBar toolBar = new JToolBar();
-
   private final JMenu fileMenu;
   private final JMenu editMenu;
   private final JMenu toolsMenu;
@@ -171,23 +175,149 @@ public abstract class EditorWindow extends JFrame {
     }
     return null;
   }
+*/
 
   protected final JScrollPane scrollPane;
   
   protected EditorWindow() {
     setTitle("VASSAL " + getEditorType() + " Editor");    
     setLayout(new BorderLayout());
-    setJMenuBar(menuBar);
-    
+
     toolBar.setFloatable(false);
     add(toolBar, BorderLayout.NORTH);
 
+    // setup menubar and actions
+    final MenuManager mm = MenuManager.getInstance();
+    setJMenuBar(mm.getMenuBar(MenuManager.EDITOR));
+
+    final int mask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+
+    saveAction = new SaveAction() {
+      private static final long serialVersionUID = 1L;
+      public void actionPerformed(ActionEvent e) {
+        save();
+        treeStateChanged(false);
+      }
+    };
+
+    saveAction.setEnabled(false);
+    saveAction.putValue(Action.ACCELERATOR_KEY,
+      KeyStroke.getKeyStroke(KeyEvent.VK_S, mask));
+    mm.addAction("Editor.save", saveAction);
+    toolBar.add(saveAction);
+
+    saveAsAction = new SaveAsAction() {
+      private static final long serialVersionUID = 1L;
+      public void actionPerformed(ActionEvent e) {
+        saveAs();
+        treeStateChanged(false);
+      }
+    };
+
+    saveAsAction.setEnabled(false);
+    saveAsAction.putValue(Action.ACCELERATOR_KEY,
+      KeyStroke.getKeyStroke(KeyEvent.VK_A, mask));
+    mm.addAction("Editor.save_as", saveAsAction);
+    toolBar.add(saveAsAction);
+
+    mm.addAction("General.quit", new ShutDownAction());
+// FXIME: mnemonics should be language-dependant
+//    mm.getAction("General.quit").setMnemonic('Q');
+
+    createUpdater = new AbstractAction(
+                      "Create " + getEditorType() + " updater") {
+      private static final long serialVersionUID = 1L;
+
+      public void actionPerformed(ActionEvent e) {
+        new ModuleUpdaterDialog(EditorWindow.this).setVisible(true);
+      }
+    };
+    createUpdater.setEnabled(false);
+    mm.addAction("create_module_updater", createUpdater);
+
+
+    URL url = null;
+    try {
+      File dir = VASSAL.build.module.Documentation.getDocumentationBaseDir();
+      dir = new File(dir, "ReferenceManual/index.htm"); //$NON-NLS-1$
+      url = HelpFile.toURL(dir);
+    }
+    catch (MalformedURLException e) {
+      e.printStackTrace();
+    }
+
+    final Action helpAction = new ShowHelpAction(url,
+      helpWindow.getClass().getResource("/images/Help16.gif")); //$NON-NLS-1$
+    helpAction.putValue(Action.SHORT_DESCRIPTION, Resources.getString(
+      "Editor.ModuleEditor.reference_manual")); //$NON-NLS-1$
+
+    mm.addAction("Editor.ModuleEditor.reference_manual", helpAction);
+    toolBar.add(helpAction);
+
+/*
+    // Temporary Component Help item until the Module is loaded
+    componentHelpItem = new JMenuItem("Component help");
+    componentHelpItem.setEnabled(false);
+    menu.add(componentHelpItem);
+*/  
+  
+    mm.addAction("AboutScreen.about_vassal", AboutVASSAL.getAction());
+
+/*    
     // build File menu
     fileMenu = new JMenu(Resources.getString("General.file"));
     fileMenu.setMnemonic(KeyEvent.VK_F);
     menuBar.add(fileMenu);
     populateFileMenu(fileMenu);
+*/
 
+/*
+    final JMenuItem deleteItem =
+      new JMenuItem(Resources.getString("Editor.delete"));
+    deleteItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
+
+    final JMenuItem cutItem = new JMenuItem(Resources.getString("Editor.cut"));
+    cutItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, mask));
+
+    final JMenuItem copyItem =
+      new JMenuItem(Resources.getString("Editor.copy"));
+    copyItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, mask));
+
+    final JMenuItem pasteItem =
+      new JMenuItem(Resources.getString("Editor.paste"));
+    pasteItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, mask));
+
+    final JMenuItem moveItem =
+      new JMenuItem(Resources.getString("Editor.move"));
+    moveItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, mask));
+
+    final JMenuItem propertiesItem =
+      new JMenuItem(Resources.getString("Editor.ModuleEditor.properties"));
+    propertiesItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, mask));
+
+    final JMenuItem translateItem = new JMenuItem(
+      Resources.getString("Editor.ModuleEditor.translate"), KeyEvent.VK_T);
+    translateItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, mask));
+
+    addMenuItem(MenuKey.DELETE, menu.add(deleteItem));
+    addMenuItem(MenuKey.CUT, menu.add(cutItem));
+    addMenuItem(MenuKey.COPY, menu.add(copyItem));
+    addMenuItem(MenuKey.PASTE, menu.add(pasteItem));
+    addMenuItem(MenuKey.MOVE, menu.add(moveItem));
+    menu.addSeparator();
+    addMenuItem(MenuKey.PROPERTIES, menu.add(propertiesItem));
+    addMenuItem(MenuKey.TRANSLATE, menu.add(translateItem));
+
+    deleteItem.setEnabled(false);
+    cutItem.setEnabled(false);
+    copyItem.setEnabled(false);
+    pasteItem.setEnabled(false);
+    moveItem.setEnabled(false);
+    propertiesItem.setEnabled(false);
+    translateItem.setEnabled(false);
+*/
+    
+/*
     // build Edit menu 
     editMenu = OrderedMenu.builder("General.edit").create();
     menuBar.add(editMenu);
@@ -202,6 +332,7 @@ public abstract class EditorWindow extends JFrame {
     helpMenu = new JMenu(Resources.getString("General.help"));
     menuBar.add(helpMenu);
     populateHelpMenu(helpMenu);
+*/
  
     // the presence of the panel prevents a NullPointerException on packing
     final JPanel panel = new JPanel();
@@ -220,12 +351,13 @@ public abstract class EditorWindow extends JFrame {
    * Add options to the File Menu. Different component types will 
    * add different options.
    */
-  protected abstract void populateFileMenu(JMenu menu);
+//  protected abstract void populateFileMenu(JMenu menu);
 
   /**
    * Add options to the Edit Menu. These are dummies entries, which
    * the {@link ConfigureTree} will replace when a module is loaded.
    */
+/*
   protected void populateEditMenu(JMenu menu) {
     final int mask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
@@ -273,17 +405,19 @@ public abstract class EditorWindow extends JFrame {
     propertiesItem.setEnabled(false);
     translateItem.setEnabled(false);
   }
+*/
 
   /**
    * Add options to the Tools Menu. Different component types will 
    * add different options.
    */
-  protected abstract void populateToolsMenu(JMenu menu);
+//  protected abstract void populateToolsMenu(JMenu menu);
  
   /**
    * Add options to the Help Menu. All component types share the same Help 
    * Menu options.
    */
+/*
   protected void populateHelpMenu(JMenu menu) {
 
     Action helpAction = null;
@@ -314,10 +448,12 @@ public abstract class EditorWindow extends JFrame {
     final Action aboutVASSAL = AboutVASSAL.getAction();
     menuItems.put(MenuKey.ABOUT_VASSAL, menu.add(aboutVASSAL));
   }
+*/
   
   /*
    * Menu Items common to multiple components
-   */  
+   */
+/* 
   protected void addSaveMenuItem(JMenu menu) {
     saveAction = new SaveAction() {
       private static final long serialVersionUID = 1L;
@@ -347,14 +483,16 @@ public abstract class EditorWindow extends JFrame {
     addMenuItem(MenuKey.SAVE_AS, menu.add(saveAsAction));
     toolBar.add(saveAsAction);
   }
-  
+*/
+ 
   /*
    * Each component must Save, SaveAs and close itself
    */
   protected abstract void save();
   protected abstract void saveAs();
   protected abstract void close();
-  
+ 
+/* 
   protected void addQuitMenuItem(JMenu menu) {
     menuItems.put(MenuKey.QUIT, menu.add(new ShutDownAction()));
 // FXIME: mnemonics should be language-dependant
@@ -385,6 +523,7 @@ public abstract class EditorWindow extends JFrame {
 
     addMenuItem(MenuKey.CREATE_MODULE_UPDATER, createUpdater);
   }
+*/
   
   protected void saver(final Runnable save) {
     final ValidationReport report = new ValidationReport();

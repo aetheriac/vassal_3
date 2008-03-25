@@ -20,6 +20,7 @@
 package VASSAL.tools;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
@@ -27,13 +28,16 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
+
+// FIXME: switch to these once we move to Java 1.6
+//import javax.swing.GroupLayout;
+//import javax.swing.LayoutStyle;
+import org.jdesktop.layout.GroupLayout;
+import org.jdesktop.layout.LayoutStyle;
 
 import VASSAL.build.GameModule;
 import VASSAL.configure.PasswordConfigurer;
@@ -58,11 +62,6 @@ public class UsernameAndPasswordDialog extends JDialog {
     setLocationRelativeTo(parent);
     setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
-    final JPanel panel = new JPanel();
-    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-    panel.setBorder(new EmptyBorder(12, 12, 11, 11));
-    add(panel);
-
     final StringConfigurer nameConfig = new StringConfigurer(null,
       Resources.getString("WizardSupport.RealName")); //$NON-NLS-1$
     final StringConfigurer pwd = new PasswordConfigurer(null,
@@ -70,27 +69,16 @@ public class UsernameAndPasswordDialog extends JDialog {
     final StringConfigurer pwd2 = new PasswordConfigurer(null,
       Resources.getString("WizardSupport.ConfirmPassword")); //$NON-NLS-1$
 
-    panel.add(nameConfig.getControls());
-    panel.add(pwd.getControls());
-    panel.add(pwd2.getControls());
+    final Component nc = nameConfig.getControls();
+    final Component p1 = pwd.getControls();
+    final Component p2 = pwd2.getControls();
 
     final JLabel note =
       new JLabel(Resources.getString("WizardSupport.NameAndPasswordDetails"));
-    note.setAlignmentX(0.5f);
-    note.setBorder(new EmptyBorder(12,0,0,0));
-    panel.add(note);
 
     final JLabel error = new JLabel(Resources.getString(
       "WizardSupport.EnterNameAndPassword")); //$NON-NLS-1$
-    error.setAlignmentX(0.5f);
-    error.setBorder(new EmptyBorder(12,0,17,0));
-    panel.add(error);
    
-    panel.add(Box.createVerticalGlue());
-
-    final Box bb = Box.createHorizontalBox();
-    bb.add(Box.createHorizontalGlue());    
-
     final JButton ok = new JButton(Resources.getString("General.ok"));
     ok.setEnabled(false);
     ok.addActionListener(new ActionListener() {
@@ -116,9 +104,6 @@ public class UsernameAndPasswordDialog extends JDialog {
         }
       }
     });
-    bb.add(ok);
-
-    bb.add(Box.createHorizontalStrut(5));
 
     final JButton cancel = new JButton(Resources.getString("General.cancel"));
     cancel.addActionListener(new ActionListener() {
@@ -126,24 +111,87 @@ public class UsernameAndPasswordDialog extends JDialog {
         UsernameAndPasswordDialog.this.dispose(); 
       }
     });
-    bb.add(cancel);
- 
-    // make buttons the same width
-    JButton[] buttons = new JButton[] { ok, cancel };
-    int maxwidth = 0;
-    for (JButton b : buttons) {
-      final Dimension d = b.getPreferredSize();
-      if (d.width > maxwidth) maxwidth = d.width;
-    }
-    final Dimension d = ok.getPreferredSize();
-    d.width = maxwidth;
-    for (JButton b : buttons) {
-      b.setPreferredSize(d);
-    } 
+   
+    final JPanel panel = new JPanel();
 
-    panel.add(bb);
+    final GroupLayout layout = new GroupLayout(panel);
+    panel.setLayout(layout);
+
+/*
+    // FIXME: This is the layout code for Java 1.6
+
+    layout.setAutoCreateGaps(true);
+    layout.setAutoCreateContainerGaps(true);
+
+    layout.setHorizontalGroup(
+      layout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+        .addComponent(nc)
+        .addComponent(p1)
+        .addComponent(p2)
+        .addComponent(note)
+        .addGroup(layout.createSequentialGroup()
+          .addGap(0, 0, Integer.MAX_VALUE)
+          .addComponent(error)
+          .addGap(0, 0, Integer.MAX_VALUE))
+        .addGroup(layout.createSequentialGroup()
+          .addGap(0, 0, Integer.MAX_VALUE)
+          .addComponent(ok)
+          .addComponent(cancel)));
+      
+    layout.setVerticalGroup(
+      layout.createSequentialGroup()
+        .addComponent(nc)
+        .addComponent(p1)
+        .addComponent(p2)
+        .addComponent(note)
+        .addComponent(error)
+        .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED,
+                         GroupLayout.DEFAULT_SIZE, Integer.MAX_VALUE)
+        .addGroup(
+          layout.createParallelGroup(GroupLayout.Alignment.BASELINE, false)
+            .addComponent(ok)
+            .addComponent(cancel)));
+
+    layout.linkSize(ok, cancel);
+*/
+
+    layout.setAutocreateGaps(true);
+    layout.setAutocreateContainerGaps(true);
+
+    layout.setHorizontalGroup(
+      layout.createParallelGroup(GroupLayout.LEADING, true)
+        .add(nc)
+        .add(p1)
+        .add(p2)
+        .add(note)
+        .add(layout.createSequentialGroup()
+          .add(0, 0, Integer.MAX_VALUE)
+          .add(error)
+          .add(0, 0, Integer.MAX_VALUE))
+        .add(layout.createSequentialGroup()
+          .add(0, 0, Integer.MAX_VALUE)
+          .add(ok)
+          .add(cancel)));
+      
+    layout.setVerticalGroup(
+      layout.createSequentialGroup()
+        .add(nc)
+        .add(p1)
+        .add(p2)
+        .add(note)
+        .add(error)
+        .addPreferredGap(LayoutStyle.UNRELATED,
+                         GroupLayout.DEFAULT_SIZE, Integer.MAX_VALUE)
+        .add(
+          layout.createParallelGroup(GroupLayout.BASELINE, false)
+            .add(ok)
+            .add(cancel)));
+
+    layout.linkSize(new Component[]{ok, cancel});
     
+    add(panel);
     pack();
+
     setMinimumSize(getSize());
 
     // This listener handles validating the input, updating the error
