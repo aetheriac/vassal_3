@@ -34,15 +34,13 @@ com/DTDs/PropertyList-1.0.dtd">
     <key>WorkingDirectory</key>
     <string>$APP_PACKAGE</string>
     <key>MainClass</key>
-    <string>VASSAL.launch.Main</string>
+    <string>VASSAL.launch.ModuleManager</string>
     <key>JVMVersion</key>
     <string>1.5+</string>
     <key>ClassPath</key>
     <array>
       <string>$JAVAROOT/Vengine.jar</string>
     </array>
-    <key>VMOptions</key>
-    <string>-Xms256M -Xmx512M</string>
   </dict>
 </dict>
 </plist>

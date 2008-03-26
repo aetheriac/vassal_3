@@ -42,6 +42,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
@@ -51,6 +52,7 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -96,7 +98,41 @@ import VASSAL.tools.imports.ImportAction;
  * @since 3.1.0
  */
 public class ModuleManager {
-  private static ModuleManager instance;
+
+  protected void launch() {
+    final File prefsFile = new File(Info.getHomeDir(), "Preferences");
+    final boolean isFirstTime = !prefsFile.exists();
+
+    if (isFirstTime) {
+      new FirstTimeDialog().setVisible(true);
+    }
+    else {
+      showFrame();
+    }
+  }
+ 
+  public static void main(String[] args) {
+    StartUp.initSystemProperties();
+    StartUp.setupErrorLog();
+
+    new Thread(new ErrorLog.Group(), "Main Thread") { //$NON-NLS-1$
+      public void run() {
+        Runnable runnable = new Runnable() {
+          public void run() {
+            getInstance().launch();
+          }
+        };
+        SwingUtilities.invokeLater(runnable);
+      }
+    }.start();
+  }
+
+  public static ModuleManager getInstance() {
+    return instance;
+  }
+
+  private static final ModuleManager instance = new ModuleManager();
+  
   private static final String SHOW_STATUS_KEY = "showServerStatus";
   private JFrame theFrame;
   private DefaultListModel modules = new DefaultListModel();
@@ -106,13 +142,6 @@ public class ModuleManager {
   private CardLayout modulePanelLayout;
   private JPanel moduleView;
   private ComponentSplitter.SplitPane serverStatusView;
-
-  public static ModuleManager getInstance() {
-    if (instance == null) {
-      instance = new ModuleManager();
-    }
-    return instance;
-  }
 
   public void addModule(File f) {
     if (!modules.contains(f)) {
@@ -150,9 +179,11 @@ public class ModuleManager {
       // setup menubar and actions
       final MenuManager mm = MenuManager.getInstance();
       theFrame.setJMenuBar(mm.getMenuBar(MenuManager.MANAGER));
-
-      mm.addAction("Main.play_module", new LoadModuleAction(theFrame));
-      mm.addAction("Main.edit_module", new EditModuleAction(theFrame));
+     
+//      mm.addAction("Main.play_module", new LoadModuleAction(theFrame));
+      mm.addAction("Main.play_module", new Player.LaunchAction(theFrame, null));
+//      mm.addAction("Main.edit_module", new EditModuleAction(theFrame));
+      mm.addAction("Main.edit_module", new Editor.LaunchAction(theFrame, null));
       mm.addAction("Main.new_module", new CreateModuleAction(theFrame));
       mm.addAction("Editor.import_module", new ImportAction(theFrame));
       mm.addAction("General.quit", new ShutDownAction());
@@ -289,6 +320,7 @@ public class ModuleManager {
     return view;
   }
 
+/*
   protected JMenu buildFileMenu() {
     JMenu menu = OrderedMenu.builder("General.file").create();
     menu.add(new LoadModuleAction(menu));
@@ -329,6 +361,7 @@ public class ModuleManager {
     menu.add(new TranslateVassalAction(theFrame));
     return menu;
   }
+*/
 
   protected JList buildModuleList() {
     recentModuleConfig = new StringArrayConfigurer("RecentModules", null);
@@ -399,7 +432,8 @@ public class ModuleManager {
           int index = list.locationToIndex(e.getPoint());
           if (index >= 0) {
             final File module = (File) list.getModel().getElementAt(index);
-            new LoadModuleAction(module).actionPerformed(null);
+//            new LoadModuleAction(module).actionPerformed(null);
+            new Player.LaunchAction(theFrame, module).actionPerformed(null);
           }
         }
       }
@@ -407,8 +441,10 @@ public class ModuleManager {
       private JPopupMenu buildPopup(int index) {
         JPopupMenu m = new JPopupMenu();
         final File module = (File) list.getModel().getElementAt(index);
-        m.add(new LoadModuleAction(module));
-        m.add(new EditModuleAction(module));
+//        m.add(new LoadModuleAction(module));
+        m.add(new Player.LaunchAction(theFrame, module));
+//        m.add(new EditModuleAction(module));
+        m.add(new Editor.LaunchAction(theFrame, module));
         m.add(new AbstractAction(Resources.getString("General.remove")) {
           private static final long serialVersionUID = 1L;
 

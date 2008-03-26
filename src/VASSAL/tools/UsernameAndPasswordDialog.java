@@ -190,8 +190,8 @@ public class UsernameAndPasswordDialog extends JDialog {
     layout.linkSize(new Component[]{ok, cancel});
     
     add(panel);
-    pack();
 
+    pack();
     setMinimumSize(getSize());
 
     // This listener handles validating the input, updating the error

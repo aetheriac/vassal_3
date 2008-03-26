@@ -61,7 +61,7 @@ public class OrderedMenu extends JMenu {
     // Note: This is extremely inefficient, but menus are small and
     // coding it this way kept the code simple.
 
-System.out.println("adding " + item.getText());
+//System.out.println("adding " + item.getText());
 
     // find location of this item in pre-built list
     final int target = items.indexOf(item.getText());
@@ -97,7 +97,7 @@ System.out.println("adding " + item.getText());
       ret = super.insert(item, 0);
     }
 
-System.out.println(actual + " " + item.getText());
+//System.out.println(actual + " " + item.getText());
 
     // reinsert separators
     for (int i = 0; i < items.size(); i++) {

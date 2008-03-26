@@ -707,8 +707,8 @@ Section "-Application" Application
   !include "${TMPDIR}/install_files.inc"
 
   ; create the heap sizes config file
-  SetOutPath "$INSTDIR"
-  ExecWait 'javaw -cp "$INSTDIR\lib\Vengine.jar" VASSAL.launch.HeapSetter'
+;  SetOutPath "$INSTDIR"
+;  ExecWait 'javaw -cp "$INSTDIR\lib\Vengine.jar" VASSAL.launch.HeapSetter'
 
   ; write keys to the registry
   WriteRegStr HKLM "${IROOT}" "InstallLocation" "$INSTDIR"
