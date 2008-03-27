@@ -256,6 +256,8 @@ public class Player {
             module.getPath()
           );
 
+          pb.directory(new File(System.getProperty("user.dir")));
+
           final Process p = pb.start();
           final InputStream in = p.getInputStream();
           in.read();
