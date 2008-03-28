@@ -29,16 +29,13 @@ import VASSAL.build.GameModule;
 import VASSAL.build.module.ExtensionsLoader;
 import VASSAL.build.module.GlobalOptions;
 import VASSAL.build.module.ModuleExtension;
-import VASSAL.configure.DirectoryConfigurer;
 import VASSAL.i18n.Localization;
 import VASSAL.i18n.Resources;
 import VASSAL.launch.os.macos.MacOS;
 import VASSAL.preferences.Prefs;
 import VASSAL.tools.DataArchive;
 import VASSAL.tools.ErrorLog;
-import VASSAL.tools.FileChooser;
 import VASSAL.tools.JarArchive;
-import VASSAL.tools.ProgressDialog;
 
 public class Player {
   protected boolean isFirstTime;
@@ -52,22 +49,19 @@ public class Player {
     StartUp.initSystemProperties();
     StartUp.setupErrorLog();
 
-    new Thread(new ErrorLog.Group(), "Main Thread") { //$NON-NLS-1$
+    Thread.setDefaultUncaughtExceptionHandler(new ErrorLog());
+    
+    SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        Runnable runnable = new Runnable() {
-          public void run() {
-            try {
-              Player.this.configure(args);
-              Player.this.extractResourcesAndLaunch(0);
-            }
-            catch (IOException e) {
-              reportError(e);
-            }
-          }
-        };
-        SwingUtilities.invokeLater(runnable);
+        try {
+          Player.this.configure(args);
+          Player.this.extractResourcesAndLaunch(0);
+        }
+        catch (IOException e) {
+          reportError(e);
+        }
       }
-    }.start();
+    });
   }
 
   protected void extractResourcesAndLaunch(final int resourceIndex) throws IOException {
@@ -115,35 +109,39 @@ public class Player {
   }
 
   protected void launch() throws IOException {
-    if (isFirstTime) {
-      new FirstTimeDialog().setVisible(true);
-    }
-    else if (builtInModule) {
-      GameModule.init(createModule(createDataArchive()));
-      for (String ext : autoExtensions) {
-        createExtension(ext).build();
+    try {
+      if (isFirstTime) {
+        new FirstTimeDialog().setVisible(true);
       }
-      createExtensionsLoader().addTo(GameModule.getGameModule());
-      Localization.getInstance().translate();
-      GameModule.getGameModule().getWizardSupport().showWelcomeWizard();
-    }
-    else if (moduleFile == null) {
-      return;
-    }
-    else {
-      GameModule.init(createModule(createDataArchive()));
-      createExtensionsLoader().addTo(GameModule.getGameModule());
-      Localization.getInstance().translate();
-      if (savedGame != null) {
-        GameModule.getGameModule().getFrame().setVisible(true);
-        GameModule.getGameModule().getGameState().loadGameInBackground(savedGame);
-      }
-      else {
+      else if (builtInModule) {
+        GameModule.init(createModule(createDataArchive()));
+        for (String ext : autoExtensions) {
+          createExtension(ext).build();
+        }
+        createExtensionsLoader().addTo(GameModule.getGameModule());
+        Localization.getInstance().translate();
         GameModule.getGameModule().getWizardSupport().showWelcomeWizard();
       }
+      else if (moduleFile == null) {
+        return;
+      }
+      else {
+        GameModule.init(createModule(createDataArchive()));
+        createExtensionsLoader().addTo(GameModule.getGameModule());
+        Localization.getInstance().translate();
+        final GameModule m = GameModule.getGameModule();
+        if (savedGame != null) {
+          m.getFrame().setVisible(true);
+          m.getGameState().loadGameInBackground(savedGame);
+        }
+        else {
+          m.getWizardSupport().showWelcomeWizard();
+        }
+      }
+    }  
+    finally {
+      System.out.print("\n");
     }
-    
-    System.out.print("\n");
   }
 
   protected ExtensionsLoader createExtensionsLoader() {
@@ -172,7 +170,7 @@ public class Player {
     isFirstTime = !prefsFile.exists();
     int n = -1;
     while (++n < args.length) {
-      String arg = args[n];
+      final String arg = args[n];
       if ("-auto".equals(arg)) {
         builtInModule = true;
       }
@@ -193,152 +191,47 @@ public class Player {
     }
   }
 
-  public static final int DEFAULT_INITIAL_HEAP = 256;
-  public static final int DEFAULT_MAXIMUM_HEAP = 512;
-
-  public static class LaunchAction extends AbstractAction {
+  public static class LaunchAction extends AbstractLaunchAction {
     private static final long serialVersionUID = 1L;
 
-    private Frame frame;    
-    private File module;
-
     public LaunchAction(Frame frame, File module) {
-      super(Resources.getString("Main.play_module"));
-      this.frame = frame;
-      this.module = module;
+      super(Resources.getString("Main.play_module"), frame,
+            Player.class.getName(), new String[0], module);
+      setEnabled(!editing.contains(module));
     }
 
+    @Override
     public void actionPerformed(ActionEvent e) {
-      if (module == null) {
-        final FileChooser fc = FileChooser.createFileChooser(frame,
-          (DirectoryConfigurer)
-            Prefs.getGlobalPrefs().getOption(Prefs.MODULES_DIR_KEY));
-
-        if (fc.showOpenDialog() == FileChooser.APPROVE_OPTION) {
-          module = fc.getSelectedFile();
-          if (module != null && !module.exists()) module = null;
-        }
-
-        if (module == null) return;
+      if (module == null) { 
+        // prompt the user to pick a module
+        if (promptForModule() == null) return;
       }
 
-      frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+      // register that this module is being played
+      if (editing.contains(module)) return;
+      Integer count = playing.get(module);
+      playing.put(module, count == null ? 0 : ++count);
 
-      new SwingWorker<Void,Void>() {
-        @Override
-        public Void doInBackground() throws Exception {
-          int initialHeap; 
-          try {
-            initialHeap = Integer.parseInt(Prefs.getGlobalPrefs()
-              .getStoredValue(GlobalOptions.INITIAL_HEAP));
-          }
-          catch (NumberFormatException ex) {
-            ErrorLog.warn(ex);
-            initialHeap = DEFAULT_INITIAL_HEAP;
-          }
+      super.actionPerformed(e);
+    }
 
-          int maximumHeap;
-          try {
-            maximumHeap = Integer.parseInt(Prefs.getGlobalPrefs()
-              .getStoredValue(GlobalOptions.MAXIMUM_HEAP));
-          }
-          catch (NumberFormatException ex) {
-            ErrorLog.warn(ex);
-            maximumHeap = DEFAULT_MAXIMUM_HEAP;
-          }
-  
-          final ProcessBuilder pb = new ProcessBuilder(
-            "java",
-            "-Xms" + initialHeap + "M",
-            "-Xmx" + maximumHeap + "M",
-            "-cp", "lib/Vengine.jar",
-            "VASSAL.launch.Player",
-            module.getPath()
-          );
-
-          pb.directory(new File(System.getProperty("user.dir")));
-
-          final Process p = pb.start();
-          final InputStream in = p.getInputStream();
-          in.read();
-          return null;
-        }
-
+    @Override
+    protected LaunchTask getLaunchTask() {
+      return new LaunchTask() {
         @Override
         protected void done() {
-          try {
-            get();
-          }
-          catch (CancellationException e) {
-          }
-          catch (InterruptedException e) {
-            ErrorLog.warn(e);
-          }
-          catch (ExecutionException e) {
-            ErrorLog.warn(e);
-          }
+          super.done();
 
-          frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+          // reduce the playing count
+          Integer count = playing.get(module);
+          if (count == 1) {
+            playing.remove(module);
+// FIXME: setEnabled(true) for editing here also
+          }
+          else playing.put(module, --count);
         }
-      }.execute();
-
-/*
-      int initialHeap; 
-      try {
-        initialHeap = Integer.parseInt(
-          Prefs.getGlobalPrefs().getStoredValue(GlobalOptions.INITIAL_HEAP));
-      }
-      catch (NumberFormatException ex) {
-        ErrorLog.warn(ex);
-        initialHeap = DEFAULT_INITIAL_HEAP;
-      }
-
-      int maximumHeap;
-      try {
-        maximumHeap = Integer.parseInt(
-          Prefs.getGlobalPrefs().getStoredValue(GlobalOptions.MAXIMUM_HEAP));
-      }
-      catch (NumberFormatException ex) {
-        ErrorLog.warn(ex);
-        maximumHeap = DEFAULT_MAXIMUM_HEAP;
-      }
-
-      try {
-*/
-/*
-        final ProcessBuilder pb = new ProcessBuilder(
-          "java",
-          "-agentlib:yjpagent",
-          "-Xms" + initialHeap + "M",
-          "-Xmx" + maximumHeap + "M",
-          "-cp", "classes:lib/*",
-          "VASSAL.launch.Player",
-          module.getPath()
-        );
-        
-        final Map<String,String> env = pb.environment();
-        env.put("LD_LIBRARY_PATH", "/home/uckelman/java/yjp/bin/linux-amd64");
-
-        pb.start();
-*/
-        
-/*
-        final ProcessBuilder pb = new ProcessBuilder(
-          "java",
-          "-Xms" + initialHeap + "M",
-          "-Xmx" + maximumHeap + "M",
-          "-cp", "lib/Vengine.jar",
-          "VASSAL.launch.Player",
-          module.getPath()
-        );
-        
-        final Process p = pb.start();
-      }
-      catch (IOException ex) {
-        ErrorLog.warn(ex);
-      }
-*/
-    } 
+      };
+    }
   }
 
   public static void main(String[] args) {
