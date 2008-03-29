@@ -48,6 +48,7 @@ import org.jdesktop.swinghelper.debug.CheckThreadViolationRepaintManager;
 import org.jdesktop.swinghelper.debug.EventDispatchThreadHangMonitor;
 */
 
+@Deprecated
 public class Main {
   protected boolean isFirstTime;
   protected boolean builtInModule;
@@ -198,7 +199,7 @@ public class Main {
       GameModule.getGameModule().getWizardSupport().showWelcomeWizard();
     }
     else if (moduleFile == null) {
-      ModuleManager.getInstance().showFrame();
+      ModuleManagerWindow.getInstance().setVisible(true);
     }
     else if (editMode) {
       new EditModuleAction(moduleFile).loadModule(moduleFile);

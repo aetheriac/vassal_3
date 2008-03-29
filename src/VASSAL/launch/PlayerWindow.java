@@ -24,13 +24,11 @@ import java.awt.FlowLayout;
 
 import javax.swing.Action;
 import javax.swing.JFrame;
-//import javax.swing.JMenu;
-//import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
 
+import VASSAL.Info;
 import VASSAL.tools.MenuManager;
-//import VASSAL.tools.OrderedMenu;
 import VASSAL.tools.WrapLayout;
 
 public class PlayerWindow extends JFrame {

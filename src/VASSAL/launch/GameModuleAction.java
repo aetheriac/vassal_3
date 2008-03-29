@@ -24,9 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
-import VASSAL.configure.DirectoryConfigurer;
-import VASSAL.preferences.Prefs;
-import VASSAL.tools.FileChooser;
 
 /**
  * Utility base class for GameModule-related actions, with auxilliary actions and error reporting
@@ -35,14 +32,12 @@ import VASSAL.tools.FileChooser;
  * 
  */
 public abstract class GameModuleAction extends AbstractAction {
-  protected FileChooser fc;
   protected Component comp;
   protected boolean actionCancelled;
   protected List<Runnable> actions = new ArrayList<Runnable>();
 
   public GameModuleAction(String name, Component comp) {
     super(name);
-    fc = FileChooser.createFileChooser(comp, (DirectoryConfigurer) Prefs.getGlobalPrefs().getOption(Prefs.MODULES_DIR_KEY));
     this.comp = comp;
   }
 

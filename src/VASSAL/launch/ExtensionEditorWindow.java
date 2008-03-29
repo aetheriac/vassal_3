@@ -55,7 +55,6 @@ public class ExtensionEditorWindow extends EditorWindow {
     
     saveAction.setEnabled(true);
     saveAsAction.setEnabled(true);
-    close.setEnabled(true);
     createUpdater.setEnabled(true);
 
     pack();

@@ -61,7 +61,7 @@ public class FirstTimeDialog extends JDialog {
 
   public FirstTimeDialog() {
     super((Frame) null, true);
-    setLocationRelativeTo(ModuleManager.getInstance().getFrame());
+    setLocationRelativeTo(ModuleManagerWindow.getInstance());
 
     setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
     addWindowListener(new WindowAdapter() {
@@ -117,6 +117,7 @@ public class FirstTimeDialog extends JDialog {
     p.add(b);
     panel.add(p);
 
+// FIXME: make sure the tour spawns a new Player
     tour.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent evt) {
         try {
@@ -141,7 +142,7 @@ public class FirstTimeDialog extends JDialog {
     jump.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent evt) {
         FirstTimeDialog.this.dispose();
-        ModuleManager.getInstance().showFrame();
+        ModuleManagerWindow.getInstance().setVisible(true);
       }
     });
 

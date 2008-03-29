@@ -24,7 +24,7 @@ import java.util.concurrent.ExecutionException;
  * Warns the user when an uncaught Exception occurs.
  * See Java code in {@link EventDispatchThread.handleException()}.
  */
-public class ErrorLog {
+public class ErrorLog implements Thread.UncaughtExceptionHandler {
   static {
     System.getProperties().put("sun.awt.exception.handler", //$NON-NLS-1$
                                "VASSAL.tools.ErrorLog");    //$NON-NLS-1$
@@ -40,7 +40,7 @@ public class ErrorLog {
     ErrorDialog.warning(t, t.getMessage());
   }
 
-  private ErrorLog() { }
+  public ErrorLog() { }
 
   public void handle(Throwable t) {
     t.printStackTrace();
@@ -75,6 +75,10 @@ public class ErrorLog {
     }
   }
 
+  public void uncaughtException(Thread t, Throwable e) {
+    handle(e);
+  }
+
   public static void main(String[] args) {
     final ErrorLog log = new ErrorLog();
     while (!ErrorDialog.isDisabled(RuntimeException.class)) {
@@ -82,6 +86,7 @@ public class ErrorLog {
     }
   }
 
+  @Deprecated
   public static class Group extends ThreadGroup {
     private ErrorLog handler = new ErrorLog();
 

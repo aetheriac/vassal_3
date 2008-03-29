@@ -33,11 +33,11 @@ public abstract class AbstractLaunchAction extends AbstractAction {
 
   protected final Frame frame; 
   protected File module;
-  protected String entryPoint;
-  protected String[] args;
+  protected final String entryPoint;
+  protected final String[] args;
 
   protected static final Set<File> editing = new HashSet<File>();
-  protected static final Map<File,Integer> playing =
+  protected static final Map<File,Integer> using =
     new HashMap<File,Integer>();
 
   public AbstractLaunchAction(String name, Frame frame, String entryPoint,
@@ -71,6 +71,9 @@ public abstract class AbstractLaunchAction extends AbstractAction {
   }
 
   protected class LaunchTask extends SwingWorker<Void,Void> {
+    // module might be reassigned before the task is over, keep a local copy
+    protected final File mod = AbstractLaunchAction.this.module; 
+
     @Override
     public Void doInBackground() throws Exception {
       int initialHeap; 
@@ -94,7 +97,7 @@ public abstract class AbstractLaunchAction extends AbstractAction {
       }
 
       final String[] pa =
-        new String[6 + args.length + (module == null ? 0 : 1)];
+        new String[6 + args.length + (mod == null ? 0 : 1)];
       pa[0] = "java";
       pa[1] = "-Xms" + initialHeap + "M";
       pa[2] = "-Xmx" + maximumHeap + "M";
@@ -102,10 +105,10 @@ public abstract class AbstractLaunchAction extends AbstractAction {
       pa[4] = System.getProperty("java.class.path");
       pa[5] = entryPoint; 
       System.arraycopy(args, 0, pa, 6, args.length);
-      if (module != null) pa[pa.length-1] = module.getPath();
+      if (mod != null) pa[pa.length-1] = mod.getPath();
 
       final ProcessBuilder pb = new ProcessBuilder(pa);
-      pb.directory(Info.getAppDir());
+      pb.directory(Info.getBinDir());
 
       final Process p = pb.start();
       final InputStream in = p.getInputStream();

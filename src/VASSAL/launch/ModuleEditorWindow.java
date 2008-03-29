@@ -115,7 +115,5 @@ public class ModuleEditorWindow extends EditorWindow {
     }); 
   }
   
-  protected void close() {
-    
-  }
+  protected void close() { }
 }
