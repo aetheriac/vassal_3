@@ -361,7 +361,7 @@ Var RemoveButton
 Function preUninstallOld
   StrCpy $RemoveOtherVersions ""
 
-  ${If} CustomSetup != 1
+  ${If} $CustomSetup != 1
     ; remove all versions in Standard setup
     ; find all versions of VASSAL
     StrCpy $R0 0
