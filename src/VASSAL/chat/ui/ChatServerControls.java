@@ -54,7 +54,6 @@ import VASSAL.preferences.PositionOption;
 import VASSAL.preferences.VisibilityOption;
 import VASSAL.tools.ComponentSplitter;
 import VASSAL.tools.KeyStrokeListener;
-import VASSAL.tools.MenuManager;
 
 public class ChatServerControls extends AbstractBuildable {
 
@@ -162,15 +161,10 @@ public class ChatServerControls extends AbstractBuildable {
             splitter.showComponent();
           }
         };
-// FIXME: This can't be right? If we're invoking revalidate() on a Swing
-// component, we should already be on the Event Dispatch Thread, and so
-// shouldn't need to call invokeLater().
         SwingUtilities.invokeLater(runnable);
       }
       else {
         JFrame frame = new JFrame(Resources.getString("Chat.server"));  //$NON-NLS-1$
-        frame.setJMenuBar(
-          MenuManager.getInstance().getMenuBar(MenuManager.GLOBAL));
         frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
         frame.add(controlPanel);
         String key = "BoundsOfClientWindow";  //$NON-NLS-1$

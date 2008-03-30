@@ -37,7 +37,6 @@ import VASSAL.chat.messageboard.MessageBoard;
 import VASSAL.chat.messageboard.MessageBoardControls;
 import VASSAL.chat.peer2peer.PeerPoolInfo;
 import VASSAL.i18n.Resources;
-import VASSAL.tools.MenuManager;
 
 /**
  * Copyright (c) 2003 by Rodney Kinney.  All rights reserved.
@@ -73,8 +72,6 @@ public class ShowServerStatusAction extends AbstractAction {
 
     public Window(ServerStatus status) {
       super(Resources.getString("Chat.server_status")); //$NON-NLS-1$
-      setJMenuBar(MenuManager.getInstance().getMenuBar(MenuManager.GLOBAL));
-
       view = new ServerStatusView(status);
       view.addPropertyChangeListener(ServerStatusView.SELECTION_PROPERTY,this);
       add(view);

@@ -52,7 +52,6 @@ import VASSAL.configure.StringArrayConfigurer;
 import VASSAL.configure.ValidationReport;
 import VASSAL.configure.ValidityChecker;
 import VASSAL.tools.AdjustableSpeedScrollPane;
-import VASSAL.tools.MenuManager;
 
 /**
  * A Map that may be configured to be visible only a particular side.
@@ -161,12 +160,12 @@ public class PrivateMap extends Map {
 
   protected Window createParentFrame() {
     if (GlobalOptions.getInstance().isUseSingleWindow()) {
-      final JDialog d = new JDialog(GameModule.getGameModule().getFrame()) {
+      JDialog d = new JDialog(GameModule.getGameModule().getFrame()) {
         private static final long serialVersionUID = 1L;
 
         public void setVisible(boolean show) {
-          super.setVisible(show &&
-            (visibleToAll || isAccessibleTo(PlayerRoster.getMySide())));
+          super.setVisible(show && (visibleToAll
+                                    || isAccessibleTo(PlayerRoster.getMySide())));
         }
       };
       d.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -174,16 +173,14 @@ public class PrivateMap extends Map {
       return d;
     }
     else {
-      final JFrame d = new JFrame() {
+      JFrame d = new JFrame() {
         private static final long serialVersionUID = 1L;
 
         public void setVisible(boolean show) {
-          super.setVisible(show &&
-            (visibleToAll || isAccessibleTo(PlayerRoster.getMySide())));
+          super.setVisible(show && (visibleToAll
+                                    || isAccessibleTo(PlayerRoster.getMySide())));
         }
       };
-
-      d.setJMenuBar(MenuManager.getInstance().getMenuBar(MenuManager.GLOBAL)); 
       d.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
       d.setTitle(getDefaultWindowTitle());
       return d;

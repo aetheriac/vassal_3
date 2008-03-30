@@ -88,7 +88,6 @@ import VASSAL.configure.PropertiesWindow;
 import VASSAL.configure.VisibilityCondition;
 import VASSAL.i18n.Resources;
 import VASSAL.tools.AdjustableSpeedScrollPane;
-import VASSAL.tools.MenuManager;
 
 public class RegionGrid extends AbstractConfigurable implements MapGrid, ConfigureTree.Mutable {
   private static final long serialVersionUID = 1L;
@@ -460,8 +459,6 @@ public class RegionGrid extends AbstractConfigurable implements MapGrid, Configu
 
     public Config(RegionGrid grid) {
       super("Regions for " + grid.container.getBoard().getName());
-      setJMenuBar(MenuManager.getInstance().getMenuBar(MenuManager.GLOBAL));
-
       board = grid.container.getBoard();
       this.grid = grid;
       initComponents();

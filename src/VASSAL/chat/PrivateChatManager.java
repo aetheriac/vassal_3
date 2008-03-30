@@ -25,7 +25,6 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import VASSAL.i18n.Resources;
-import VASSAL.tools.MenuManager;
 
 /**
  * Manages {@link PrivateChatter} instances
@@ -55,14 +54,11 @@ public class PrivateChatManager {
       chat = new PrivateChatter(sender, client);
       chatters.add(new Entry(sender, chat));
       JFrame f = new JFrame();
-      f.setJMenuBar(MenuManager.getInstance().getMenuBar(MenuManager.GLOBAL));
-      
       f.addWindowListener(new WindowAdapter() {
         public void windowClosing(WindowEvent e) {
           promptToBan(sender);
         }
       });
-
       f.setTitle(Resources.getString("Chat.private_channel", sender.getName())); //$NON-NLS-1$
       f.getContentPane().add(chat);
       f.pack();

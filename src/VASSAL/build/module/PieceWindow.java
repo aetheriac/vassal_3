@@ -47,7 +47,6 @@ import VASSAL.preferences.PositionOption;
 import VASSAL.preferences.VisibilityOption;
 import VASSAL.tools.ComponentSplitter;
 import VASSAL.tools.LaunchButton;
-import VASSAL.tools.MenuManager;
 import VASSAL.tools.UniqueIdManager;
 
 /**
@@ -100,8 +99,6 @@ public class PieceWindow extends Widget implements UniqueIdManager.Identifyable 
     }
     else {
       final JFrame d = new JFrame();
-      d.setJMenuBar(MenuManager.getInstance().getMenuBar(MenuManager.GLOBAL));
-
       d.add(root);
       d.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
       d.setTitle(getConfigureName());
@@ -115,7 +112,7 @@ public class PieceWindow extends Widget implements UniqueIdManager.Identifyable 
       });
       return d;
     }
-   }
+  }
 
   public void launchButtonPressed() {
     if (mainWindowDock != null) {
