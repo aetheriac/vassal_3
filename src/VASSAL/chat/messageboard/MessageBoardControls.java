@@ -33,6 +33,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.WindowConstants;
 import VASSAL.i18n.Resources;
+import VASSAL.tools.MenuManager;
 
 /**
  * UI controls for posting and retrieving messages from a
@@ -69,6 +70,8 @@ public class MessageBoardControls {
     viewer = new MessageViewer();
 
     msgFrame = new JFrame(Resources.getString("Chat.message_board"));  //$NON-NLS-1$
+    msgFrame.setJMenuBar(
+      MenuManager.getInstance().getMenuBar(MenuManager.GLOBAL));
     msgFrame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
     msgFrame.setLayout(new BoxLayout(msgFrame.getContentPane(), BoxLayout.Y_AXIS));
     msgFrame.add(viewer);

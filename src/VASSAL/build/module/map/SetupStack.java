@@ -97,6 +97,7 @@ import VASSAL.counters.Properties;
 import VASSAL.counters.Stack;
 import VASSAL.i18n.Resources;
 import VASSAL.tools.AdjustableSpeedScrollPane;
+import VASSAL.tools.MenuManager;
 import VASSAL.tools.UniqueIdManager;
 
 /**
@@ -561,19 +562,25 @@ public class SetupStack extends AbstractConfigurable implements GameComponent, U
 
     public StackConfigurer(SetupStack stack) {
       super("Adjust At-Start Stack");
+      setJMenuBar(MenuManager.getInstance().getMenuBar(MenuManager.GLOBAL));
+
       myStack = stack;
       mySlot = stack.getTopPiece();
+
       if (mySlot != null) {
         myPiece = mySlot.getPiece();
       }
+
       myStack.updatePosition();
       savePosition = new Point(myStack.pos);
+      
       if (stack instanceof DrawPile) {
         dummySize = new Dimension(((DrawPile) stack).getSize());
       }
       else {
         dummySize = new Dimension(DEFAULT_DUMMY_SIZE, DEFAULT_DUMMY_SIZE);
       }
+
       addWindowListener(new WindowAdapter() {
         public void windowClosing(WindowEvent e) {
           cancel();

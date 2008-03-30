@@ -31,6 +31,7 @@ import javax.swing.event.HyperlinkListener;
 import VASSAL.build.widget.HtmlChart;
 import VASSAL.build.widget.HtmlChart.XTMLEditorKit;
 import VASSAL.i18n.Resources;
+import VASSAL.tools.MenuManager;
 import VASSAL.tools.ScrollPane;
 
 /**
@@ -43,6 +44,7 @@ public class HelpWindow extends JFrame implements HyperlinkListener {
 
   public HelpWindow(String title, URL contents) {
     super(title);
+    setJMenuBar(MenuManager.getInstance().getMenuBar(MenuManager.GLOBAL));
     setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
     pane = new JEditorPane();
     pane.setEditable(false);

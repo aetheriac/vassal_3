@@ -38,6 +38,7 @@ public abstract class MenuManager {
   public static final int MANAGER = 0;
   public static final int PLAYER = 1;
   public static final int EDITOR = 2;
+  public static final int GLOBAL = 3;
 
   public abstract JMenuBar getMenuBar(int type);
 
