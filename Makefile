@@ -112,18 +112,18 @@ $(TMPDIR)/VASSAL-$(VERSION)-macosx.dmg: $(TMPDIR)/VASSAL-$(VERSION).app
 	sudo sh -c "mount -t hfsplus -o loop $@ $(TMPDIR)/dmg ; cp -va $< $(TMPDIR)/dmg ; umount $(TMPDIR)/dmg"
 	rmdir $(TMPDIR)/dmg
 
-$(TMPDIR)/VASSAL-$(VERSION)-generic.zip: version all $(JARS) $(TMPDIR)/VASSAL.exe 
+$(TMPDIR)/VASSAL-$(VERSION)-generic.zip: version all $(JARS)
 	mkdir -p $(TMPDIR)/VASSAL-$(VERSION)
 	svn export $(DOCDIR) $(TMPDIR)/VASSAL-$(VERSION)/doc
 	svn export $(LIBDIR) $(TMPDIR)/VASSAL-$(VERSION)/lib
 	rm $(TMPDIR)/VASSAL-$(VERSION)/lib/AppleJavaExtensions.jar
 	cp $(LIBDIR)/Vengine.jar $(TMPDIR)/VASSAL-$(VERSION)/lib
-	cp dist/VASSAL.sh dist/windows/VASSAL.bat $(TMPDIR)/VASSAL.exe \
-		$(TMPDIR)/VASSAL-$(VERSION)
+	cp dist/VASSAL.sh dist/windows/VASSAL.bat $(TMPDIR)/VASSAL-$(VERSION)
 	cd $(TMPDIR) ; zip -9rv $(notdir $@) VASSAL-$(VERSION) ; cd ..
 
-$(TMPDIR)/VASSAL-$(VERSION)-windows.exe: release-generic
+$(TMPDIR)/VASSAL-$(VERSION)-windows.exe: release-generic $(TMPDIR)/VASSAL.exe
 	rm $(TMPDIR)/VASSAL-$(VERSION)/VASSAL.sh
+	cp $(TMPDIR)/VASSAL.exe $(TMPDIR)/VASSAL-$(VERSION)
 	for i in `find $(TMPDIR)/VASSAL-$(VERSION) -type d` ; do \
 		echo SetOutPath \"\$$INSTDIR\\`echo $$i | \
 			sed -e 's/tmp\/VASSAL-$(VERSION)\/\?//' -e 's/\//\\\/g'`\" ; \
