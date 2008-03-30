@@ -445,7 +445,6 @@ public class Editor {
       fileMenu = OrderedMenu.builder("General.file")
         .appendItem("Editor.save")
         .appendItem("Editor.save_as")
-        .appendItem("Editor.import_module")
         .appendSeparator()
         .appendItem("GameState.new_game")
         .appendItem("GameState.load_game")
@@ -477,7 +476,6 @@ public class Editor {
         .appendItem("Editor.ModuleEditor.reference_manual")
         .appendSeparator()
         .appendItem("about_module")
-        .appendItem("AboutScreen.about_vassal")
         .create();
 
       menuBar.add(fileMenu);
@@ -485,10 +483,8 @@ public class Editor {
       menuBar.add(toolsMenu);
       menuBar.add(helpMenu);
 
-      parent.put("Main.play_module", fileMenu);
-      parent.put("Main.edit_module", fileMenu);
-      parent.put("Main.new_module", fileMenu);
-      parent.put("Editor.import_module", fileMenu);
+      parent.put("Editor.save", fileMenu);
+      parent.put("Editor.save_as", fileMenu);
       parent.put("GameState.new_game", fileMenu);
       parent.put("GameState.load_game", fileMenu);
       parent.put("GameState.save_game", fileMenu);
@@ -505,10 +501,8 @@ public class Editor {
       parent.put("Editor.ModuleEditor.properties", editMenu);
       parent.put("Editor.ModuleEditor.translate", editMenu);
 
-      parent.put("Chat.server_status", toolsMenu);
       parent.put("create_module_updater", toolsMenu);
       parent.put("Editor.ModuleEditor.update_saved", toolsMenu);
-      parent.put("Editor.ModuleEditor.translate_vassal", toolsMenu);
 
       parent.put("General.help", helpMenu);
       parent.put("Editor.ModuleEditor.reference_manual", helpMenu);
