@@ -72,7 +72,8 @@ Vengine.jar: all $(TMPDIR)
 	cp dist/Vengine.mf $(TMPDIR)
 	(echo -n 'Class-Path: ' ; \
 		find $(LIBDIR) -name '*.jar' -printf '%f\n  ' | \
-		sed -e '/Vengine.jar/d' -e '/^  $$/d') >>$(TMPDIR)/Vengine.mf
+		sed -e '/Vengine.jar/d' -e '/AppleJavaExtensions.jar/d' -e '/^  $$/d' \
+	) >>$(TMPDIR)/Vengine.mf
 	$(JAR) cvfm $(LIBDIR)/$@ $(TMPDIR)/Vengine.mf -C $(CLASSDIR) .
 
 $(TMPDIR)/VASSAL.exe: Info.class $(TMPDIR)
