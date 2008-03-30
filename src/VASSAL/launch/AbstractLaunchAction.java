@@ -4,6 +4,8 @@ import java.awt.Cursor;
 import java.awt.Frame;
 import java.io.File;
 import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.awt.event.ActionEvent;
 import java.util.HashSet;
 import java.util.HashMap;
@@ -24,6 +26,7 @@ import VASSAL.configure.DirectoryConfigurer;
 import VASSAL.preferences.Prefs;
 import VASSAL.tools.ErrorLog;
 import VASSAL.tools.FileChooser;
+import VASSAL.tools.IOUtils;
 
 public abstract class AbstractLaunchAction extends AbstractAction {
   private static final long serialVersionUID = 1L;
@@ -111,11 +114,19 @@ public abstract class AbstractLaunchAction extends AbstractAction {
       pb.directory(Info.getBinDir());
 
       final Process p = pb.start();
-      final InputStream in = p.getInputStream();
 
-      // process writes to stdout to signal end of loading
-      in.read();
+      // close child's stdin because we won't write to it 
+      p.getOutputStream().close();
+
+      // pump child's stderr to our own stderr
+      new StreamPump(p.getErrorStream(), System.err).start();
+
+      // child writes a char to stdout to signal end of loading
+      p.getInputStream().read();
       publish((Void) null);
+
+      // pump child's stdout to our own stdout
+      new StreamPump(p.getInputStream(), System.out).start();
 
       // block until the process ends
       p.waitFor();
@@ -138,6 +149,25 @@ public abstract class AbstractLaunchAction extends AbstractAction {
         ErrorLog.warn(e);
       }
       catch (ExecutionException e) {
+        ErrorLog.warn(e);
+      }
+    }
+  }
+
+  private static class StreamPump extends Thread {
+    private final InputStream in;
+    private final OutputStream out;
+
+    public StreamPump(InputStream in, OutputStream out) {
+      this.in = in;
+      this.out = out;
+    }
+
+    public void run() {
+      try {
+        IOUtils.copy(in, out);
+      }
+      catch (IOException e) {
         ErrorLog.warn(e);
       }
     }
