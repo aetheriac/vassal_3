@@ -46,6 +46,7 @@ import VASSAL.tools.imports.ImportAction;
 
 public class Editor {
   protected File moduleFile;
+  protected File extensionFile;
   protected List<String> extractTargets = new ArrayList<String>();
 
   private boolean newModule = false;
@@ -123,15 +124,20 @@ public class Editor {
       if (newModule) new CreateModuleAction(null).performAction(null);
 
       if (moduleFile == null) return;
-/*
+
       if (newExtension) {
         GameModule.init(new BasicModule(new DataArchive(moduleFile.getPath())));
         final JFrame f = GameModule.getGameModule().getFrame();
         f.setVisible(true);
         new NewExtensionAction(f).performAction(null);
       }
-*/
-      if (importModule) new ImportAction(null).loadModule(moduleFile); 
+      else if (extensionFile != null) {
+        GameModule.init(new BasicModule(new DataArchive(moduleFile.getPath())));
+        final JFrame f = GameModule.getGameModule().getFrame();
+        f.setVisible(true);
+        new EditExtensionAction(extensionFile).performAction(null);
+      }
+      else if (importModule) new ImportAction(null).loadModule(moduleFile); 
       else new EditModuleAction(moduleFile).loadModule(moduleFile);
     }
     finally {
@@ -152,13 +158,12 @@ public class Editor {
       else if ("-new".equals(arg)) {
         newModule = true; 
       }
-/*
       else if ("-newext".equals(arg)) {
         newExtension = true;
       }
       else if ("-edext".equals(arg)) {
+        extensionFile = new File(args[++n]); 
       }
-*/
       else if (!arg.startsWith("-")) {
         moduleFile = new File(arg);
       }
@@ -285,11 +290,11 @@ public class Editor {
   }
 
   private static class EditorMenuManager extends MenuManager {
-    private final JMenuBar playerBar;
+    private final JMenuBar playerBar = new JMenuBar();
     private final JMenu playerFileMenu;
     private final JMenu playerHelpMenu;
 
-    private final JMenuBar editorBar;
+    private final JMenuBar editorBar = new JMenuBar();
     private final JMenu editorFileMenu;
     private final JMenu editorEditMenu;
     private final JMenu editorToolsMenu;
@@ -324,7 +329,6 @@ public class Editor {
         .appendItem("AboutScreen.about_vassal")
         .create();
 
-      playerBar = new JMenuBar();
       playerBar.add(playerFileMenu);
       playerBar.add(playerHelpMenu);
 
@@ -358,7 +362,6 @@ public class Editor {
         .appendItem("AboutScreen.about_vassal")
         .create();
 
-      editorBar = new JMenuBar();
       editorBar.add(editorFileMenu);
       editorBar.add(editorEditMenu);
       editorBar.add(editorToolsMenu);

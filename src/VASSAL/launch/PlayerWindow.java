@@ -42,21 +42,6 @@ public class PlayerWindow extends JFrame {
     return controlPanel;
   }
 
-/*
-  protected final JMenuBar menuBar = new JMenuBar();
-
-  public JMenu getFileMenu() {
-    return fileMenu;
-  }
-
-  public JMenu getHelpMenu() {
-    return helpMenu;
-  }
-
-  protected final JMenu fileMenu;
-  protected final JMenu helpMenu;
-*/
-
   protected final JToolBar toolBar = new JToolBar();
   protected final JPanel controlPanel = new JPanel();
 

@@ -346,13 +346,14 @@ public class ModuleManagerWindow extends JFrame {
     private static final long serialVersionUID = 1L;
     private ExtensionsManager extMgr;
     private JList extList;
+
     private AbstractAction addExtensionAction =
       new AbstractAction(Resources.getString("ModuleManager.add")) {
 
       private static final long serialVersionUID = 1L;
 
       public void actionPerformed(ActionEvent e) {
-        FileChooser fc = FileChooser.createFileChooser(
+        final FileChooser fc = FileChooser.createFileChooser(
           ModuleManagerWindow.this, (DirectoryConfigurer)
             Prefs.getGlobalPrefs().getOption(Prefs.MODULES_DIR_KEY));
         if (fc.showOpenDialog() == FileChooser.APPROVE_OPTION) {
@@ -362,6 +363,7 @@ public class ModuleManagerWindow extends JFrame {
       }
     };
 
+/*
     private AbstractAction newExtensionAction =
       new AbstractAction(Resources.getString(Resources.NEW)) {
 
@@ -380,10 +382,10 @@ public class ModuleManagerWindow extends JFrame {
         }
       }
     };
-/*
+*/
     private Action newExtensionAction =
       new NewExtensionLaunchAction(ModuleManagerWindow.this);
-*/
+
     private ExtensionControls() {
       super(new BorderLayout());
       setBorder(new TitledBorder(
@@ -399,8 +401,11 @@ public class ModuleManagerWindow extends JFrame {
       extList.setCellRenderer(new DefaultListCellRenderer() {
         private static final long serialVersionUID = 1L;
 
-        public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-          super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        public Component getListCellRendererComponent(JList list,
+          Object value, int index, boolean isSelected, boolean cellHasFocus) {
+
+          super.getListCellRendererComponent(
+            list, value, index, isSelected, cellHasFocus);
           boolean active = ((Extension) value).isActive();
 // FIXME: should get colors from LAF
           setForeground(active ? Color.black : Color.gray);
@@ -411,7 +416,8 @@ public class ModuleManagerWindow extends JFrame {
       extList.addMouseListener(new MouseAdapter() {
         public void mouseReleased(MouseEvent e) {
           if (e.isMetaDown() && extMgr != null) {
-            buildPopup(extList.locationToIndex(e.getPoint())).show(extList, e.getX(), e.getY());
+            buildPopup(extList.locationToIndex(e.getPoint()))
+                              .show(extList, e.getX(), e.getY());
           }
         }
       });
@@ -430,9 +436,12 @@ public class ModuleManagerWindow extends JFrame {
             refresh();
           }
         });
-        m.add(new EditExtensionAction(m));
+
+        m.add(new EditExtensionLaunchAction(
+          ModuleManagerWindow.this, ext.getFile(), getSelectedModule()));
         m.addSeparator();
       }
+
       m.add(newExtensionAction);
       m.add(addExtensionAction);
       return m;
@@ -500,7 +509,6 @@ public class ModuleManagerWindow extends JFrame {
     }
   }
 
-/*
   private class NewExtensionLaunchAction extends AbstractLaunchAction {
     private static final long serialVersionUID = 1L;
 
@@ -534,13 +542,57 @@ public class ModuleManagerWindow extends JFrame {
           else using.put(mod, --count);
         }
 
+/*
         @Override
         protected void process(List<Void> chunks) {
           super.process(chunks);
           ((ModuleManagerWindow) frame).addModule(mod);
         }
+*/
       };
     }
   }
+
+  private class EditExtensionLaunchAction extends AbstractLaunchAction {
+    private static final long serialVersionUID = 1L;
+
+    public EditExtensionLaunchAction(Frame frame, File ext, File module) {
+      super(Resources.getString("Editor.edit_extension"), frame,
+            Editor.class.getName(), new String[]{ "-edext", ext.getPath() },
+            module);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      // register that this module is being used
+      if (editing.contains(module)) return;
+      Integer count = using.get(module);
+      using.put(module, count == null ? 1 : ++count);
+
+      super.actionPerformed(e);
+    }
+
+    @Override
+    protected LaunchTask getLaunchTask() {
+      return new LaunchTask() {
+        @Override
+        protected void done() {
+          super.done();
+
+          // reduce the using count
+          Integer count = using.get(mod);
+          if (count == 1) using.remove(mod);
+          else using.put(mod, --count);
+        }
+
+/*
+        @Override
+        protected void process(List<Void> chunks) {
+          super.process(chunks);
+          ((ModuleManagerWindow) frame).addModule(mod);
+        }
 */
+      };
+    } 
+  }
 }

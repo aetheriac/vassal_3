@@ -153,11 +153,13 @@ public class ModuleManager {
       parent.put("General.help", helpMenu);
       parent.put("Editor.ModuleEditor.reference_manual", helpMenu);
     }
-    
+
+/*
     @Override
     public JMenuBar getMenuBar(int type) {
       return type == MANAGER ? menuBar : null;
     }
+*/
   }
 
   public static void main(String[] args) {
