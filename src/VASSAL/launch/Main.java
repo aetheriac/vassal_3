@@ -36,7 +36,6 @@ import VASSAL.build.module.ExtensionsLoader;
 import VASSAL.build.module.ModuleExtension;
 import VASSAL.i18n.Localization;
 import VASSAL.i18n.Resources;
-import VASSAL.launch.os.macos.MacOS;
 import VASSAL.preferences.Prefs;
 import VASSAL.tools.DataArchive;
 import VASSAL.tools.ErrorLog;
@@ -48,6 +47,10 @@ import org.jdesktop.swinghelper.debug.CheckThreadViolationRepaintManager;
 import org.jdesktop.swinghelper.debug.EventDispatchThreadHangMonitor;
 */
 
+/** 
+ * @deprecated Use {@link Editor}, {@link Player}, and {@link ModuleManager}
+ *  as entry points for VASSAL instead.
+ */
 @Deprecated
 public class Main {
   protected boolean isFirstTime;
@@ -172,11 +175,6 @@ public class Main {
       System.setProperty(httpProxyPort, System.getProperty(proxyPort));
     }
 
-    //
-    // OS-specific setup
-    //
-    if (Info.isMacOSX()) MacOS.setup();
-    
     //
     // Miscellaneous setup
     //
