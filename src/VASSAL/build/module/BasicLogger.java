@@ -55,8 +55,8 @@ import VASSAL.tools.ArchiveWriter;
 import VASSAL.tools.BridgeStream;
 import VASSAL.tools.FileChooser;
 import VASSAL.tools.KeyStrokeListener;
-import VASSAL.tools.MenuManager;
 import VASSAL.tools.Obfuscator;
+import VASSAL.tools.menu.MenuManager;
 
 public class BasicLogger implements Logger, Buildable, GameComponent, CommandEncoder {
   public static final String BEGIN = "begin_log";  //$NON-NLS-1$

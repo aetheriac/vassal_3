@@ -57,8 +57,8 @@ import VASSAL.tools.ArchiveWriter;
 import VASSAL.tools.BridgeStream;
 import VASSAL.tools.Deobfuscator;
 import VASSAL.tools.FileChooser;
-import VASSAL.tools.MenuManager;
 import VASSAL.tools.Obfuscator;
+import VASSAL.tools.menu.MenuManager;
 
 // FIXME: switch back to javax.swing.SwingWorker on move to Java 1.6
 //import javax.swing.SwingWorker;

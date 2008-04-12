@@ -35,7 +35,7 @@ import VASSAL.build.module.documentation.Tutorial;
 import VASSAL.configure.Configurer;
 import VASSAL.configure.SingleChildInstance;
 import VASSAL.i18n.Resources;
-import VASSAL.tools.MenuManager;
+import VASSAL.tools.menu.MenuManager;
 
 /**
  * Represents the <code>Help</code> menu of the controls window
@@ -45,10 +45,10 @@ public class Documentation extends AbstractConfigurable {
   }
 
   public JMenu getHelpMenu() {
-    final JMenuBar mb =
-      MenuManager.getInstance().getMenuBar(MenuManager.PLAYER);
+    final JMenuBar mb = MenuManager.getInstance().getMenuBarFor(
+      GameModule.getGameModule().getFrame());
+
     return mb.getMenu(mb.getMenuCount()-1);
-//    return GameModule.getGameModule().getHelpMenu();
   }
 
   public void build(Element el) {
