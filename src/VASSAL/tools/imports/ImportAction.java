@@ -21,7 +21,7 @@ package VASSAL.tools.imports;
 
 import java.awt.Component;
 import java.awt.Cursor;
-import java.awt.Frame;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
@@ -93,8 +93,8 @@ public final class ImportAction extends EditModuleAction {
 		SymbolSet.class,
 	};
 
-  public static FileChooser getFileChooser(Frame frame) {
-    final FileChooser chooser = FileChooser.createFileChooser(frame,
+  public static FileChooser getFileChooser(Window w) {
+    final FileChooser chooser = FileChooser.createFileChooser(w,
       (DirectoryConfigurer)
         Prefs.getGlobalPrefs().getOption(Prefs.MODULES_DIR_KEY));
 
