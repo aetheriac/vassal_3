@@ -32,7 +32,7 @@ import VASSAL.build.GameModule;
 import VASSAL.build.module.documentation.HelpFile;
 import VASSAL.configure.VisibilityCondition;
 import VASSAL.i18n.Resources;
-import VASSAL.tools.MenuManager;
+import VASSAL.tools.menu.MenuManager;
 
 /**
  * Defines a saved game that is accessible from the File menu.
@@ -198,9 +198,12 @@ public class PredefinedSetup extends AbstractConfigurable {
 
   public void addTo(Buildable parent) {
     if (parent instanceof GameModule) {
+// FIXME!
+/*
       final MenuManager mm = MenuManager.getInstance();
       originalItem = mm.getMenuItem("GameState.new_game");
       mm.addMenuItem("GameState.new_game", getMenuInUse());
+*/
 /*
       JMenu fileMenu = GameModule.getGameModule().getFileMenu();
       originalItem = (JMenuItem) fileMenu.getMenuComponent(0);
@@ -229,8 +232,10 @@ public class PredefinedSetup extends AbstractConfigurable {
 
   public void removeFrom(Buildable parent) {
     if (parent instanceof GameModule) {
+/*
       final MenuManager mm = MenuManager.getInstance();
       mm.addMenuItem("GameState.new_game", originalItem);
+*/
 /*
       JMenu fileMenu = GameModule.getGameModule().getFileMenu();
       fileMenu.insert(originalItem, 0);
