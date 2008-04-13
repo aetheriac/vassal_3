@@ -36,7 +36,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Box;
@@ -72,7 +71,7 @@ import VASSAL.build.widget.PieceSlot;
 import VASSAL.i18n.Resources;
 import VASSAL.i18n.TranslateAction;
 import VASSAL.launch.EditorWindow;
-import VASSAL.tools.MenuManager;
+import VASSAL.tools.menu.MenuManager;
 
 /**
  * This is the Configuration Tree that appears in the Configuration window
@@ -869,24 +868,6 @@ public class ConfigureTree extends JTree implements PropertyChangeListener, Mous
     mm.addAction("Editor.move", moveAction);
     mm.addAction("Editor.ModuleEditor.properties", propertiesAction);
     mm.addAction("Editor.ModuleEditor.translate", translateAction);
-
-/*
-    ew.setMenuItem(EditorWindow.MenuKey.DELETE, deleteAction);
-    ew.setMenuItem(EditorWindow.MenuKey.CUT, cutAction);
-    ew.setMenuItem(EditorWindow.MenuKey.COPY, copyAction);
-    ew.setMenuItem(EditorWindow.MenuKey.PASTE, pasteAction);
-    ew.setMenuItem(EditorWindow.MenuKey.MOVE, moveAction);
-    ew.setMenuItem(EditorWindow.MenuKey.PROPERTIES, propertiesAction);
-    ew.setMenuItem(EditorWindow.MenuKey.TRANSLATE, translateAction);
-
-    deleteItem = ew.getMenuItem(EditorWindow.MenuKey.DELETE);
-    cutItem = ew.getMenuItem(EditorWindow.MenuKey.CUT);
-    copyItem = ew.getMenuItem(EditorWindow.MenuKey.COPY);
-    pasteItem = ew.getMenuItem(EditorWindow.MenuKey.PASTE);
-    moveItem = ew.getMenuItem(EditorWindow.MenuKey.MOVE);
-    propertiesItem = ew.getMenuItem(EditorWindow.MenuKey.PROPERTIES);
-    translateItem = ew.getMenuItem(EditorWindow.MenuKey.TRANSLATE);
-*/
 
     updateEditMenu(); 
   }
