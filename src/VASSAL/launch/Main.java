@@ -185,7 +185,7 @@ public class Main {
 
   protected void launch() throws IOException {
     if (isFirstTime) {
-      new FirstTimeDialog().setVisible(true);
+      new FirstTimeDialog(null).setVisible(true);
     }
     else if (builtInModule) {
       GameModule.init(createModule(createDataArchive()));
