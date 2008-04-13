@@ -26,14 +26,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Properties;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import javax.swing.AbstractAction;
-import javax.swing.Action;
+
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -43,7 +39,6 @@ import javax.swing.SwingUtilities;
 import VASSAL.Info;
 import VASSAL.build.GameModule;
 import VASSAL.build.module.ExtensionsLoader;
-import VASSAL.build.module.GlobalOptions;
 import VASSAL.build.module.ModuleExtension;
 import VASSAL.i18n.Localization;
 import VASSAL.i18n.Resources;
@@ -223,6 +218,12 @@ public class Player {
     public LaunchAction(ModuleManagerWindow mm, File module) {
       super(Resources.getString("Main.play_module"), mm,
             Player.class.getName(), new String[0], module);
+      setEnabled(!editing.contains(module));
+    }
+    
+    public LaunchAction(ModuleManagerWindow mm, File module, File saveGame) {
+      super(Resources.getString("General.open"), mm, Player.class.getName(),
+            new String[] {"-load",saveGame.getPath()}, module);
       setEnabled(!editing.contains(module));
     }
 
