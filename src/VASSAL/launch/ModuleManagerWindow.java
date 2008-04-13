@@ -138,6 +138,7 @@ public class ModuleManagerWindow extends JFrame {
     final JMenu helpMenu = mm.createMenu(Resources.getString("General.help"));
 
     helpMenu.add(mm.addKey("General.help"));
+    helpMenu.add(mm.addKey("Main.tour"));
 
     if (!Info.isMacOSX()) {
       helpMenu.addSeparator();
@@ -174,8 +175,6 @@ public class ModuleManagerWindow extends JFrame {
     mm.addAction("Editor.ModuleEditor.translate_vassal",
                  new TranslateVassalAction(this));
 
-    mm.addAction("AboutScreen.about_vassal", AboutVASSAL.getAction());
-
     URL url = null; 
     try {
       url = new File(Documentation.getDocumentationBaseDir(),
@@ -185,6 +184,10 @@ public class ModuleManagerWindow extends JFrame {
       ErrorLog.warn(e);
     }
     mm.addAction("General.help", new ShowHelpAction(url, null));
+    
+    mm.addAction("Main.tour", new LaunchTourAction(this));
+    mm.addAction("AboutScreen.about_vassal", AboutVASSAL.getAction());
+
 
     // set up panes
     final JSplitPane modAndExtControls =
