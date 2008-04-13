@@ -61,8 +61,8 @@ import VASSAL.i18n.Resources;
 import VASSAL.preferences.PositionOption;
 import VASSAL.preferences.Prefs;
 import VASSAL.tools.DataArchive;
-import VASSAL.tools.MenuManager;
 import VASSAL.tools.SequenceEncoder;
+import VASSAL.tools.menu.MenuManager;
 
 public class BasicModule extends GameModule {
   private static char COMMAND_SEPARATOR = (char) KeyEvent.VK_ESCAPE;

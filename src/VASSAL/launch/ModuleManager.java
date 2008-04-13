@@ -19,15 +19,14 @@
 package VASSAL.launch;
 
 import java.io.File;
-import javax.swing.JMenu;
+import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import javax.swing.SwingUtilities;
 
 import VASSAL.Info;
 import VASSAL.tools.ErrorLog;
-import VASSAL.tools.MacOSXMenuManager;
-import VASSAL.tools.MenuManager;
-import VASSAL.tools.OrderedMenu;
+import VASSAL.tools.menu.GeneralMenuManager;
+import VASSAL.tools.menu.MacOSXMenuManager;
 
 /**
  * Tracks recently-used modules and builds the main GUI window for 
@@ -40,6 +39,7 @@ public class ModuleManager {
   public ModuleManager(final String[] args) {
     StartUp.initSystemProperties();
     StartUp.setupErrorLog();
+    StartUp.startErrorLog();
 
     Thread.setDefaultUncaughtExceptionHandler(new ErrorLog());
     SwingUtilities.invokeLater(new Runnable() {
@@ -50,116 +50,23 @@ public class ModuleManager {
   }
 
   protected void launch() {
-    if (Info.isMacOSX()) new MacOSXModuleManagerMenuManager();
+    if (Info.isMacOSX()) new MacOSXMenuManager();
     else new ModuleManagerMenuManager();
 
     final File prefsFile = new File(Info.getHomeDir(), "Preferences");
     final boolean isFirstTime = !prefsFile.exists();
 
-    if (isFirstTime) {
-      new FirstTimeDialog().setVisible(true);
-    }
-    else {
-      ModuleManagerWindow.getInstance().setVisible(true);
-    }
+    final ModuleManagerWindow w = ModuleManagerWindow.getInstance();
+    w.setVisible(true);
+    if (isFirstTime) new FirstTimeDialog(w).setVisible(true);
   }
- 
-  private static class ModuleManagerMenuManager extends MenuManager {
+
+  private static class ModuleManagerMenuManager extends GeneralMenuManager {
     private final JMenuBar menuBar = new JMenuBar();
-    private final JMenu fileMenu;
-    private final JMenu toolsMenu;
-    private final JMenu helpMenu;
 
-    public ModuleManagerMenuManager() {
-      fileMenu = OrderedMenu.builder("General.file")
-        .appendItem("Main.play_module")
-        .appendItem("Main.edit_module")
-        .appendItem("Main.new_module")
-        .appendItem("Editor.import_module")
-        .appendSeparator()
-        .appendItem("General.quit")
-        .create();
-
-      toolsMenu = OrderedMenu.builder("General.tools")
-        .appendItem("Chat.server_status")
-        .appendItem("Editor.ModuleEditor.translate_vassal")
-        .create();
-
-      helpMenu = OrderedMenu.builder("General.help")
-        .appendItem("General.help")
-        .appendItem("AboutScreen.about_vassal")
-        .create();
-      
-      menuBar.add(fileMenu);
-      menuBar.add(toolsMenu);
-      menuBar.add(helpMenu);
-
-      parent.put("Main.play_module", fileMenu);
-      parent.put("Main.edit_module", fileMenu);
-      parent.put("Main.new_module", fileMenu);
-      parent.put("Editor.import_module", fileMenu);
-      parent.put("General.quit", fileMenu);
-
-      parent.put("Chat.server_status", toolsMenu);
-      parent.put("Editor.ModuleEditor.translate_vassal", toolsMenu);
-
-      parent.put("General.help", helpMenu);
-      parent.put("Editor.ModuleEditor.reference_manual", helpMenu);
-      parent.put("AboutScreen.about_vassal", helpMenu); 
+    public JMenuBar getMenuBarFor(JFrame fc) {
+      return (fc instanceof ModuleManagerWindow) ? menuBar : null;
     }
-    
-    @Override
-    public JMenuBar getMenuBar(int type) {
-      return type == MANAGER ? menuBar : null;
-    }
-  }
-
-  private static class MacOSXModuleManagerMenuManager
-                                                   extends MacOSXMenuManager {
-    private final JMenu fileMenu;
-    private final JMenu toolsMenu;
-    private final JMenu helpMenu;
-
-    public MacOSXModuleManagerMenuManager() {
-      fileMenu = OrderedMenu.builder("General.file")
-        .appendItem("Main.play_module")
-        .appendItem("Main.edit_module")
-        .appendItem("Main.new_module")
-        .appendItem("Editor.import_module")
-        .create();
-
-      toolsMenu = OrderedMenu.builder("General.tools")
-        .appendItem("Chat.server_status")
-        .appendItem("Editor.ModuleEditor.translate_vassal")
-        .create();
-
-      helpMenu = OrderedMenu.builder("General.help")
-        .appendItem("General.help")
-        .appendItem("Editor.ModuleEditor.reference_manual")
-        .create();
-      
-      menuBar.add(fileMenu);
-      menuBar.add(toolsMenu);
-      menuBar.add(helpMenu);
-
-      parent.put("Main.play_module", fileMenu);
-      parent.put("Main.edit_module", fileMenu);
-      parent.put("Main.new_module", fileMenu);
-      parent.put("Editor.import_module", fileMenu);
-
-      parent.put("Chat.server_status", toolsMenu);
-      parent.put("Editor.ModuleEditor.translate_vassal", toolsMenu);
-
-      parent.put("General.help", helpMenu);
-      parent.put("Editor.ModuleEditor.reference_manual", helpMenu);
-    }
-
-/*
-    @Override
-    public JMenuBar getMenuBar(int type) {
-      return type == MANAGER ? menuBar : null;
-    }
-*/
   }
 
   public static void main(String[] args) {

@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (c) 2000-2008 by Rodney Kinney, Joel Uckelman
+ * Copyright (c) 2000-2008 by Brent Easton, Rodney Kinney, Joel Uckelman
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -33,12 +33,15 @@ import java.util.Map;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 
+import VASSAL.Info;
 import VASSAL.build.GameModule;
 import VASSAL.build.module.documentation.HelpFile;
 import VASSAL.build.module.documentation.HelpWindow;
@@ -51,15 +54,13 @@ import VASSAL.configure.ValidationReport;
 import VASSAL.configure.ValidationReportDialog;
 import VASSAL.i18n.Resources;
 import VASSAL.i18n.TranslateVassalWindow;
-import VASSAL.tools.MenuManager;
-import VASSAL.tools.OrderedMenu;
+import VASSAL.tools.menu.MenuManager;
 
 /**
  * EditorWindow is the base class for the three top-level component
  * editors :- ModuleEditorWindow, ExtensionEditorWindow, PluginEditorWindow
  * 
  * @author Brent Easton
- *
  */
 public abstract class EditorWindow extends JFrame {
   private static final long serialVersionUID = 1L;
@@ -91,7 +92,55 @@ public abstract class EditorWindow extends JFrame {
 
     // setup menubar and actions
     final MenuManager mm = MenuManager.getInstance();
-    setJMenuBar(mm.getMenuBar(MenuManager.EDITOR));
+    final JMenuBar mb = mm.getMenuBarFor(this);
+
+    // file menu
+    final JMenu fileMenu = mm.createMenu(Resources.getString("General.file"));
+  
+    fileMenu.add(mm.addKey("Editor.save"));
+    fileMenu.add(mm.addKey("Editor.save_as"));
+
+    if (!Info.isMacOSX()) {
+      fileMenu.addSeparator();
+      fileMenu.add(mm.addKey("General.quit"));
+    }
+
+    // edit menu
+    final JMenu editMenu = mm.createMenu(Resources.getString("General.edit"));
+    
+    editMenu.add(mm.addKey("Editor.cut"));
+    editMenu.add(mm.addKey("Editor.copy"));
+    editMenu.add(mm.addKey("Editor.paste"));
+    editMenu.add(mm.addKey("Editor.move"));
+    editMenu.addSeparator();
+    editMenu.add(mm.addKey("Editor.ModuleEditor.properties"));
+    editMenu.add(mm.addKey("Editor.ModuleEditor.translate"));
+
+    // tools menu
+    final JMenu toolsMenu = mm.createMenu(Resources.getString("General.tools"));
+
+    toolsMenu.add(mm.addKey("create_module_updater"));
+    toolsMenu.add(mm.addKey("Editor.ModuleEditor.update_saved"));
+
+    // help menu
+    final JMenu helpMenu = mm.createMenu(Resources.getString("General.help"));
+
+    helpMenu.add(mm.addKey("General.help"));
+    helpMenu.add(mm.addKey("Editor.ModuleEditor.reference_manual"));
+    
+    helpMenu.add(mm.addKey("about_module"));
+
+    if (!Info.isMacOSX()) {
+      helpMenu.addSeparator();
+      helpMenu.add(mm.addKey("AboutScreen.about_vassal"));
+    }
+
+    mb.add(fileMenu);
+    mb.add(editMenu);
+    mb.add(toolsMenu);
+    mb.add(helpMenu);
+    setJMenuBar(mb);
+
 
     final int mask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 

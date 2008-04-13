@@ -1,7 +1,26 @@
+/*
+ * $Id$
+ *
+ * Copyright (c) 2008 by Joel Uckelman 
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License (LGPL) as published by the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, copies are available
+ * at http://www.opensource.org.
+ */
+
 package VASSAL.launch;
 
 import java.awt.Cursor;
-import java.awt.Frame;
+import java.awt.Window;
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
@@ -34,7 +53,7 @@ public abstract class AbstractLaunchAction extends AbstractAction {
   public static final int DEFAULT_INITIAL_HEAP = 256;
   public static final int DEFAULT_MAXIMUM_HEAP = 512;
 
-  protected final Frame frame; 
+  protected final Window window; 
   protected File module;
   protected final String entryPoint;
   protected final String[] args;
@@ -43,17 +62,17 @@ public abstract class AbstractLaunchAction extends AbstractAction {
   protected static final Map<File,Integer> using =
     new HashMap<File,Integer>();
 
-  public AbstractLaunchAction(String name, Frame frame, String entryPoint,
+  public AbstractLaunchAction(String name, Window window, String entryPoint,
                               String[] args, File module) {
     super(name);
-    this.frame = frame;
+    this.window = window;
     this.entryPoint = entryPoint;
     this.args = args;
     this.module = module;
   }
 
   public void actionPerformed(ActionEvent e) {
-    frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+    window.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
     getLaunchTask().execute();
   }
 
@@ -61,7 +80,7 @@ public abstract class AbstractLaunchAction extends AbstractAction {
 
   protected File promptForModule() {
     // prompt the use to pick a module
-    final FileChooser fc = FileChooser.createFileChooser(frame,
+    final FileChooser fc = FileChooser.createFileChooser(window,
       (DirectoryConfigurer)
         Prefs.getGlobalPrefs().getOption(Prefs.MODULES_DIR_KEY));
 
@@ -85,7 +104,10 @@ public abstract class AbstractLaunchAction extends AbstractAction {
           .getStoredValue(GlobalOptions.INITIAL_HEAP));
       }
       catch (NumberFormatException ex) {
-        ErrorLog.warn(ex);
+        // don't show warning dialog, since this isn't fatal,
+        // or even abnormal, e.g., in the case where this is
+        // a new copy of VASSAL
+        ex.printStackTrace();
         initialHeap = DEFAULT_INITIAL_HEAP;
       }
 
@@ -95,7 +117,10 @@ public abstract class AbstractLaunchAction extends AbstractAction {
           .getStoredValue(GlobalOptions.MAXIMUM_HEAP));
       }
       catch (NumberFormatException ex) {
-        ErrorLog.warn(ex);
+        // don't show warning dialog, since this isn't fatal,
+        // or even abnormal, e.g., in the case where this is
+        // a new copy of VASSAL
+        ex.printStackTrace();
         maximumHeap = DEFAULT_MAXIMUM_HEAP;
       }
 
@@ -135,7 +160,7 @@ public abstract class AbstractLaunchAction extends AbstractAction {
 
     @Override
     protected void process(List<Void> chunks) {
-      frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+      window.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
     }
 
     @Override

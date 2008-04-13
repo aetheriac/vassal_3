@@ -22,14 +22,16 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 
-import javax.swing.Action;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
 
 import VASSAL.Info;
-import VASSAL.tools.MenuManager;
+import VASSAL.i18n.Resources;
 import VASSAL.tools.WrapLayout;
+import VASSAL.tools.menu.MenuManager;
 
 public class PlayerWindow extends JFrame {
   private static final long serialVersionUID = 1L;
@@ -52,38 +54,44 @@ public class PlayerWindow extends JFrame {
 
     // setup menubar and actions
     final MenuManager mm = MenuManager.getInstance();
-    setJMenuBar(mm.getMenuBar(MenuManager.PLAYER));
+    final JMenuBar mb = mm.getMenuBarFor(this);
+
+    // file menu
+    final JMenu fileMenu = mm.createMenu(Resources.getString("General.file"));
+
+    fileMenu.add(mm.addKey("GameState.new_game"));
+    fileMenu.add(mm.addKey("GameState.load_game"));
+    fileMenu.add(mm.addKey("GameState.save_game"));
+    fileMenu.add(mm.addKey("GameState.close_game"));
+    fileMenu.addSeparator();
+    fileMenu.add(mm.addKey("BasicLogger.begin_logfile"));
+    fileMenu.add(mm.addKey("BasicLogger.end_logfile"));
+
+    if (!Info.isMacOSX()) {
+      fileMenu.addSeparator();
+      fileMenu.add(mm.addKey("Prefs.edit_preferences"));
+      fileMenu.addSeparator();
+      fileMenu.add(mm.addKey("General.quit"));
+    }
 
     mm.addAction("General.quit", new ShutDownAction());
-  
+
+    // help menu
+    final JMenu helpMenu = mm.createMenu(Resources.getString("General.help"));
+    
+    helpMenu.add(mm.addKey("General.help"));
+
+    if (!Info.isMacOSX()) {
+      helpMenu.addSeparator();
+      helpMenu.add(mm.addKey("AboutScreen.about_vassal"));
+    }
+
     mm.addAction("AboutScreen.about_vassal", AboutVASSAL.getAction());
+    
+    mb.add(fileMenu);
+    mb.add(helpMenu);
 
-/*
-    // build File menu
-    fileMenu = OrderedMenu.builder("General.file")
-                          .appendItem("GameState.new_game")
-                          .appendItem("GameState.load_game")
-                          .appendItem("GameState.save_game")
-                          .appendItem("GameState.close_game")
-                          .appendSeparator()
-                          .appendItem("BasicLogger.begin_logfile")
-                          .appendItem("BasicLogger.end_logfile")
-                          .appendSeparator()
-                          .appendItem("Prefs.edit_preferences")
-                          .appendSeparator()
-                          .appendItem("General.quit")
-                          .create();
-    fileMenu.add(new ShutDownAction());
-    menuBar.add(fileMenu);
-
-    // build Help menu
-    helpMenu = OrderedMenu.builder("General.help")
-                          .appendItem("About VASSAL")
-                          .create();
-    menuBar.add(helpMenu);
-    final Action aboutVASSAL = AboutVASSAL.getAction();
-    helpMenu.add(aboutVASSAL);
-*/
+    setJMenuBar(mb);
 
     // build toolbar
     toolBar.setLayout(new WrapLayout(FlowLayout.LEFT, 0, 0));

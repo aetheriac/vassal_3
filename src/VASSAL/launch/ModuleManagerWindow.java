@@ -1,3 +1,22 @@
+/*
+ * $Id: Info.java 3388 2008-03-30 21:51:32Z uckelman $
+ *
+ * Copyright (c) 2000-2008 by Brent Easton, Rodney Kinney, Joel Uckelman 
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License (LGPL) as published by the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, copies are available
+ * at http://www.opensource.org.
+ */
+
 package VASSAL.launch;
 
 import java.awt.BorderLayout;
@@ -31,6 +50,8 @@ import javax.swing.DefaultListModel;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -63,8 +84,7 @@ import VASSAL.tools.ComponentSplitter;
 import VASSAL.tools.DataArchive;
 import VASSAL.tools.ErrorLog;
 import VASSAL.tools.FileChooser;
-import VASSAL.tools.OrderedMenu;
-import VASSAL.tools.MenuManager;
+import VASSAL.tools.menu.MenuManager;
 import VASSAL.tools.imports.ImportAction;
 
 public class ModuleManagerWindow extends JFrame {
@@ -93,7 +113,43 @@ public class ModuleManagerWindow extends JFrame {
 
     // setup menubar and actions
     final MenuManager mm = MenuManager.getInstance();
-    setJMenuBar(mm.getMenuBar(MenuManager.MANAGER));
+    final JMenuBar mb = mm.getMenuBarFor(this);    
+
+    // file menu
+    final JMenu fileMenu = mm.createMenu(Resources.getString("General.file"));
+    
+    fileMenu.add(mm.addKey("Main.play_module"));
+    fileMenu.add(mm.addKey("Main.edit_module"));
+    fileMenu.add(mm.addKey("Main.new_module"));
+    fileMenu.add(mm.addKey("Editor.import_module"));
+
+    if (!Info.isMacOSX()) {
+      fileMenu.addSeparator();
+      fileMenu.add(mm.addKey("General.quit"));
+    }
+
+    // tools menu
+    final JMenu toolsMenu = mm.createMenu(Resources.getString("General.tools"));
+    
+    toolsMenu.add(mm.addKey("Chat.server_status"));
+    toolsMenu.add(mm.addKey("Editor.ModuleEditor.translate_vassal"));
+
+    // help menu
+    final JMenu helpMenu = mm.createMenu(Resources.getString("General.help"));
+
+    helpMenu.add(mm.addKey("General.help"));
+
+    if (!Info.isMacOSX()) {
+      helpMenu.addSeparator();
+      helpMenu.add(mm.addKey("AboutScreen.about_vassal"));
+    }
+
+
+    mb.add(fileMenu);
+    mb.add(toolsMenu);
+    mb.add(helpMenu);
+
+    setJMenuBar(mb);
 
     mm.addAction("Main.play_module", new Player.PromptLaunchAction(this));
     mm.addAction("Main.edit_module", new Editor.PromptLaunchAction(this));
@@ -119,6 +175,7 @@ public class ModuleManagerWindow extends JFrame {
                  new TranslateVassalAction(this));
 
     mm.addAction("AboutScreen.about_vassal", AboutVASSAL.getAction());
+
     URL url = null; 
     try {
       url = new File(Documentation.getDocumentationBaseDir(),
@@ -363,26 +420,6 @@ public class ModuleManagerWindow extends JFrame {
       }
     };
 
-/*
-    private AbstractAction newExtensionAction =
-      new AbstractAction(Resources.getString(Resources.NEW)) {
-
-      private static final long serialVersionUID = 1L;
-
-      public void actionPerformed(ActionEvent e) {
-        try {
-          GameModule.init(new BasicModule(
-            new DataArchive(getSelectedModule().getPath())));
-          GameModule.getGameModule().getFrame().setVisible(true);
-          new NewExtensionAction(
-            ModuleManagerWindow.this).actionPerformed(null);
-        }
-        catch (IOException e1) {
-          e1.printStackTrace();
-        }
-      }
-    };
-*/
     private Action newExtensionAction =
       new NewExtensionLaunchAction(ModuleManagerWindow.this);
 

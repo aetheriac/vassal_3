@@ -27,7 +27,7 @@ import javax.swing.JOptionPane;
 import VASSAL.build.GameModule;
 import VASSAL.build.module.ModuleExtension;
 import VASSAL.configure.ExtensionTree;
-import VASSAL.tools.MenuManager;
+import VASSAL.tools.menu.MenuManager;
 
 public class ExtensionEditorWindow extends EditorWindow {
 

@@ -28,12 +28,11 @@ import VASSAL.build.GameModule;
 import VASSAL.configure.ConfigureTree;
 import VASSAL.configure.SavedGameUpdaterDialog;
 import VASSAL.i18n.Resources;
-import VASSAL.tools.MenuManager;
+import VASSAL.tools.menu.MenuManager;
 
 public class ModuleEditorWindow extends EditorWindow {
   private static final long serialVersionUID = 1L;
 
-//  protected JMenuItem updateSavedGame;
   protected Action updateSavedGame;
 
   public ModuleEditorWindow(GameModule mod) {
@@ -43,10 +42,10 @@ public class ModuleEditorWindow extends EditorWindow {
     treeStateChanged(false);
     scrollPane.setViewportView(tree);    
     
-    tree.populateEditMenu(this);
- 
     final MenuManager mm = MenuManager.getInstance();
 
+    tree.populateEditMenu(this);
+ 
     mm.addAction("Editor.ModuleEditor.reference_manual", tree.getHelpAction());
 
     updateSavedGame = new AbstractAction(Resources.getString(

@@ -1,8 +1,26 @@
+/*
+ * $Id: Info.java 3388 2008-03-30 21:51:32Z uckelman $
+ *
+ * Copyright (c) 2000-2008 by Rodney Kinney, Joel Uckelman 
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License (LGPL) as published by the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, copies are available
+ * at http://www.opensource.org.
+ */
 
 package VASSAL.launch;
 
 import java.awt.Cursor;
-import java.awt.Frame;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
@@ -25,24 +43,17 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-// FIXME: switch back to javax.swing.SwingWorker on move to Java 1.6
-//import javax.swing.SwingWorker;
-import org.jdesktop.swingworker.SwingWorker;
-
 import VASSAL.Info;
 import VASSAL.build.GameModule;
 import VASSAL.build.module.GlobalOptions;
 import VASSAL.i18n.Resources;
-import VASSAL.launch.os.macos.MacOS;
 import VASSAL.preferences.Prefs;
 import VASSAL.tools.DataArchive;
 import VASSAL.tools.ErrorLog;
 import VASSAL.tools.FileChooser;
-import VASSAL.tools.MacOSXMenuManager;
-import VASSAL.tools.MenuManager;
-import VASSAL.tools.OrderedMenu;
 import VASSAL.tools.imports.ImportAction;
-
+import VASSAL.tools.menu.GeneralMenuManager;
+import VASSAL.tools.menu.MacOSXMenuManager;
 
 public class Editor {
   protected File moduleFile;
@@ -55,7 +66,8 @@ public class Editor {
 
   public Editor(final String[] args) {
     StartUp.initSystemProperties();
-    StartUp.setupErrorLog();
+//    StartUp.setupErrorLog();
+    StartUp.startErrorLog();
 
     Thread.setDefaultUncaughtExceptionHandler(new ErrorLog());
  
@@ -117,7 +129,7 @@ public class Editor {
   }
 
   protected void launch() throws IOException {
-    if (Info.isMacOSX()) new MacOSXEditorMenuManager();
+    if (Info.isMacOSX()) new MacOSXMenuManager();
     else new EditorMenuManager();
 
     try {
@@ -173,8 +185,8 @@ public class Editor {
   public static class NewModuleLaunchAction extends AbstractLaunchAction {
     private static final long serialVersionUID = 1L;
 
-    public NewModuleLaunchAction(Frame frame) {
-      super(Resources.getString("Main.new_module"), frame, 
+    public NewModuleLaunchAction(Window window) {
+      super(Resources.getString("Main.new_module"), window, 
             Editor.class.getName(), new String[]{ "-new" }, null);
     }
 
@@ -187,8 +199,8 @@ public class Editor {
   public static class ImportModuleLaunchAction extends AbstractLaunchAction {
     private static final long serialVersionUID = 1L;
 
-    public ImportModuleLaunchAction(Frame frame) {
-      super(Resources.getString("Editor.import_module"), frame, 
+    public ImportModuleLaunchAction(Window window) {
+      super(Resources.getString("Editor.import_module"), window, 
             Editor.class.getName(), new String[]{ "-import" }, null);
     }
 
@@ -203,7 +215,7 @@ public class Editor {
     @Override
     protected File promptForModule() {
       // prompt the use to pick a module
-      final FileChooser fc = ImportAction.getFileChooser(frame);
+      final FileChooser fc = ImportAction.getFileChooser(window);
 
       if (fc.showOpenDialog() == FileChooser.APPROVE_OPTION) {
         module = fc.getSelectedFile();
@@ -252,7 +264,7 @@ public class Editor {
         @Override
         protected void process(List<Void> chunks) {
           super.process(chunks);
-          ((ModuleManagerWindow) frame).addModule(mod);
+          ((ModuleManagerWindow) window).addModule(mod);
         }
       };
     }
@@ -289,227 +301,18 @@ public class Editor {
     }
   }
 
-  private static class EditorMenuManager extends MenuManager {
-    private final JMenuBar playerBar = new JMenuBar();
-    private final JMenu playerFileMenu;
-    private final JMenu playerHelpMenu;
-
+  private static class EditorMenuManager extends GeneralMenuManager {
     private final JMenuBar editorBar = new JMenuBar();
-    private final JMenu editorFileMenu;
-    private final JMenu editorEditMenu;
-    private final JMenu editorToolsMenu;
-    private final JMenu editorHelpMenu;
- 
-    private JMenuItem playerQuitItem;
-    private JMenuItem editorQuitItem;
-
-    private JMenuItem playerAboutItem;
-    private JMenuItem editorAboutItem;
-
-    private JMenuItem playerHelpItem;
-    private JMenuItem editorHelpItem;
+    private final JMenuBar playerBar = new JMenuBar();
 
     public EditorMenuManager() {
-      playerFileMenu = OrderedMenu.builder("General.file")
-        .appendItem("GameState.new_game")
-        .appendItem("GameState.load_game")
-        .appendItem("GameState.save_game")
-        .appendItem("GameState.close_game")
-        .appendSeparator()
-        .appendItem("BasicLogger.begin_logfile")
-        .appendItem("BasicLogger.end_logfile")
-        .appendSeparator()
-        .appendItem("Prefs.edit_preferences")
-        .appendSeparator()
-        .appendItem("General.quit")
-        .create();
-
-      playerHelpMenu = OrderedMenu.builder("General.help")
-        .appendItem("General.help")
-        .appendItem("AboutScreen.about_vassal")
-        .create();
-
-      playerBar.add(playerFileMenu);
-      playerBar.add(playerHelpMenu);
-
-      editorFileMenu = OrderedMenu.builder("General.file")
-        .appendItem("Editor.save")
-        .appendItem("Editor.save_as")
-        .appendSeparator()
-        .appendItem("General.quit")
-        .create();
-
-      editorEditMenu = OrderedMenu.builder("General.edit")
-        .appendItem("Editor.delete")
-        .appendItem("Editor.cut")
-        .appendItem("Editor.copy")
-        .appendItem("Editor.paste")
-        .appendItem("Editor.move")
-        .appendSeparator()
-        .appendItem("Editor.ModuleEditor.properties")
-        .appendItem("Editor.ModuleEditor.translate")
-        .create();
-
-      editorToolsMenu = OrderedMenu.builder("General.tools")
-        .appendItem("Create updater")  // fix
-        .appendItem("Editor.ModuleEditor.updated_saved")
-        .create();
-
-      editorHelpMenu = OrderedMenu.builder("General.help")
-        .appendItem("General.help")
-        .appendItem("Editor.ModuleEditor.reference_manual")
-        .appendSeparator()
-        .appendItem("AboutScreen.about_vassal")
-        .create();
-
-      editorBar.add(editorFileMenu);
-      editorBar.add(editorEditMenu);
-      editorBar.add(editorToolsMenu);
-      editorBar.add(editorHelpMenu);
-
-      parent.put("GameState.new_game", playerFileMenu);
-      parent.put("GameState.load_game", playerFileMenu);
-      parent.put("GameState.save_game", playerFileMenu);
-      parent.put("GameState.close_game", playerFileMenu);
-      parent.put("BasicLogger.begin_logfile", playerFileMenu);
-      parent.put("BasicLogger.end_logfile", playerFileMenu);
-      parent.put("Prefs.edit_preferences", playerFileMenu);
-
-      parent.put("about_module", playerHelpMenu);
-
-      parent.put("Editor.save", editorFileMenu);
-      parent.put("Editor.save_as", editorFileMenu);
-
-      parent.put("Editor.delete", editorEditMenu);
-      parent.put("Editor.cut", editorEditMenu);
-      parent.put("Editor.copy", editorEditMenu);
-      parent.put("Editor.paste", editorEditMenu);
-      parent.put("Editor.move", editorEditMenu);
-      parent.put("Editor.ModuleEditor.properties", editorEditMenu);
-      parent.put("Editor.ModuleEditor.translate", editorEditMenu);
-
-      parent.put("create_module_updater", editorToolsMenu);
-      parent.put("Editor.ModuleEditor.update_saved", editorToolsMenu);
-
-      parent.put("Editor.ModuleEditor.reference_manual", editorHelpMenu);
+      super();
     }
 
-    @Override
-    public JMenuBar getMenuBar(int type) {
-      switch (type) {
-      case PLAYER: return playerBar;
-      case EDITOR: return editorBar;
-      default:     return null; 
-      }
-    }
-
-    @Override
-    public void addAction(String id, Action a) {
-      if ("General.quit".equals(id)) {
-        if (playerQuitItem != null) playerFileMenu.remove(playerQuitItem);
-        if (editorQuitItem != null) editorFileMenu.remove(editorQuitItem);
-
-        playerQuitItem = playerFileMenu.add(a);
-        editorQuitItem = editorFileMenu.add(a);
-        
-        actions.put(id, a);
-      }
-      else if ("AboutScreen.about_vassal".equals(id)) {
-        if (playerAboutItem != null) playerHelpMenu.remove(playerAboutItem);
-        if (editorAboutItem != null) editorHelpMenu.remove(editorAboutItem);
-
-        playerAboutItem = playerHelpMenu.add(a);
-        editorAboutItem = editorHelpMenu.add(a);
-
-        actions.put(id, a);
-      }
-      else if ("General.help".equals(id)) {
-        if (playerHelpItem != null) playerHelpMenu.remove(playerHelpItem);
-        if (editorHelpItem != null) editorHelpMenu.remove(editorHelpItem);
-
-        playerHelpItem = playerHelpMenu.add(a);
-        editorHelpItem = editorHelpMenu.add(a);
-
-        actions.put(id, a);
-      }
-      else {
-        super.addAction(id, a);
-      }
-    }
-  }
-
-  private static class MacOSXEditorMenuManager extends MacOSXMenuManager {
-    private final JMenu fileMenu;
-    private final JMenu editMenu;
-    private final JMenu toolsMenu;
-    private final JMenu helpMenu;
-
-    public MacOSXEditorMenuManager() {
-      fileMenu = OrderedMenu.builder("General.file")
-        .appendItem("Editor.save")
-        .appendItem("Editor.save_as")
-        .appendSeparator()
-        .appendItem("GameState.new_game")
-        .appendItem("GameState.load_game")
-        .appendItem("GameState.save_game")
-        .appendItem("GameState.close_game")
-        .appendSeparator()
-        .appendItem("BasicLogger.begin_logfile")
-        .appendItem("BasicLogger.end_logfile")
-        .create();
-
-      editMenu = OrderedMenu.builder("General.edit")
-        .appendItem("Editor.delete")
-        .appendItem("Editor.cut")
-        .appendItem("Editor.copy")
-        .appendItem("Editor.paste")
-        .appendItem("Editor.move")
-        .appendSeparator()
-        .appendItem("Editor.ModuleEditor.properties")
-        .appendItem("Editor.ModuleEditor.translate")
-        .create();
-  
-      toolsMenu =  OrderedMenu.builder("General.tools")
-        .appendItem("Create updater")  // fix
-        .appendItem("Editor.ModuleEditor.updated_saved")
-        .create();
-
-      helpMenu = OrderedMenu.builder("General.help")
-        .appendItem("General.help")
-        .appendItem("Editor.ModuleEditor.reference_manual")
-        .appendSeparator()
-        .appendItem("about_module")
-        .create();
-
-      menuBar.add(fileMenu);
-      menuBar.add(editMenu);
-      menuBar.add(toolsMenu);
-      menuBar.add(helpMenu);
-
-      parent.put("Editor.save", fileMenu);
-      parent.put("Editor.save_as", fileMenu);
-      parent.put("GameState.new_game", fileMenu);
-      parent.put("GameState.load_game", fileMenu);
-      parent.put("GameState.save_game", fileMenu);
-      parent.put("GameState.close_game", fileMenu);
-      parent.put("BasicLogger.begin_logfile", fileMenu);
-      parent.put("BasicLogger.end_logfile", fileMenu);
-      parent.put("General.quit", fileMenu);
-      
-      parent.put("Editor.delete", editMenu);
-      parent.put("Editor.cut", editMenu);
-      parent.put("Editor.copy", editMenu);
-      parent.put("Editor.paste", editMenu);
-      parent.put("Editor.move", editMenu);
-      parent.put("Editor.ModuleEditor.properties", editMenu);
-      parent.put("Editor.ModuleEditor.translate", editMenu);
-
-      parent.put("create_module_updater", toolsMenu);
-      parent.put("Editor.ModuleEditor.update_saved", toolsMenu);
-
-      parent.put("General.help", helpMenu);
-      parent.put("Editor.ModuleEditor.reference_manual", helpMenu);
-      parent.put("about_module", helpMenu);
+    public JMenuBar getMenuBarFor(JFrame fc) {
+      if (fc instanceof PlayerWindow) return playerBar;
+      else if (fc instanceof EditorWindow) return editorBar;
+      else return null;
     }
   }
 

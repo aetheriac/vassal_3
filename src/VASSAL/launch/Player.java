@@ -1,8 +1,25 @@
+/*
+ * $Id: Info.java 3388 2008-03-30 21:51:32Z uckelman $
+ *
+ * Copyright (c) 2000-2008 by Rodney Kinney, Joel Uckelman 
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License (LGPL) as published by the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, copies are available
+ * at http://www.opensource.org.
+ */
 
 package VASSAL.launch;
 
 import java.awt.Cursor;
-import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
@@ -17,14 +34,11 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-
-// FIXME: switch back to javax.swing.SwingWorker on move to Java 1.6
-//import javax.swing.SwingWorker;
-import org.jdesktop.swingworker.SwingWorker;
 
 import VASSAL.Info;
 import VASSAL.build.GameModule;
@@ -33,17 +47,15 @@ import VASSAL.build.module.GlobalOptions;
 import VASSAL.build.module.ModuleExtension;
 import VASSAL.i18n.Localization;
 import VASSAL.i18n.Resources;
-import VASSAL.launch.os.macos.MacOS;
 import VASSAL.preferences.Prefs;
 import VASSAL.tools.DataArchive;
 import VASSAL.tools.ErrorLog;
 import VASSAL.tools.JarArchive;
-import VASSAL.tools.MacOSXMenuManager;
-import VASSAL.tools.MenuManager;
-import VASSAL.tools.OrderedMenu;
+import VASSAL.tools.menu.GeneralMenuManager;
+import VASSAL.tools.menu.MacOSXMenuManager;
 
 public class Player {
-  protected boolean isFirstTime;
+//  protected boolean isFirstTime;
   protected boolean builtInModule;
   protected File moduleFile;
   protected File savedGame;
@@ -52,7 +64,8 @@ public class Player {
 
   public Player(final String[] args) {
     StartUp.initSystemProperties();
-    StartUp.setupErrorLog();
+//    StartUp.setupErrorLog();
+    StartUp.startErrorLog();
 
     Thread.setDefaultUncaughtExceptionHandler(new ErrorLog());
     
@@ -114,14 +127,17 @@ public class Player {
   }
 
   protected void launch() throws IOException {
-    if (Info.isMacOSX()) new MacOSXPlayerMenuManager();
+    if (Info.isMacOSX()) new MacOSXMenuManager();
     else new PlayerMenuManager();
 
     try {
+/*
       if (isFirstTime) {
         new FirstTimeDialog().setVisible(true);
       }
       else if (builtInModule) {
+*/
+      if (builtInModule) {
         GameModule.init(createModule(createDataArchive()));
         for (String ext : autoExtensions) {
           createExtension(ext).build();
@@ -174,8 +190,10 @@ public class Player {
   }
 
   protected void configure(final String[] args) {
+/*
     File prefsFile = new File(Info.getHomeDir(), "Preferences");
     isFirstTime = !prefsFile.exists();
+*/
     int n = -1;
     while (++n < args.length) {
       final String arg = args[n];
@@ -234,7 +252,7 @@ public class Player {
         @Override
         protected void process(List<Void> chunks) {
           super.process(chunks);
-          ((ModuleManagerWindow) frame).addModule(mod);
+          ((ModuleManagerWindow) window).addModule(mod);
         }
       };
     }
@@ -257,87 +275,15 @@ public class Player {
     }
   }
 
-  private static class PlayerMenuManager extends MenuManager {
+  private static class PlayerMenuManager extends GeneralMenuManager {
     private final JMenuBar menuBar = new JMenuBar();
-    private final JMenu fileMenu;
-    private final JMenu helpMenu;
 
     public PlayerMenuManager() {
-      fileMenu = OrderedMenu.builder("General.file")
-        .appendItem("GameState.new_game")
-        .appendItem("GameState.load_game")
-        .appendItem("GameState.save_game")
-        .appendItem("GameState.close_game")
-        .appendSeparator()
-        .appendItem("BasicLogger.begin_logfile")
-        .appendItem("BasicLogger.end_logfile")
-        .appendSeparator()
-        .appendItem("Prefs.edit_preferences")
-        .appendSeparator()
-        .appendItem("General.quit")
-        .create();
-
-      helpMenu = OrderedMenu.builder("General.help")
-        .appendItem("General.help")
-        .appendItem("about_module")
-        .appendItem("AboutScreen.about_vassal")
-        .create();
-
-      menuBar.add(fileMenu);
-      menuBar.add(helpMenu);
-
-      parent.put("GameState.new_game", fileMenu);
-      parent.put("GameState.load_game", fileMenu);
-      parent.put("GameState.save_game", fileMenu);
-      parent.put("GameState.close_game", fileMenu);
-      parent.put("BasicLogger.begin_logfile", fileMenu);
-      parent.put("BasicLogger.end_logfile", fileMenu);
-      parent.put("Prefs.edit_preferences", fileMenu);
-      parent.put("General.quit", fileMenu);
-    
-      parent.put("General.help", helpMenu);
-      parent.put("about_module", helpMenu);
-      parent.put("AboutScreen.about_vassal", helpMenu);
+      super();
     }
 
-    @Override
-    public JMenuBar getMenuBar(int type) {
-      return type == PLAYER ? menuBar : null;
-    }
-  }
-
-  private static class MacOSXPlayerMenuManager extends MacOSXMenuManager {
-    private final JMenu fileMenu;
-    private final JMenu helpMenu;
-
-    public MacOSXPlayerMenuManager() {
-      fileMenu = OrderedMenu.builder("General.file")
-        .appendItem("GameState.new_game")
-        .appendItem("GameState.load_game")
-        .appendItem("GameState.save_game")
-        .appendItem("GameState.close_game")
-        .appendSeparator()
-        .appendItem("BasicLogger.begin_logfile")
-        .appendItem("BasicLogger.end_logfile")
-        .create();
-
-      helpMenu = OrderedMenu.builder("General.help")
-        .appendItem("General.help")
-        .appendItem("about_module")
-        .create();
-
-      menuBar.add(fileMenu);
-      menuBar.add(helpMenu);
-
-      parent.put("GameState.new_game", fileMenu);
-      parent.put("GameState.load_game", fileMenu);
-      parent.put("GameState.save_game", fileMenu);
-      parent.put("GameState.close_game", fileMenu);
-      parent.put("BasicLogger.begin_logfile", fileMenu);
-      parent.put("BasicLogger.end_logfile", fileMenu);
-    
-      parent.put("General.help", helpMenu);
-      parent.put("about_module", helpMenu);
+    public JMenuBar getMenuBarFor(JFrame fc) {
+      return (fc instanceof PlayerWindow) ? menuBar : null;
     }
   }
 
