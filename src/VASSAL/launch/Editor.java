@@ -19,7 +19,6 @@
 
 package VASSAL.launch;
 
-import java.awt.Cursor;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -27,14 +26,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Properties;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import javax.swing.AbstractAction;
+
 import javax.swing.Action;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -45,7 +40,6 @@ import javax.swing.SwingUtilities;
 
 import VASSAL.Info;
 import VASSAL.build.GameModule;
-import VASSAL.build.module.GlobalOptions;
 import VASSAL.i18n.Resources;
 import VASSAL.preferences.Prefs;
 import VASSAL.tools.DataArchive;
@@ -304,10 +298,6 @@ public class Editor {
   private static class EditorMenuManager extends GeneralMenuManager {
     private final JMenuBar editorBar = new JMenuBar();
     private final JMenuBar playerBar = new JMenuBar();
-
-    public EditorMenuManager() {
-      super();
-    }
 
     public JMenuBar getMenuBarFor(JFrame fc) {
       if (fc instanceof PlayerWindow) return playerBar;

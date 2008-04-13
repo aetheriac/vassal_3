@@ -47,6 +47,7 @@ public class ArchiveWriter extends DataArchive {
   private final Map<String,Object> sounds = new HashMap<String,Object>();
   private final Map<String,Object> files = new HashMap<String,Object>();
   private String archiveName;
+  private boolean closeWhenNotInUse;
 
   /**
    * Create a new writeable archive.
@@ -59,6 +60,7 @@ public class ArchiveWriter extends DataArchive {
    */
   public ArchiveWriter(String zipName) {
     archiveName = zipName;
+    closeWhenNotInUse = false;
     if (archiveName == null) {
       archive = null;
     }
@@ -71,12 +73,34 @@ public class ArchiveWriter extends DataArchive {
       }
     }
   }
-
+  
+  public ArchiveWriter(String zipName, boolean keepClosed) {
+    this(zipName);
+    closeWhenNotInUse();
+  }
+  
   public ArchiveWriter(ZipFile archive) {
     this.archive = archive;
     archiveName = archive.getName();
   }
 
+  /**
+   * Close the archive, but keep it available for reuse. Used for Preferences
+   * file which must be shared between processes.
+   */
+  public void closeWhenNotInUse() {
+    closeWhenNotInUse = true;
+    if (archive != null) {
+      try {
+        archive.close();
+        archive = null;
+      }
+      catch (IOException ex) {
+        archive = null;
+      }
+    }
+  }
+  
   /**
    * Add an image file to the archive. The file will be copied into an "images"
    * directory in the archive. Storing another image with the same name will
@@ -166,6 +190,9 @@ public class ArchiveWriter extends DataArchive {
    */
   @Override
   public InputStream getFileStream(String name) throws IOException {
+    if (closeWhenNotInUse && archive == null && archiveName != null) {
+      archive = new ZipFile(archiveName);
+    }
     InputStream stream;
     stream = getAddedStream(images, name);
     if (stream == null) {
@@ -218,7 +245,7 @@ public class ArchiveWriter extends DataArchive {
       if (fc.showSaveDialog() != FileChooser.APPROVE_OPTION) return;
       archiveName = fc.getSelectedFile().getPath();
     }
-
+    
     String temp = (new File(archiveName)).getParent();
     temp = temp == null ? "temp" : temp + File.separator + "temp";
     int n = 1;
@@ -229,6 +256,9 @@ public class ArchiveWriter extends DataArchive {
 
     final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(temp));
     try {
+      if (closeWhenNotInUse && archive == null && archiveName != null) {
+        archive = new ZipFile(archiveName);
+      }
       if (archive != null) {
         try {
           // Copy old non-overwritten entries into temp file
@@ -305,7 +335,9 @@ public class ArchiveWriter extends DataArchive {
                             "\nData stored in " + temp);
     }
 
-    archive = new ZipFile(archiveName);
+    if (!closeWhenNotInUse) {
+      archive = new ZipFile(archiveName);
+    }
   }
 
   private void writeEntries(Map<String,Object> h, int method,

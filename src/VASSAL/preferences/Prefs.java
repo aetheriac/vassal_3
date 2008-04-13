@@ -139,10 +139,12 @@ public class Prefs {
     catch (IOException e) {
       e.printStackTrace();
     }
+    
+    editor.getArchive().closeWhenNotInUse();
 
     // FIXME: Use stringPropertyNames() in 1.6+
 //    for (String key : storedValues.stringPropertyNames()) {   
-    for (Enumeration e = storedValues.keys(); e.hasMoreElements(); ) {
+    for (Enumeration<?> e = storedValues.keys(); e.hasMoreElements(); ) {
       final String key = (String) e.nextElement(); 
       final String value = storedValues.getProperty(key);
       final Configurer c = options.get(key);
