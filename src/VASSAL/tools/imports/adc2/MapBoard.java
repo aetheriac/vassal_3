@@ -31,11 +31,11 @@ import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,6 +43,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -53,7 +55,10 @@ import VASSAL.build.module.Inventory;
 import VASSAL.build.module.Map;
 import VASSAL.build.module.PrototypeDefinition;
 import VASSAL.build.module.PrototypesContainer;
+import VASSAL.build.module.ToolbarMenu;
 import VASSAL.build.module.map.BoardPicker;
+import VASSAL.build.module.map.LayerControl;
+import VASSAL.build.module.map.LayeredPieceCollection;
 import VASSAL.build.module.map.SetupStack;
 import VASSAL.build.module.map.Zoomer;
 import VASSAL.build.module.map.boardPicker.Board;
@@ -75,6 +80,7 @@ import VASSAL.counters.Marker;
 import VASSAL.counters.UsePrototype;
 import VASSAL.tools.ExtensionFileFilter;
 import VASSAL.tools.SequenceEncoder;
+import VASSAL.tools.TempFileManager;
 import VASSAL.tools.imports.FileFormatException;
 import VASSAL.tools.imports.Importer;
 
@@ -88,6 +94,264 @@ public class MapBoard extends Importer {
 
 	private static final String PLACE_NAME = "Location Names";
 
+	protected class MapLayer {
+		private final ArrayList<? extends MapDrawable> elements; 
+		private final String name;
+		private final boolean switchable;
+		protected boolean dirty = false;
+		protected ArrayList<MapLayer> layers = null;
+		protected String imageName;
+		
+		MapLayer(ArrayList<? extends MapDrawable> elements, String name, boolean switchable) {
+			this.elements = elements;
+			this.name = name;
+			this.switchable = switchable;
+		}				
+		
+		void writeToArchive() throws IOException {
+			// write piece
+			Rectangle r = writeImageToArchive();
+			if (imageName != null) {
+				SequenceEncoder se = new SequenceEncoder(';');
+				se.append("").append("").append(imageName).append(getName());
+				GamePiece gp = new BasicPiece(BasicPiece.ID + se.getValue());
+				gp = new Marker(Marker.ID + "Layer", gp);
+				gp.setProperty("Layer", getName());
+				gp = new Immobilized(gp, Immobilized.ID + "n;V"); 
+
+				// create layer
+				LayeredPieceCollection l = getLayeredPieceCollection();
+				String order = l.getAttributeValueString(LayeredPieceCollection.LAYER_ORDER);
+				if (order.equals("")) {
+					order = getName();
+				}
+				else {
+					order = order + "," + getName();
+				}
+				l.setAttribute(LayeredPieceCollection.LAYER_ORDER, order);
+
+				Map mainMap = getMainMap();
+				Board board = getBoard();
+				SetupStack stack = new SetupStack();
+				insertComponent(stack, mainMap);
+				Point p = new Point(r.x + r.width/2, r.y + r.height/2);
+				stack.setAttribute(SetupStack.NAME, getName());
+				stack.setAttribute(SetupStack.OWNING_BOARD, board.getConfigureName());
+				stack.setAttribute(SetupStack.X_POSITION, Integer.toString(p.x));
+				stack.setAttribute(SetupStack.Y_POSITION, Integer.toString(p.y));
+
+				PieceSlot slot = new PieceSlot(gp);
+				insertComponent(slot, stack);
+				
+				if (isSwitchable()) {
+					// TODO: initial state of layer visibility
+					// add stack layer control
+					LayerControl control = new LayerControl();
+					insertComponent(control, l);
+					control.setAttribute(LayerControl.BUTTON_TEXT, getName());
+					control.setAttribute(LayerControl.TOOLTIP, "Toggle " + getName().toLowerCase() + " visibility");
+					control.setAttribute(LayerControl.COMMAND, LayerControl.CMD_TOGGLE);
+					control.setAttribute(LayerControl.LAYERS, getName());
+
+					// one toolbar menu to control all mapboard elements.
+					ToolbarMenu menu = getToolbarMenu();
+					String entries = menu.getAttributeValueString(ToolbarMenu.MENU_ITEMS);
+					if (entries.equals("")) {
+						entries = getName();
+					}
+					else {
+						entries = new SequenceEncoder(entries, ',').append(getName()).getValue();
+					}
+					menu.setAttribute(ToolbarMenu.MENU_ITEMS, entries);
+				}
+			}
+		}
+
+		/**
+		 * @throws IOException
+		 */
+		protected Rectangle writeImageToArchive() throws IOException {
+			// write image to archive
+			BufferedImage image = getLayerImage();
+			if (image != null) {
+				Rectangle r = getCropRectangle(image);
+				File f = TempFileManager.getInstance().createTempFile("map", ".png");
+				FileOutputStream out = new FileOutputStream(f);
+				ImageIO.write(image.getSubimage(r.x, r.y, r.width, r.height), "png", out);
+				out.close();
+				imageName = getUniqueImageFileName(getName());
+				GameModule.getGameModule().getArchiveWriter().addImage(f.getPath(), imageName);
+				return r;
+			}
+			else {
+				return null;
+			}
+		}
+		
+		protected Rectangle getCropRectangle(BufferedImage image) {
+			Rectangle r = new Rectangle(getLayout().getBoardSize());
+			leftside:
+				while (true) {
+					for (int i = r.y; i < r.y + r.height; ++i) {
+						if (image.getRGB(r.x, i) != 0) {
+							break leftside;
+						}
+					}
+					++r.x;
+					--r.width;
+				}
+			topside:
+				while (true) {
+					for (int i = r.x; i < r.x + r.width; ++i) {
+						if (image.getRGB(i, r.y) != 0) {
+							break topside;
+						}
+					}
+					++r.y;
+					--r.height;
+				}
+			rightside:
+				while (true) {
+					for (int i = r.y; i < r.y + r.height; ++i) {
+						if (image.getRGB(r.x + r.width - 1, i) != 0) {
+							break rightside;
+						}
+					}
+					--r.width;
+				}
+			bottomside:
+				while (true) {
+					for (int i = r.x; i < r.x + r.width; ++i) {
+						if (image.getRGB(i, r.y + r.height - 1) != 0) {
+							break bottomside;
+						}
+					}
+					--r.height;
+				}
+			return r;
+		}
+
+		void overlay(MapLayer layer) {
+			if (layers == null) {
+				layers = new ArrayList<MapLayer>();
+			}
+			layers.add(layer);
+		}
+		
+		BufferedImage getLayerImage() {
+			dirty = false;
+			Dimension d = getLayout().getBoardSize();
+			BufferedImage image = new BufferedImage(d.width, d.height, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g = image.createGraphics();
+			draw(g);
+
+			if (layers != null) {
+				for (MapLayer l : layers) {
+					l.draw(g);
+					if (l.hasDrawn()) {
+						dirty = true;
+					}
+				}
+			}
+			if (!dirty) {
+				image = null;
+				return null;
+			}
+			return image;
+		}
+		
+		void draw(Graphics2D g) {
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,   RenderingHints.VALUE_ANTIALIAS_OFF);
+			g.setRenderingHint(RenderingHints.KEY_RENDERING,      RenderingHints.VALUE_RENDER_QUALITY);
+			g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+			
+			for (MapDrawable m : elements) {
+				if (m.draw(g)) {
+					dirty = true;
+				}
+			}
+		}
+		
+		boolean isSwitchable() {
+			return switchable;
+		}
+		
+		String getName() {
+			return name;
+		}
+		
+		boolean hasElements() {
+			return !elements.isEmpty();
+		}
+		
+		boolean hasDrawn() {
+			return dirty;
+		}
+	}
+
+	class BaseLayer extends MapLayer {
+
+		BaseLayer() {
+			super(null, "Base Layer", false);
+		}
+
+		boolean hasBaseMap() {
+			File underlay = action.getCaseInsensitiveFile(new File(forceExtension(path, "sml")), null, false, null);
+			if (underlay == null) {
+				underlay = action.getCaseInsensitiveFile(new File(stripExtension(path) + "-Z" + (zoomLevel+1) + ".bmp"), 
+						null, false, null);				
+			}
+			return underlay != null;
+		}
+		
+		@Override
+		void draw(Graphics2D g) {
+			// set background color
+			g.setBackground(tableColor);
+			Dimension d = getLayout().getBoardSize();
+			g.clearRect(0, 0, d.width, d.height);
+			dirty = true;
+			
+			// See if map image file exists
+			File sml = action.getCaseInsensitiveFile(new File(forceExtension(path, "sml")), null, false, null);
+			if (sml != null) {
+				try {
+					readScannedMapLayoutFile(sml, g);
+				} catch (IOException e) {}
+			}
+			else {
+				// If sml file doesn't exist, see if there is a single-sheet underlay image
+				File underlay = action.getCaseInsensitiveFile(new File(stripExtension(path) + "-Z" + (zoomLevel+1) + ".bmp"), 
+						null, false, null);
+				if (underlay != null) {
+					BufferedImage img;
+					try {
+						img = ImageIO.read(underlay);
+						g.drawImage(img, null, 0, 0);
+					} catch (IOException e) {}					
+				}
+			}			
+		}		
+
+		@Override
+		void writeToArchive() throws IOException {
+			// write the underlay map image
+			writeImageToArchive();
+			assert(imageName != null);
+			Board board = getBoard();
+			board.setAttribute(Board.IMAGE, imageName);
+			board.setConfigureName(baseName);
+			
+			// so we can get hex labels
+			getMainMap().setBoards(Collections.singleton(board));
+		}
+
+		@Override
+		protected Rectangle getCropRectangle(BufferedImage image) {
+			return new Rectangle(getLayout().getBoardSize());
+		}
+	}
+	
 	/**
 	 * A layout consisting of squares in a checkerboard pattern (<it>i.e.</it> each
 	 * square has four neighbours).
@@ -194,13 +458,18 @@ public class MapBoard extends Importer {
 			super(index);
 			assert (symbol != null);
 			this.symbol = symbol;
-		}
-
+		}		
+		
 		@Override
-		void draw(Graphics2D g) {
+		boolean draw(Graphics2D g) {
 			Point p = getPosition();
-			if (symbol != null)
+			if (symbol != null && !symbol.isTransparent()) {
 				g.drawImage(symbol.getImage(), null, p.x, p.y);
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 	}
 	
@@ -210,14 +479,18 @@ public class MapBoard extends Importer {
 	protected class MapBoardOverlay extends HexData {
 		
 		@Override
-		void draw(Graphics2D g) {
-			if (symbol != null) {
+		boolean draw(Graphics2D g) {
+			if (symbol != null) {				
 				for (int y = 0; y < getNRows(); ++y) {
 					for (int x = 0; x < getNColumns(); ++x) {
 						Point p = coordinatesToPosition(x, y);
 						g.drawImage(symbol.getImage(), null, p.x, p.y);
 					}
 				}
+				return true;
+			}
+			else {
+				return false;
 			}
 		}
 
@@ -264,10 +537,12 @@ public class MapBoard extends Importer {
 		 * list calls the draw method for all of the lines thus created.
 		 */
 		@Override
-		void draw(Graphics2D g) {
+		boolean draw(Graphics2D g) {
 			LineDefinition l = getLine();
-
+			boolean result = false;
+			
 			if (l != null) {
+				result = true;
 				Point pos = getPosition();
 				int size = getLayout().getHexSize();
 				pos.translate(size / 2, size / 2);
@@ -321,8 +596,11 @@ public class MapBoard extends Importer {
 			}
 			
 			// if this is the last one, draw all of the compiled lines.
-			if (this == hexLines.get(hexLines.size() - 1))
+			if (this == hexLines.get(hexLines.size() - 1)) {
 				drawLines(g, BasicStroke.CAP_BUTT);
+			}
+			
+			return result;
 		}
 		
 		@Override
@@ -361,11 +639,13 @@ public class MapBoard extends Importer {
 
 		// see the comments for HexLine.draw(Graphics2D).
 		@Override
-		void draw(Graphics2D g) {
+		boolean draw(Graphics2D g) {
 
 			LineDefinition l = getLine();
+			boolean result = false;
 
 			if (l != null) {
+				result = true;
 				Point p = getPosition();
 				int size = getLayout().getHexSize();
 				int dX = getLayout().getDeltaX();
@@ -405,8 +685,11 @@ public class MapBoard extends Importer {
 			}
 
 			// if this is the last one, draw all the lines.
-			if (this == hexSides.get(hexSides.size() - 1))
+			if (this == hexSides.get(hexSides.size() - 1)) {
 				drawLines(g, BasicStroke.CAP_ROUND);
+			}
+			
+			return result;
 		}
 		
 		@Override
@@ -965,7 +1248,10 @@ public class MapBoard extends Importer {
 			this.hexIndex = index;
 		}
 
-		abstract void draw(Graphics2D g);
+		/**
+		 * Draw the element to the graphics context. Return <code>true</code> if an element was actually drawn.
+		 */
+		abstract boolean draw(Graphics2D g);
 
 		int getHexIndex() {
 			return hexIndex;
@@ -1146,12 +1432,10 @@ public class MapBoard extends Importer {
 
 				// add numbering system to grid
 				RegularGridNumbering gn = getGridNumbering();
-				gn.addTo(mg);
-				mg.add(gn);			
+				insertComponent(gn, mg);
 
 				// add grid to zone
-				mg.addTo(zone);
-				zone.add(mg);
+				insertComponent(mg, zone);
 
 				getLayout().setGridNumberingOffsets(gn, this);
 			}
@@ -1340,17 +1624,21 @@ public class MapBoard extends Importer {
 		}
 
 		@Override
-		void draw(Graphics2D g) {
-			if (getSize() == 0)
-				return;
-			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-					RenderingHints.VALUE_ANTIALIAS_ON);
-			g.setFont(getFont());
-			g.setColor(color);
-			Point p = getPosition(g);
-			g.drawString(text, p.x, p.y);
-			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-					RenderingHints.VALUE_ANTIALIAS_OFF);
+		boolean draw(Graphics2D g) {
+			if (getSize() != 0) {
+				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+						RenderingHints.VALUE_ANTIALIAS_ON);
+				g.setFont(getFont());
+				g.setColor(color);
+				Point p = getPosition(g);
+				g.drawString(text, p.x, p.y);
+				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+						RenderingHints.VALUE_ANTIALIAS_OFF);
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 
 		String getText() {
@@ -1982,7 +2270,7 @@ public class MapBoard extends Importer {
 	private BufferedImage map;
 
 	// organizes all the drawable elements in order of drawing priority
-	private ArrayList<ArrayList<? extends MapDrawable>> mapElements = new ArrayList<ArrayList<? extends MapDrawable>>();
+	private ArrayList<MapLayer> mapElements = new ArrayList<MapLayer>();
 
 	// grid numbering systems
 	private final ArrayList<MapSheet> mapSheets = new ArrayList<MapSheet>();
@@ -2023,25 +2311,19 @@ public class MapBoard extends Importer {
 	// map file path
 	private String path;
 	
-	// the exported VASSAL Map object
-	private Map mainMap;
-
-	// VASSAL board created from imported map
-	private Board board;
-
 	// The VASSAL BoardPicker object which is the tree parent of Board.
 	private BoardPicker boardPicker;
 
 	// initialize the drawing elements which must all be ArrayList<>'s.
 	public MapBoard() {
-		mapElements.add(primaryMapBoardSymbols);
-		mapElements.add(secondaryMapBoardSymbols);
-		mapElements.add(hexSides);
-		mapElements.add(hexLines);
-		mapElements.add(placeSymbols);
-		mapElements.add(attributes);
-		mapElements.add(overlaySymbol);
-		mapElements.add(placeNames);
+		mapElements.add(new MapLayer(primaryMapBoardSymbols, "Primary MapBoard Symbols", false));
+		mapElements.add(new MapLayer(secondaryMapBoardSymbols, "Secondary MapBoard Symbols", false));
+		mapElements.add(new MapLayer(hexSides, "Hex Sides", true));
+		mapElements.add(new MapLayer(hexLines, "Hex Lines", true));
+		mapElements.add(new MapLayer(placeSymbols, "Place Symbols", false));
+		mapElements.add(new MapLayer(attributes, "Attributes", false));
+		mapElements.add(new MapLayer(overlaySymbol, "Overlay Symbol", true));
+		mapElements.add(new MapLayer(placeNames, "Place Names", true));
 	}
 
 	/**
@@ -2051,36 +2333,14 @@ public class MapBoard extends Importer {
 	 */
 	protected BufferedImage getMapImage() throws IOException {
 		if (map == null) {
-			Dimension d = getLayout().getBoardSize();
-			map = new BufferedImage(d.width, d.height, BufferedImage.TYPE_INT_ARGB);
-			Graphics2D g = map.createGraphics();
+			MapLayer base = new BaseLayer();
 			
-			// set background color
-			g.setBackground(tableColor);
-			g.clearRect(0, 0, d.width, d.height);
-			
-			// See if map image file exists
-			File sml = action.getCaseInsensitiveFile(new File(forceExtension(path, "sml")), null, false, null);
-			if (sml != null) 
-				readScannedMapLayoutFile(sml, g);
-			else {
-				// If sml file doesn't exist, see if there is a single-sheet underlay image
-				File underlay = action.getCaseInsensitiveFile(new File(stripExtension(path) + "-Z" + (zoomLevel+1) + ".bmp"), 
-						null, false, null);
-				if (underlay != null) {
-					BufferedImage img = ImageIO.read(underlay);
-					g.drawImage(img, null, 0, 0);
-				}
+			// go through the list of drawable elements and put them on after getting the (optional) scanned sheets.
+			for (MapLayer layer : mapElements) {
+				base.overlay(layer);
 			}
 			
-			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-			g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-			g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-
-			// go through the list of drawable elements and put them on after getting the (optional) scanned sheets.
-			for (ArrayList<? extends MapDrawable> list : mapElements)
-				for (MapDrawable element : list)
-					element.draw(g);
+			map = base.getLayerImage();
 		}
 		return map;
 	}
@@ -2361,7 +2621,7 @@ public class MapBoard extends Importer {
 		
 		byte[] priority = new byte[10];
 		in.read(priority);
-		ArrayList<ArrayList<? extends MapDrawable>> items = new ArrayList<ArrayList<? extends MapDrawable>>(mapElements.size());
+		ArrayList<MapLayer> items = new ArrayList<MapLayer>(mapElements.size());
 		for (int i = 0; i < mapElements.size(); ++i) {
 
 			// invalid index: abort reordering and switch back to default
@@ -2612,15 +2872,6 @@ public class MapBoard extends Importer {
 	}
 
 	/**
-	 * @return The VASSAL Map object corresponding to this imported map.
-	 */
-	Map getMainMap() {
-		if (mainMap == null)
-			mainMap = GameModule.getGameModule().getAllDescendantComponentsOf(Map.class).toArray(new Map[0])[0];
-		return mainMap;
-	}
-	
-	/**
 	 * @return How many sides does each hex (6) or square (4) have?
 	 */
 	int getNFaces() {
@@ -2678,28 +2929,42 @@ public class MapBoard extends Importer {
 	public void writeToArchive() throws IOException {
 
 		GameModule module = GameModule.getGameModule();
-
-		// write the map image
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		ImageIO.write(getMapImage(), "png", out);
-		byte[] imageDataArray = out.toByteArray();
-		module.getArchiveWriter().addImage(baseName + ".png", imageDataArray);
-
+		
+		// merge layers that can and should be merged.
+		MapLayer base = new BaseLayer();		
+		// if there is no base map image, avoid creating a lot of layers.
+		if (!((BaseLayer) base).hasBaseMap()) {
+			Iterator<MapLayer> iter = mapElements.iterator();
+			while(iter.hasNext()) {
+				base.overlay(iter.next());
+				iter.remove();
+			}
+			mapElements.add(base);
+		}
+		else {
+			MapLayer last = base;
+			Iterator<MapLayer> iter = mapElements.iterator();
+			while(iter.hasNext()) {
+				MapLayer next = iter.next();
+				if (!last.isSwitchable() && !next.isSwitchable()) {
+					last.overlay(next);
+					iter.remove();
+				}
+				else {
+					last = next;
+				}
+			}
+			mapElements.add(0, base);
+		}
+		
+		for (MapLayer layer : mapElements) {
+			layer.writeToArchive();
+		}		
+		
 		// map options: log formats
 		getMainMap().setAttribute(Map.MOVE_WITHIN_FORMAT, "$pieceName$ moving from [$previousLocation$] to [$location$]");
 		getMainMap().setAttribute(Map.MOVE_TO_FORMAT, "$pieceName$ moving from [$previousLocation$] to [$location$]");
 		getMainMap().setAttribute(Map.CREATE_FORMAT, "$pieceName$ Added to [$location$]");
-
-		boardPicker = getBoardPicker();
-		board = new Board();
-		board.addTo(boardPicker);
-		boardPicker.add(board);
-		board.setAttribute(Board.IMAGE, baseName + ".png");
-		// board.setAttribute(Board.REVERSIBLE, Boolean.TRUE);
-		board.setConfigureName(baseName);
-		
-		// so we can get hex labels
-		getMainMap().setBoards(Collections.singleton(board));
 
 		// default grid
 		AbstractConfigurable ac = getLayout().getGeometricGrid();
@@ -2707,8 +2972,9 @@ public class MapBoard extends Importer {
 		// ensure that we don't have a singleton null
 		if (mapSheets.size() == 1 && mapSheets.get(0) == null)
 			mapSheets.remove(0);
-		
+				
 		// setup grids defined by ADC module
+		Board board = getBoard();
 		if (mapSheets.size() > 0) {
 			ZonedGrid zg = new ZonedGrid();
 			for (MapSheet ms : mapSheets) {
@@ -2716,22 +2982,18 @@ public class MapBoard extends Importer {
 					break;
 				Zone z = ms.getZone();
 				if (z != null) {
-					z.addTo(zg);
-					zg.add(z);
+					insertComponent(z, zg);
 				}
 			}
 
 			// add default grid
-			ac.addTo(zg);
-			zg.add(ac);
+			insertComponent(ac, zg);
 
 			// add zoned grid to board
-			zg.addTo(board);
-			board.add(zg);
+			insertComponent(zg, board);
 		} else {
 			// add the default grid to the board
-			ac.addTo(board);
-			board.add(ac);
+			insertComponent(ac, board);
 		}
 
 		/* global properties */
@@ -2747,8 +3009,7 @@ public class MapBoard extends Importer {
 			for (int i = 0; i < 3; ++i)
 				s[i] = Double.toString(set.getZoomFactor(i));
 			zoom.setAttribute("zoomLevels", StringArrayConfigurer.arrayToString(s));
-			zoom.addTo(mainMap);
-			getMainMap().add(zoom);
+			insertComponent(zoom, getMainMap());
 		}
 		
 		// add place name capability
@@ -2758,9 +3019,7 @@ public class MapBoard extends Importer {
 		
 		// set up inventory button
 		final Inventory inv = new Inventory();
-		inv.build(null);			
-		inv.addTo(module);
-		module.add(inv);		
+		insertComponent(inv, module);
 		inv.setAttribute(Inventory.BUTTON_TEXT, "Search");
 		inv.setAttribute(Inventory.TOOLTIP, "Find place by name");
 		inv.setAttribute(Inventory.FILTER, "CurrentMap = Main Map");
@@ -2778,8 +3037,7 @@ public class MapBoard extends Importer {
 		// write prototype
 		PrototypesContainer container = module.getAllDescendantComponentsOf(PrototypesContainer.class).iterator().next();
 		PrototypeDefinition def = new PrototypeDefinition();
-		def.addTo(container);
-		container.add(def);
+		insertComponent(def, container);
 		def.setConfigureName(PLACE_NAMES);
 		
 		GamePiece gp = new BasicPiece();
@@ -2793,7 +3051,8 @@ public class MapBoard extends Importer {
 		// write place names as pieces with no image.
 		getMainMap();
 		final Point offset = getCenterOffset();
-		final HashSet<String> set = new HashSet<String>();
+		final HashSet<String> set = new HashSet<String>();		
+		final Board board = getBoard();
 		
 		for (PlaceName pn : placeNames) {
 			String name = pn.getText();
@@ -2804,10 +3063,9 @@ public class MapBoard extends Importer {
 				continue;
 			set.add(name);
 			SetupStack stack = new SetupStack();
-			stack.addTo(mainMap);
-			mainMap.add(stack);
+			insertComponent(stack, getMainMap());
 			p.translate(offset.x, offset.y);
-			String location = mainMap.locationName(p);
+			String location = getMainMap().locationName(p);
 			stack.setAttribute(SetupStack.NAME, name);
 			stack.setAttribute(SetupStack.OWNING_BOARD, board.getConfigureName());
 			
@@ -2838,8 +3096,7 @@ public class MapBoard extends Importer {
 			gp = new UsePrototype(se.getValue(), bp);
 			
 			PieceSlot ps = new PieceSlot(gp);
-			ps.addTo(stack);
-			stack.add(ps);
+			insertComponent(ps, stack);
 		}
 	}
 
@@ -2856,9 +3113,36 @@ public class MapBoard extends Importer {
 	 * @return The VASSAL board object corresponding to the imported map.
 	 */
 	Board getBoard() {
+		BoardPicker picker = getBoardPicker();
+		String boards[] = picker.getAllowableBoardNames();
+		assert(boards.length <= 1);
+		Board board = null;
+		if (boards.length == 0) {
+			board = new Board();
+			insertComponent(board, picker);
+		}
+		else {
+			board = picker.getBoard(boards[0]);
+		}
 		return board;
 	}
 
+	private ToolbarMenu getToolbarMenu() {
+		List<ToolbarMenu> list = getMainMap().getComponentsOf(ToolbarMenu.class);
+		ToolbarMenu menu = null;
+		if (list.size() == 0) {
+			menu = new ToolbarMenu();
+			insertComponent(menu, getMainMap());
+			menu.setAttribute(ToolbarMenu.BUTTON_TEXT, "View");
+			menu.setAttribute(ToolbarMenu.TOOLTIP, "Toggle visibility of map elements");				
+		}
+		else {
+			assert(list.size() == 1);
+			menu = list.get(0);
+		}
+		return menu;
+	}
+	
 	/**
 	 * @return The map background colour.
 	 */
