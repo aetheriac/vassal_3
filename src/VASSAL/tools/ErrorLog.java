@@ -20,6 +20,8 @@ package VASSAL.tools;
 
 import java.util.concurrent.ExecutionException;
 
+import VASSAL.Info;
+
 /**
  * Warns the user when an uncaught Exception occurs.
  * See Java code in {@link EventDispatchThread.handleException()}.
@@ -31,6 +33,7 @@ public class ErrorLog implements Thread.UncaughtExceptionHandler {
   }
 
   public static void warn(Throwable t) {
+    System.err.println("[" + Info.getInstanceID() + "]");
     t.printStackTrace();
 
     // replace ExecutionExceptions with their causes
