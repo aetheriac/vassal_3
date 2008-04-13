@@ -166,8 +166,21 @@ public class ModuleManagerWindow extends JFrame {
     // tools menu
     final JMenu toolsMenu = mm.createMenu(Resources.getString("General.tools"));
     
-    toolsMenu.add(mm.addKey("Chat.server_status"));
-    toolsMenu.add(mm.addKey("Editor.ModuleEditor.translate_vassal"));
+    toolsMenu.add(mm.createCheckBoxMenuItem(new AbstractAction(
+                   Resources.getString("Chat.server_status")) {
+      private static final long serialVersionUID = 1L;
+
+      public void actionPerformed(ActionEvent e) {
+        serverStatusView.toggleVisibility();
+        final BooleanConfigurer config = (BooleanConfigurer)
+          Prefs.getGlobalPrefs().getOption(SHOW_STATUS_KEY);
+        if (config != null) {
+          config.setValue(config.booleanValue() ? Boolean.FALSE : Boolean.TRUE);
+        }
+      }
+    }));
+ 
+   toolsMenu.add(mm.addKey("Editor.ModuleEditor.translate_vassal"));
 
     // help menu
     final JMenu helpMenu = mm.createMenu(Resources.getString("General.help"));
@@ -187,25 +200,12 @@ public class ModuleManagerWindow extends JFrame {
 
     setJMenuBar(mb);
 
+    // add actions
     mm.addAction("Main.play_module", new Player.PromptLaunchAction(this));
     mm.addAction("Main.edit_module", new Editor.PromptLaunchAction(this));
     mm.addAction("Main.new_module", new Editor.NewModuleLaunchAction(this));
     mm.addAction("Editor.import_module", new Editor.ImportModuleLaunchAction(this));
     mm.addAction("General.quit", shutDownAction);
-
-    mm.addAction("Chat.server_status", new AbstractAction(
-                   Resources.getString("Chat.server_status")) {
-      private static final long serialVersionUID = 1L;
-
-      public void actionPerformed(ActionEvent e) {
-        serverStatusView.toggleVisibility();
-        BooleanConfigurer config = (BooleanConfigurer)
-          Prefs.getGlobalPrefs().getOption(SHOW_STATUS_KEY);
-        if (config != null) {
-          config.setValue(config.booleanValue() ? Boolean.FALSE : Boolean.TRUE);
-        }
-      }
-    });
 
     mm.addAction("Editor.ModuleEditor.translate_vassal",
                  new TranslateVassalAction(this));
