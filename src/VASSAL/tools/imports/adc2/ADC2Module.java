@@ -19,13 +19,16 @@ package VASSAL.tools.imports.adc2;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.event.InputEvent;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.io.BufferedInputStream;
@@ -90,6 +93,7 @@ import VASSAL.counters.Deck;
 import VASSAL.counters.Decorator;
 import VASSAL.counters.Delete;
 import VASSAL.counters.DynamicProperty;
+import VASSAL.counters.Embellishment;
 import VASSAL.counters.Footprint;
 import VASSAL.counters.FreeRotator;
 import VASSAL.counters.GamePiece;
@@ -286,11 +290,11 @@ public class ADC2Module extends Importer {
 
 		private final int type;
 		private final int show;
-		private final int color;
+		private final Color color;
 		private final int position;
 		private final int size;
 
-		protected StatusDots(int type, int show, int color, int position, int size) {
+		protected StatusDots(int type, int show, Color color, int position, int size) {
 			this.type = type;
 			this.show = show;
 			this.color = color;
@@ -298,7 +302,7 @@ public class ADC2Module extends Importer {
 			this.size = size;
 		}
 
-		public int getColor() {
+		public Color getColor() {
 			return color;
 		}
 
@@ -326,7 +330,6 @@ public class ADC2Module extends Importer {
 			else
 				return null;
 		}
-
 	}
 
 	private static final int FORCE_POOL_BLOCK_END = 30000;
@@ -512,8 +515,9 @@ public class ADC2Module extends Importer {
 				appendDecorator(getPropertySheet());
 				appendDecorator(getDynamicProperty());
 				appendDecorator(getPieceValueMask());
-				appendDecorator(getMarker());
 				appendDecorator(getMovementMarkable());
+				appendDecorator(getDefendedEmbellishment());
+				appendDecorator(getAttackedEmbellishment());
 				appendDecorator(getFreeRotator());
 				appendDecorator(getUsePrototype());
 				appendDecorator(getHidden());
@@ -569,6 +573,22 @@ public class ADC2Module extends Importer {
 				return FACING_ANGLES[facing];
 		}
 		
+		protected Embellishment getDefendedEmbellishment() throws IOException {
+			Embellishment layer = pieceClass.getDefendedEmbellishmentDecorator();
+			SequenceEncoder se = new SequenceEncoder(';');
+			se.append(hasDefended() ? 1 : -1).append("");
+			layer.mySetState(se.getValue());
+			return layer;
+		}
+		
+		protected Embellishment getAttackedEmbellishment() throws IOException {
+			Embellishment layer = pieceClass.getAttackedEmbellishmentDecorator();
+			SequenceEncoder se = new SequenceEncoder(';');
+			se.append(hasAttacked() ? 1 : -1).append("");
+			layer.mySetState(se.getValue());
+			return layer;
+		}
+		
 		// TODO: provide angle phase offset for FreeRotator
 		protected FreeRotator getFreeRotator() {
 			FreeRotator p = pieceClass.getFreeRotatorDecorator();
@@ -592,34 +612,57 @@ public class ADC2Module extends Importer {
 		//		 and antialiased characters in MouseOverStackViewer
 		protected PropertySheet getPropertySheet() {
 			PropertySheet p = pieceClass.getPropertySheetDecorator();
+			
 			if (p != null) {
+				SequenceEncoder.Decoder decoder = new SequenceEncoder.Decoder(p.myGetType().substring(PropertySheet.ID.length()), ';');
+			    String definition = decoder.nextToken();
+			    String menuName = decoder.nextToken();
+			    char launchKey = decoder.nextChar('\0');
+			    int commitStyle = decoder.nextInt(0);
+			    String red = decoder.hasMoreTokens() ? decoder.nextToken() : "";
+			    String green = decoder.hasMoreTokens() ? decoder.nextToken() : "";
+			    String blue = decoder.hasMoreTokens() ? decoder.nextToken() : "";
+		
 				SequenceEncoder se = new SequenceEncoder('~');
 				SequenceEncoder state = new SequenceEncoder('~');
 				for(int i = 0; i < pieceValues.length; ++i) {
 					if (pieceValues[i] != null && !pieceValues[i].equals("")) {
 						se.append("0" + pieceValues[i]);
-						if (pieceValues[i] != null && !pieceValues[i].equals("")) {
-							Object o = getValue(i);
-							if (o instanceof String)
-								state.append((String) o);
-							else if (o instanceof Integer)
-								state.append(o.toString());
-							else if (o instanceof Boolean)
-								state.append(o.equals(Boolean.TRUE) ? "yes" : "no");
-							else
-								state.append("");
-						}
+						Object o = getValue(i);
+						if (o instanceof String)
+							state.append((String) o);
+						else if (o instanceof Integer)
+							state.append(o.toString());
+						else if (o instanceof Boolean)
+							state.append(o.equals(Boolean.TRUE) ? "yes" : "no");
+						else
+							state.append("");
 					}
 				}
 				
-				if (se.getValue() != null) {
-					se = new SequenceEncoder(se.getValue(), ';'); // properties
-					se.append("Properties"); // menu name
-					se.append('P'); // key
-					se.append(0); // commit
-					se.append("").append("").append(""); // colour
+				if (definition.length() == 0) {
+					definition = se.getValue();
+				}
+				else if (se.getValue() != null) {
+					definition = definition + "~" + se.getValue();
+				}
+				
+				String st = p.myGetState();
+				if (st == null) {
+					st = state.getValue();
+				}
+				else if (state.getValue() != null) {
+					st = p.myGetState() + "~" + state.getValue();
+				}
+				
+				if (definition != null && definition.length() > 0) {
+					se = new SequenceEncoder(definition, ';'); // properties
+					se.append(menuName); // menu name
+					se.append(launchKey); // key
+					se.append(commitStyle); // commit
+					se.append(red).append(green).append(blue); // colour
 					p.mySetType(PropertySheet.ID + se.getValue());
-					p.mySetState(state.getValue());
+					p.mySetState(st);
 				}
 				else {
 					p = null;
@@ -634,10 +677,6 @@ public class ADC2Module extends Importer {
 			dp.setInner(gamePiece); // so we can change the state below.
 			dp.setValue(drawOnTopOfOthers() ? "1" : "0");
 			return dp;
-		}
-
-		protected Marker getMarker() {
-			return pieceClass.getMarkerDecorator();
 		}
 
 		protected GamePiece getBasicPiece() throws IOException {
@@ -873,11 +912,6 @@ public class ADC2Module extends Importer {
 		}
 
 		@Override
-		public Marker getMarkerDecorator() {
-			return null;
-		}
-
-		@Override
 		public Obscurable getPieceValueMask() throws IOException {
 			return null;
 		}
@@ -909,7 +943,7 @@ public class ADC2Module extends Importer {
 			se.append(getHiddenSymbol().getFileName()); // hide image
 			se.append("Hide Piece"); // menu name
 			BufferedImage image = getSymbol().getImage();
-			se.append("G" + getHiddenImage(new Dimension(image.getWidth(), image.getHeight()), HiddenFlag.MARKER)); // display style
+			se.append("G" + getFlagImage(new Dimension(image.getWidth(), image.getHeight()), StateFlag.MARKER)); // display style
 			se.append(getHiddenName()); // mask name
 			if (getOwner() == Player.NO_PLAYERS || getOwner() == Player.ALL_PLAYERS) {
 				se.append("side:");
@@ -1002,7 +1036,34 @@ public class ADC2Module extends Importer {
 		}
 
 		public PropertySheet getPropertySheetDecorator() {
-			return new PropertySheet();
+			SequenceEncoder type = new SequenceEncoder('~');
+			SequenceEncoder state = new SequenceEncoder('~');
+			for(int i = 0; i < classValues.length; ++i) {
+				if (classValues[i] != null && !classValues[i].equals("")) {
+					type.append("0" + classValues[i]);
+					Object o = getValue(i);
+					if (o instanceof String)
+						state.append((String) o);
+					else if (o instanceof Integer)
+						state.append(o.toString());
+					else if (o instanceof Boolean)
+						state.append(o.equals(Boolean.TRUE) ? "yes" : "no");
+					else
+						state.append("");
+				}
+			}
+
+			PropertySheet p = new PropertySheet();
+			SequenceEncoder se = new SequenceEncoder(';'); // properties
+			se.append(type.getValue() == null ? "" : type.getValue());
+			se.append("Properties"); // menu name
+			se.append('P'); // key
+			se.append(0); // commit
+			se.append("").append("").append(""); // colour
+			p.mySetType(PropertySheet.ID + se.getValue());
+			p.mySetState(state.getValue());
+
+			return p;
 		}
 
 		public UsePrototype getUsePrototypeDecorator() {
@@ -1013,6 +1074,47 @@ public class ADC2Module extends Importer {
 			return p;
 		}
 
+		public Embellishment getAttackedEmbellishmentDecorator() throws IOException {
+			return getCombatEmbellishmentDecorator("Mark Attacked", "A", StateFlag.ATTACK);
+		}
+		
+		public Embellishment getDefendedEmbellishmentDecorator() throws IOException {
+			return getCombatEmbellishmentDecorator("Mark Defended", "D", StateFlag.DEFEND);
+		}
+		
+		private Embellishment getCombatEmbellishmentDecorator(String command, String key, StateFlag flag) throws IOException {
+			BufferedImage image = getSymbol().getImage();
+			String imageName = getFlagImage(new Dimension(image.getWidth(), image.getHeight()), flag);
+			SequenceEncoder se = new SequenceEncoder(';');
+			se.append(command)                   // Activate command
+			  .append(InputEvent.CTRL_MASK)      // Activate modifiers
+			  .append(key)                       // Activate key
+			  .append("")                        // Up command
+			  .append(0)                         // Up modifiers
+			  .append("")                        // Up key
+			  .append("")                        // Down command
+			  .append(0)                         // Down modifiers
+			  .append("")                        // Down key
+			  .append("")                        // Reset command
+			  .append("")                        // Reset key
+			  .append("")                        // Reset level
+			  .append(false)                     // Draw underneath when selected
+			  .append(0)                         // x offset
+			  .append(0)                         // y offset
+			  .append(StringArrayConfigurer.arrayToString(new String[] {imageName})) // Image name
+			  .append(StringArrayConfigurer.arrayToString(new String[] {""}))
+			  .append(false)                     // loop levels
+			  .append(command)                   // name
+			  .append((KeyStroke) null)          // Random key
+			  .append("")                        // Random text
+			  .append(false)                     // Follow property
+			  .append("")                        // Property name
+			  .append(1);                        // First level value
+			Embellishment layer = new Embellishment();
+			layer.mySetType(Embellishment.ID + se.getValue());
+			return layer;
+		}
+		
 		public Obscurable getPieceValueMask() throws IOException {
 			if (getOwner().useHiddenPieces()) {
 				SequenceEncoder se = new SequenceEncoder(';');
@@ -1020,7 +1122,7 @@ public class ADC2Module extends Importer {
 				se.append(getImageName()); // hide image
 				se.append("Hide Info"); // menu name
 				BufferedImage image = getSymbol().getImage();
-				se.append("G" + getHiddenImage(new Dimension(image.getWidth(), image.getHeight()), HiddenFlag.INFO)); // display style
+				se.append("G" + getFlagImage(new Dimension(image.getWidth(), image.getHeight()), StateFlag.INFO)); // display style
 				if (name == null)
 					se.append(getName());
 				else
@@ -1038,44 +1140,13 @@ public class ADC2Module extends Importer {
 		public MovementMarkable getMovementMarkableDecorator() throws IOException {
 			SequenceEncoder se = new SequenceEncoder(';');
 			BufferedImage img = getSymbol().getImage();
-			int xOffset = img.getWidth()/2 + 1;
-			int yOffset = -img.getHeight()/2 - 2;
-			String movedIcon = "/images/moved.gif";
+			int xOffset = -img.getWidth()/2 - 10;
+			int yOffset = -img.getHeight()/2;
+			String movedIcon = getFlagImage(new Dimension(img.getWidth(), img.getHeight()), StateFlag.MOVE);
 			se.append(movedIcon).append(xOffset).append(yOffset);
 			MovementMarkable p = new MovementMarkable();
 			p.mySetType(MovementMarkable.ID + se.getValue());
 			return p;
-		}
-
-		public Marker getMarkerDecorator() {
-			SequenceEncoder se;
-			boolean useMarker = false;
-			se = new SequenceEncoder(',');
-			for (int i = 0; i < classValues.length; ++i) {
-				if (classValues[i] != null && !classValues[i].equals("") && getValue(i) != null) {
-					se.append(classValues[i]);
-					useMarker = true;
-				}
-			}
-			if (useMarker) {
-				Marker p = new Marker();
-				p.mySetType(Marker.ID + se.getValue());
-				for (int i = 0; i < classValues.length; ++i) {
-					if (classValues[i] == null || classValues[i].equals(""))
-						continue;
-					Object o = getValue(i);
-					if (o instanceof Boolean)
-						p.setProperty(classValues[i], o.equals(Boolean.TRUE) ? "yes" : "no");
-					else if (o instanceof String)
-						p.setProperty(classValues[i], (String) o);
-					else if (o instanceof Integer)
-						p.setProperty(classValues[i], o.toString());
-				}
-				return p;
-			}
-			else {
-				return null;
-			}
 		}
 
 		public Decorator getHiddenDecorator() throws IOException {
@@ -1102,7 +1173,7 @@ public class ADC2Module extends Importer {
 					se.append(getHiddenSymbol().getFileName()); // hide image
 					se.append("Hide Piece"); // menu name
 					BufferedImage image = getSymbol().getImage();
-					se.append("G" + getHiddenImage(new Dimension(image.getWidth(), image.getHeight()), HiddenFlag.MARKER)); // display style
+					se.append("G" + getFlagImage(new Dimension(image.getWidth(), image.getHeight()), StateFlag.MARKER)); // display style
 					se.append(getHiddenName()); // mask name
 					se.append(sides); // owning player
 					p = new Obscurable();
@@ -1304,7 +1375,7 @@ public class ADC2Module extends Importer {
 		return set;
 	}
 
-	private HashMap<HiddenFlag, HashMap<Dimension, String>> hiddenFlagImages;
+	private HashMap<StateFlag, HashMap<Dimension, String>> hiddenFlagImages;
 	private int version;
 	private int classCombatSummaryValues;
 	private int pieceCombatSummaryValues;
@@ -1316,24 +1387,34 @@ public class ADC2Module extends Importer {
 	private final String infoPages[] = new String[10];
 	private String infoPageName;
 	
-	public enum HiddenFlag {
-		INFO("i", new Color(0.2f, 1.0f, 1.0f, 0.4f), new Dimension(10, 15)),
-		MARKER("H", new Color(1.0f, 1.0f, 0.2f, 0.4f), new Dimension(15, 10));
+//	public static final Color FLAG_BACKGROUND = new Color(1.0f, 1.0f, 0.8f);
+//	public static final Color FLAG_FOREGROUND = new Color(0.5f, 0.0f, 0.5f);
+	public static final Color FLAG_BACKGROUND = Color.BLACK;
+	public static final Color FLAG_FOREGROUND = Color.WHITE;
+	
+	public enum StateFlag {
+		MOVE("M", FLAG_BACKGROUND, FLAG_FOREGROUND, 0),
+		ATTACK("A", FLAG_BACKGROUND, FLAG_FOREGROUND, 1),
+		DEFEND("D", FLAG_BACKGROUND, FLAG_FOREGROUND, 1),
+		INFO("h", FLAG_BACKGROUND, FLAG_FOREGROUND, 2),
+		MARKER("H", FLAG_BACKGROUND, FLAG_FOREGROUND, 2);
 		
-		public final String flag;
-		public final Color color;
-		public final Dimension size;
+		public final String name;
+		public final Color background;
+		public final Color foreground;
+		public final int tab;
 
-		HiddenFlag(String flag, Color c, Dimension d) {
-			this.flag = flag;
-			this.color = c;
-			this.size = d;
+		private StateFlag(String flag, Color background, Color foreground, int tab) {
+			this.name = flag;
+			this.background = background;
+			this.foreground = foreground;
+			this.tab = tab;
 		}
 	}
 	
-	protected String getHiddenImage(Dimension d, HiddenFlag flag) throws IOException {
+	protected String getFlagImage(Dimension d, StateFlag flag) throws IOException {
 		if (hiddenFlagImages == null)
-			hiddenFlagImages = new HashMap<HiddenFlag, HashMap<Dimension,String>>();
+			hiddenFlagImages = new HashMap<StateFlag, HashMap<Dimension,String>>();
 		
 		HashMap<Dimension,String> map = hiddenFlagImages.get(flag);		
 		if (map == null) {
@@ -1343,13 +1424,22 @@ public class ADC2Module extends Importer {
 		
 		String imageName = map.get(d);
 		if (imageName == null) {
-			BufferedImage icon = new BufferedImage(d.width, d.height, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage icon = new BufferedImage(d.width + 20, d.height, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = icon.createGraphics();
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+			g.setColor(flag.background);
+			g.fillRoundRect(d.width, 15*flag.tab, 20, 15, 5, 5);
+			g.setColor(flag.foreground);
+			g.setFont(new Font("Dialog", Font.PLAIN, 9));
+			Rectangle2D r = g.getFontMetrics().getStringBounds(flag.name, g);
+			g.drawString(flag.name, d.width + 15 - (int) (r.getWidth()/2.0), 11 + 15*flag.tab);
+
+			g.setBackground(new Color(0,0,0,0));
+			g.clearRect(0, 0, d.width+10, d.height);
 			
-			g.setColor(flag.color);
-			g.fillRect(0, 0, flag.size.width, flag.size.height);
-			
-			imageName = getUniqueImageFileName(flag.flag + d.width + "x" + d.height);
+			imageName = getUniqueImageFileName(flag.name + d.width + "x" + d.height);
 			map.put(d, imageName);
 			
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -1421,10 +1511,43 @@ public class ADC2Module extends Importer {
 			readInfoPageBlock(in);
 			readInfoSizeBlock(in);
 			readAllianceBlock(in);
+			readDrawOptionsBlock(in);
+			readPieceStatusDotsBlock(in); // read this in again!
 		}
 		catch(ADC2Utils.NoMoreBlocksException e) { }
 	}
 	
+	// TODO: what happens when this conflicts with the draw options in the map file itself?
+	private void readDrawOptionsBlock(DataInputStream in) throws IOException {
+		ADC2Utils.readBlockHeader(in, "Draw Options");
+		
+		@SuppressWarnings("unused")
+		boolean showHexSides = in.readByte() != 0;
+		@SuppressWarnings("unused")
+		boolean showHexLines = in.readByte() != 0;
+		@SuppressWarnings("unused")
+		boolean showPlaceNames = in.readByte() != 0;
+		int pieceOptionFlags = in.readUnsignedByte();
+		@SuppressWarnings("unused")
+		boolean showPieces = (pieceOptionFlags & 0x1) > 0;
+		@SuppressWarnings("unused")
+		boolean showMarkers = (pieceOptionFlags & 0x2) == 0;		
+		
+		/*
+		 * First three bytes give symbols per hex for the three zoomlevels.
+		 * 1 = 1 (inside hex)
+		 * 4 = 4 per hex
+		 * 101 = 1 (inside hex) & overlay stack on pieces
+		 * 104 = 4 per hex & overlay stack on pieces
+		 * 200 = 1 (centered)
+		 * 201 = 1 (centered) & overlay stack on pieces
+		 * all other values are completely invalid.
+		 * 
+		 * The purpose of the last byte in this block is unknown.
+		 */
+		in.read(new byte[4]);
+	}
+
 	// TODO: allow multiple players to see hidden units.
 	protected void readAllianceBlock(DataInputStream in) throws IOException {
 		ADC2Utils.readBlockHeader(in, "Alliances");
@@ -1584,7 +1707,7 @@ public class ADC2Module extends Importer {
 			int color = in.readUnsignedByte();
 			int position = in.readByte();
 			in.read(size);
-			statusDots[i] = new StatusDots(type, show, color, position, size[2]);
+			statusDots[i] = new StatusDots(type, show, ADC2Utils.getColorFromIndex(color), position, size[2]);
 		}
 	}
 
@@ -1919,12 +2042,17 @@ public class ADC2Module extends Importer {
 		// set common properties
 		GamePiece gp = new BasicPiece();
 		
-		gp = new Delete(Delete.ID + "Delete;D", gp);
+		Delete del = new Delete();
+		SequenceEncoder se = new SequenceEncoder(';');
+		se.append("Delete").append(KeyStroke.getKeyStroke("DELETE"));
+		del.mySetType(Delete.ID + se.getValue());
+		del.setInner(gp);
+		gp = del;
 		
 		if (forcePools.count(ForcePool.class) > 0)
 			gp = new ReturnToDeck(ReturnToDeck.ID + "Return to Force Pool;R;;Select Force Pool", gp);
 		
-		SequenceEncoder se = new SequenceEncoder(';');
+		se = new SequenceEncoder(';');
 		se.append(KeyStroke.getKeyStroke('T', InputEvent.CTRL_MASK))
 			.append("Movement Trail")
 			.append(false)
@@ -1951,8 +2079,8 @@ public class ADC2Module extends Importer {
 
 		configureMouseOverStackViewer(gameModule);
 		writePrototypesToArchive(gameModule);
-		getMap().writeToArchive();	
-		configureMapLayers();		
+		getMap().writeToArchive();
+		configureMapLayers();				
 		writeClassesToArchive(gameModule);
 		writeForcePoolsToArchive(gameModule);
 		writeDecksToArchive(gameModule);
@@ -2035,7 +2163,7 @@ public class ADC2Module extends Importer {
 		LayeredPieceCollection layer = getLayeredPieceCollection();
 		String order = layer.getAttributeValueString(LayeredPieceCollection.LAYER_ORDER);
 		if (order.equals("")) {
-			order = StringArrayConfigurer.arrayToString(new String[] {"0", "1"});
+			order = "0,1";
 		}
 		else {
 			order = order + ",0,1";
