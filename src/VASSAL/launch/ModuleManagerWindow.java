@@ -707,13 +707,14 @@ public class ModuleManagerWindow extends JFrame {
       BufferedReader br = null;
       try {
         zip = new ZipFile(file);
-        br = new BufferedReader(
-          new InputStreamReader(zip.getInputStream(zip.getEntry("buildFile"))));
+        br = new BufferedReader(new InputStreamReader(
+          zip.getInputStream(zip.getEntry("buildFile"))));
         parseBuildFile(br);
       }
       catch (Exception e) {
         setValid(false);
-        setError(Resources.getString("ModuleManager.add_error", file.getName(), type));
+        setError(Resources.getString(
+          "ModuleManager.add_error", file.getName(), type));
         return;
       }
       finally {
@@ -722,7 +723,7 @@ public class ModuleManagerWindow extends JFrame {
             br.close();
           }
           catch (IOException e) {
-            
+            e.printStackTrace();  
           }
         }
         if (zip != null) {
@@ -730,12 +731,12 @@ public class ModuleManagerWindow extends JFrame {
             zip.close();
           }
           catch (IOException e) {
-            
+            e.printStackTrace();  
           }
         }
       }
+
       setValid(true);
-      return;
     }
     
     /*
