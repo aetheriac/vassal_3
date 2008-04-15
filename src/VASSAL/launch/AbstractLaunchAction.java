@@ -70,6 +70,14 @@ public abstract class AbstractLaunchAction extends AbstractAction {
     this.args = args;
     this.module = module;
   }
+  
+  public static boolean isInUse(File f) {
+    return using.containsKey(f);
+  }
+  
+  public static boolean isEditing(File f) {
+    return editing.contains(f);
+  }
 
   public void actionPerformed(ActionEvent e) {
     window.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
