@@ -1,7 +1,7 @@
 /*
  * $Id: SaveGameData.java 3423 2008-04-13 21:51:32Z swampwallaby $
  *
- * Copyright (c) 2008 by Brent Easton
+ * Copyright (c) 2008 by Brent Easton and Joel Uckelman
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,7 +25,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
@@ -43,8 +42,14 @@ import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 import VASSAL.build.GameModule;
 import VASSAL.tools.ArchiveWriter;
@@ -63,11 +68,17 @@ public class SaveGameData {
   public static final String ZIP_ENTRY_NAME = "metadata";
   public static final String SAVE_VERSION = "1.0";
   public static final String ROOT_NODE = "data";
-  public static final String VERSION_ATTR = "version";
   public static final String MODULE_NODE = "module";
   public static final String NAME_ENTRY = "name";
   public static final String VERSION_ENTRY = "version";
   public static final String COMMENTS_NODE = "comments";
+
+  public static final String NAME_ATTR = "name";
+  public static final String VERSION_ATTR = "version";
+
+  public static final String ROOT_ELEMENT = "data";
+  public static final String MODULE_ELEMENT = "module";
+  public static final String COMMENTS_ELEMENT = "comments";
 
   protected boolean valid = false;
   protected String moduleName;
@@ -121,47 +132,39 @@ public class SaveGameData {
    * @throws IOException If anything goes wrong
    */
   public void save(ArchiveWriter archive) throws IOException {
-    Document xmldoc = null;
+    Document doc = null;
     Element e = null;
     Node n = null;
     try {
-      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-      DocumentBuilder builder = factory.newDocumentBuilder();
-      DOMImplementation impl = builder.getDOMImplementation();
-
-      xmldoc = impl.createDocument(null, ROOT_NODE, null);
-      Element root = xmldoc.getDocumentElement();
+      doc = DocumentBuilderFactory.newInstance()
+                                  .newDocumentBuilder()
+                                  .newDocument();
+      
+      final Element root = doc.createElement(ROOT_ELEMENT);
       root.setAttribute(VERSION_ATTR, SAVE_VERSION);
-      Element module = xmldoc.createElementNS(null, MODULE_NODE);
-      root.appendChild(module);
-      e = xmldoc.createElementNS(null, NAME_ENTRY);
-      module.appendChild(e);
-      n = xmldoc.createTextNode(moduleName);
-      e.appendChild(n);
-      e = xmldoc.createElementNS(null, VERSION_ENTRY);
-      module.appendChild(e);
-      n = xmldoc.createTextNode(moduleVersion);
-      e.appendChild(n);
+      doc.appendChild(root);
 
-      Element comments = xmldoc.createElementNS(null, COMMENTS_NODE);
+      final Element module = doc.createElement(MODULE_ELEMENT);
+      module.setAttribute(NAME_ATTR, moduleName);
+      module.setAttribute(VERSION_ATTR, moduleVersion);
+      root.appendChild(module);
+
+      final Element comments = doc.createElement(COMMENTS_ELEMENT);
+      comments.appendChild(doc.createTextNode(getComments()));
       root.appendChild(comments);
-      n = xmldoc.createTextNode(getComments());
-      comments.appendChild(n);
     }
     catch (ParserConfigurationException ex) {
       throw new IOException(ex.getMessage());
     }
 
     final BridgeStream out = new BridgeStream();
-    final Source source = new DOMSource(xmldoc);
-    final Result result = new StreamResult(out);
-    Transformer xformer;
     try {
-      xformer = TransformerFactory.newInstance().newTransformer();
+      final Transformer xformer =
+        TransformerFactory.newInstance().newTransformer();
       xformer.setOutputProperty(OutputKeys.INDENT, "yes");
       xformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount",
           "2");
-      xformer.transform(source, result);
+      xformer.transform(new DOMSource(doc), new StreamResult(out));
     }
     catch (TransformerConfigurationException ex) {
       throw new IOException(ex.getMessage());
@@ -174,7 +177,6 @@ public class SaveGameData {
     }
 
     archive.addFile(ZIP_ENTRY_NAME, out.toInputStream());
-    return;
   }
 
   /**
@@ -186,130 +188,131 @@ public class SaveGameData {
    * @param file Saved Game File
    */
   public void read(File file) {
-    comments = "";
-    moduleName = "";
-    moduleVersion = "";
-    ZipFile zip = null;
-    InputStream is = null;
+    comments = moduleName = moduleVersion = "";
     setValid(true);
 
-    /*
-     * This may be an old-style saved game with no metadata. Check that it is a
-     * valid Zip file and has a 'savedgame' entry.
-     */
+    ZipFile zip = null;
+    InputStream is = null;
     try {
-      zip = new ZipFile(file);
-      @SuppressWarnings("unused")
-      // Just checking the savedgame exists
-      final ZipEntry save = zip.getEntry(GameState.SAVEFILE_ZIP_ENTRY);
-    }
-    catch (ZipException e) {
-      setValid(false);
-    }
-    catch (IOException e) {
-      setValid(false);
+      try {
+        zip = new ZipFile(file);
+
+        // This may be an old-style saved game with no metadata. Check that
+        // it is a valid zip file and has a 'savedgame' entry.
+        if (zip.getEntry(GameState.SAVEFILE_ZIP_ENTRY) == null) {
+          throw new IOException("Not a valid saved game."); 
+        }  
+      }
+      catch (ZipException e) {
+        // print no stack trace, this is likely not a zip file
+        setValid(false);
+        return;
+      }
+      catch (IOException e) {
+        e.printStackTrace();
+        setValid(false);
+        return;
+      }
+
+      // Try to parse the metadata. Failure is not catastrophic, we can
+      // treat it like an old-style save with no metadata.
+      try {
+        final ZipEntry data = zip.getEntry(GameState.SAVEFILE_METADATA_ENTRY);
+        if (data == null) return;
+
+        final XMLReader parser = XMLReaderFactory.createXMLReader();
+
+        // set up the handler
+        final XMLHandler handler = new XMLHandler();
+        parser.setContentHandler(handler);
+        parser.setDTDHandler(handler);
+        parser.setEntityResolver(handler);
+        parser.setErrorHandler(handler);
+
+        // parse! parse!
+        is = zip.getInputStream(data);
+        parser.parse(new InputSource(is));
+      }
+      catch (IOException e) {
+        e.printStackTrace();
+      }
+      catch (SAXException e) {
+        e.printStackTrace();
+      }
     }
     finally {
-      if (!isValid() && zip != null) {
+      if (zip != null) {
         try {
           zip.close();
         }
-        catch (Exception e) {
-
+        catch (IOException e) {
+          e.printStackTrace();
         }
       }
-    }
-
-    if (!isValid()) {
-      return;
-    }
-
-    /*
-     * Try and parse the metadata. Failure is not catastrophic, we can treat it
-     * like an old-style save with no metadata
-     */
-    try {
-      final ZipEntry data = zip.getEntry(GameState.SAVEFILE_METADATA_ENTRY);
-      if (data != null) {
-        is = zip.getInputStream(data);
-        DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory
-            .newInstance();
-        DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-        Document metadata = docBuilder.parse(is);
-        metadata.getDocumentElement().normalize();
-
-        NodeList rootList = metadata.getElementsByTagName(ROOT_NODE);
-        if (rootList.getLength() == 0) {
-          return;
-        }
-        String metaDataVersion = ((Element) rootList.item(0)).getAttribute(VERSION_ATTR);
-        if (!SAVE_VERSION.equals(metaDataVersion)) {
-          // Later versions may require to do conversion
-        }
-        
-        NodeList nodes = metadata.getElementsByTagName(MODULE_NODE);
-        Node node = nodes.item(0);
-        if (node != null && node.getNodeType() == Node.ELEMENT_NODE) {
-          Element moduleElement = (Element) node;
-          NodeList nl = null;
-
-          NodeList entryList = moduleElement.getElementsByTagName(NAME_ENTRY);
-          Element entry = (Element) entryList.item(0);
-          if (entry != null) {
-            nl = entry.getChildNodes();
-            if (nl.getLength() > 0) {
-              moduleName = ((Node) nl.item(0)).getNodeValue();
-            }
-          }
-
-          entryList = moduleElement.getElementsByTagName(VERSION_ENTRY);
-          entry = (Element) entryList.item(0);
-          if (entry != null) {
-            nl = entry.getChildNodes();
-            if (nl.getLength() > 0) {
-              moduleVersion = ((Node) nl.item(0)).getNodeValue();
-            }
-          }
-        }
-
-        nodes = metadata.getElementsByTagName(COMMENTS_NODE);
-        node = nodes.item(0);
-        if (node != null && node.getNodeType() == Node.ELEMENT_NODE) {
-          Element commentElement = (Element) node;
-          NodeList nl = commentElement.getChildNodes();
-          if (nl.getLength() > 0) {
-            comments = ((Node) nl.item(0)).getNodeValue();
-          }
-        }
-      }
-    }
-    catch (IOException e) {
-
-    }
-    catch (ParserConfigurationException e) {
-
-    }
-    catch (SAXException e) {
-
-    }
-
-    finally {
-      try {
-        if (zip != null) {
-          zip.close();
-        }
-      }
-      catch (Exception e) {
-
-      }
-      try {
-        if (is != null) {
+      
+      if (is != null) {
+        try {
           is.close();
         }
+        catch (IOException e) {
+          e.printStackTrace();
+        }
       }
-      catch (Exception e) {
+    }
+  }
 
+  private class XMLHandler extends DefaultHandler {
+    final StringBuilder accumulator = new StringBuilder();
+
+    @Override
+    public void startElement(String uri, String localName,
+                             String qName, Attributes attrs) {
+      // clear the content accumulator
+      accumulator.setLength(0);
+
+      // handle element attributes we care about
+      if (MODULE_ELEMENT.equals(qName)) {
+        moduleName = getAttr(attrs, NAME_ATTR);
+        moduleVersion = getAttr(attrs, VERSION_ATTR);
       }
+/*
+      else if (VASSAL_ELEMENT.equals(localName)) {
+        vassalVersion = attrs.getName(VERSION_ATTR);
+      }
+*/
+    }
+
+    private String getAttr(Attributes attrs, String qName) {
+      final String value = attrs.getValue(qName);
+      return value == null ? "" : value;
+    }
+
+    @Override
+    public void endElement(String uri, String localName, String qName) {
+      // handle all of the elements which have CDATA here
+      if (COMMENTS_ELEMENT.equals(qName)) {
+        comments = accumulator.toString().trim();
+      }
+    }
+
+    @Override
+    public void characters(char[] ch, int start, int length) {
+      accumulator.append(ch, start, length);
+    }
+
+    @Override
+    public void warning(SAXParseException e) throws SAXException {
+      e.printStackTrace();
+    }
+
+    @Override
+    public void error(SAXParseException e) throws SAXException {
+      e.printStackTrace();
+    }
+
+    @Override
+    public void fatalError(SAXParseException e) throws SAXException {
+      throw e;
     }
   }
 }
