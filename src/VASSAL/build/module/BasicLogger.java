@@ -103,8 +103,6 @@ public class BasicLogger implements Logger, Buildable, GameComponent, CommandEnc
     final MenuManager mm = MenuManager.getInstance();
     mm.addAction("BasicLogger.begin_logfile", newLogAction);
     mm.addAction("BasicLogger.end_logfile", endLogAction);
-//    GameModule.getGameModule().getFileMenu().add(newLogAction);
-//    GameModule.getGameModule().getFileMenu().add(endLogAction);
 
     JButton button = mod.getToolBar().add(undoAction);
     button.setToolTipText(Resources.getString("BasicLogger.undo_last_move"));  //$NON-NLS-1$
