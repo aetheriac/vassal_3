@@ -20,7 +20,6 @@ package VASSAL.build.module;
 
 import java.awt.Cursor;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -35,11 +34,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import javax.swing.Action;
+
 import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JFrame;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+
+import org.jdesktop.swingworker.SwingWorker;
 
 import VASSAL.build.GameModule;
 import VASSAL.command.AddPiece;
@@ -59,10 +60,6 @@ import VASSAL.tools.Deobfuscator;
 import VASSAL.tools.FileChooser;
 import VASSAL.tools.Obfuscator;
 import VASSAL.tools.menu.MenuManager;
-
-// FIXME: switch back to javax.swing.SwingWorker on move to Java 1.6
-//import javax.swing.SwingWorker;
-import org.jdesktop.swingworker.SwingWorker;
 
 /**
  * The GameState represents the state of the game currently being played.
@@ -438,7 +435,9 @@ public class GameState implements CommandEncoder {
   }
   
   public static final String SAVEFILE_ZIP_ENTRY = "savedGame";  //$NON-NLS-1$
-
+  public static final String SAVEFILE_METADATA_ENTRY = "metadata";
+  public static final String SAVEFILE_VERSION = "1.0";
+  
   /**
    * Return a {@link Command} that, when executed, will restore the
    * game to its current state.  Invokes {@link GameComponent#getRestoreCommand}
@@ -505,12 +504,21 @@ public class GameState implements CommandEncoder {
 
     final ArchiveWriter saver = new ArchiveWriter(f.getPath());
     saver.addFile(SAVEFILE_ZIP_ENTRY, out.toInputStream());
+    String comments  = (String) JOptionPane.showInputDialog(
+        GameModule.getGameModule().getFrame(),
+        Resources.getString("BasicLogger.enter_comments"),
+        Resources.getString("BasicLogger.log_file_comments"),
+        JOptionPane.PLAIN_MESSAGE,
+        null,
+        null,
+        "");
+    (new SaveGameData(comments)).save(saver);
     saver.write();
     if (saver.getArchive() != null) {
       saver.getArchive().close();
     }
   }
-
+  
   public void loadGameInBackground(final File f) {
     try {
       loadGameInBackground(f.getName(), new FileInputStream(f));

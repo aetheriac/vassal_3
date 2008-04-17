@@ -74,6 +74,7 @@ public class BasicLogger implements Logger, Buildable, GameComponent, CommandEnc
   protected Command beginningState;
   protected File outputFile;
   protected Action stepAction = new StepAction();
+  protected String comments = "";
 
   public BasicLogger() {
     super();
@@ -100,8 +101,8 @@ public class BasicLogger implements Logger, Buildable, GameComponent, CommandEnc
     mod.getGameState().addGameComponent(this);
 
     final MenuManager mm = MenuManager.getInstance();
-    mm.getInstance().addAction("BasicLogger.begin_logfile", newLogAction);
-    mm.getInstance().addAction("BasicLogger.end_logfile", endLogAction);
+    mm.addAction("BasicLogger.begin_logfile", newLogAction);
+    mm.addAction("BasicLogger.end_logfile", endLogAction);
 //    GameModule.getGameModule().getFileMenu().add(newLogAction);
 //    GameModule.getGameModule().getFileMenu().add(endLogAction);
 
@@ -277,7 +278,16 @@ public class BasicLogger implements Logger, Buildable, GameComponent, CommandEnc
       new Obfuscator(s.getBytes("UTF-8")).write(out); //$NON-NLS-1$    
 
       final ArchiveWriter saver = new ArchiveWriter(outputFile.getPath());
-      saver.addFile("savedGame", out.toInputStream()); //$NON-NLS-1$
+      saver.addFile(GameState.SAVEFILE_ZIP_ENTRY, out.toInputStream()); //$NON-NLS-1$
+      comments  = (String) JOptionPane.showInputDialog(
+          GameModule.getGameModule().getFrame(),
+          Resources.getString("BasicLogger.enter_comments"),
+          Resources.getString("BasicLogger.log_file_comments"),
+          JOptionPane.PLAIN_MESSAGE,
+          null,
+          null,
+          comments);
+      (new SaveGameData(comments)).save(saver);
       saver.write();
 
       GameModule.getGameModule().getGameState().setModified(false);

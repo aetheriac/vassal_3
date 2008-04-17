@@ -54,9 +54,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -81,6 +81,7 @@ import org.jdesktop.swingx.treetable.DefaultTreeTableModel;
 import VASSAL.Info;
 import VASSAL.build.module.Documentation;
 import VASSAL.build.module.ExtensionsManager;
+import VASSAL.build.module.SaveGameData;
 import VASSAL.chat.CgiServerStatus;
 import VASSAL.chat.ui.ServerStatusView;
 import VASSAL.configure.BooleanConfigurer;
@@ -94,8 +95,8 @@ import VASSAL.tools.BrowserSupport;
 import VASSAL.tools.ComponentSplitter;
 import VASSAL.tools.ErrorLog;
 import VASSAL.tools.FileChooser;
-import VASSAL.tools.menu.MenuManager;
 import VASSAL.tools.SequenceEncoder;
+import VASSAL.tools.menu.MenuManager;
 
 public class ModuleManagerWindow extends JFrame {
   private static final long serialVersionUID = 1L;
@@ -342,8 +343,10 @@ public class ModuleManagerWindow extends JFrame {
         Collections.sort(l);
         for (File f2 : l) {
           final SaveFileInfo fileInfo = new SaveFileInfo(f2, folderInfo);
-          final MyTreeNode fileNode = new MyTreeNode(fileInfo);
-          folderNode.add(fileNode);
+          if (fileInfo.isValid() && fileInfo.belongsToModule()) {
+            final MyTreeNode fileNode = new MyTreeNode(fileInfo);          
+            folderNode.add(fileNode);
+          }
         }
       }
       rootNode.add(moduleNode);
@@ -424,8 +427,10 @@ public class ModuleManagerWindow extends JFrame {
     tree.getTableHeader().setAlignmentX(JComponent.CENTER_ALIGNMENT);
   }
   
-  /*
+  /**
    * Return the number of Modules added to the Module Manager
+   * 
+   * @return Number of modules
    */
   private int getModuleCount() {
     return rootNode.getChildCount();
@@ -472,7 +477,7 @@ public class ModuleManagerWindow extends JFrame {
       moduleView, getModuleCount() == 0 ? "quickStart" : "modules");
   }
   
-  /* *************************************************************************
+  /** *************************************************************************
    * Custom Tree table model:-
    *  - Return column count
    *  - Return column headings
@@ -500,11 +505,12 @@ public class ModuleManagerWindow extends JFrame {
     
   }
   
-  /* *************************************************************************
+  /** *************************************************************************
    * Custom Tree cell renderer:-
    *   - Add file name as tooltip
    *   - Handle expanded display (some nodes use the same icon for expanded/unexpanded)
    *   - Gray out inactve extensions
+   *   - Gray out Save Games that belong to other modules
    */
   private class MyTreeCellRenderer extends DefaultTreeCellRenderer {
 
@@ -519,16 +525,12 @@ public class ModuleManagerWindow extends JFrame {
       setText(info.toString());
       setToolTipText(info.getToolTipText());
       setIcon(info.getIcon(expanded));
-      if (info instanceof ExtensionInfo) {
-         final boolean isActive = ((ExtensionInfo) info).isActive();
-         // FIXME: should get colors from LAF
-         setForeground(isActive ? Color.black : Color.gray);
-      }
+      setForeground(info.getTreeCellFgColor());
       return this;
     }
   }  
   
-  /* *************************************************************************
+  /** *************************************************************************
    * Custom cell render for Version column
    *   - Center data
    */
@@ -547,7 +549,7 @@ public class ModuleManagerWindow extends JFrame {
     }
   }
   
-  /* *************************************************************************
+  /** *************************************************************************
    * Custom TreeTable Node
    */
   private static class MyTreeNode extends DefaultMutableTreeTableNode {
@@ -569,14 +571,7 @@ public class ModuleManagerWindow extends JFrame {
     }
     
     public Object getValueAt(int column) {
-      switch (column) {
-      case KEY_COLUMN:
-        return getNodeInfo().toString();
-      case VERSION_COLUMN:
-        return getNodeInfo().getVersion();
-      default:
-        return null;
-      }
+      return getNodeInfo().getValueAt(column);
     }
     
     public MyTreeNode findNode(File f) {
@@ -604,8 +599,10 @@ public class ModuleManagerWindow extends JFrame {
       return getChildCount();
     }
     
-    /*
+    /**
      * Return the Module node enclosing this node
+     * 
+     * @return Parent Tree Node
      */
     public MyTreeNode getParentModuleNode() {
       final AbstractInfo info = getNodeInfo();
@@ -620,8 +617,10 @@ public class ModuleManagerWindow extends JFrame {
       }
     }
     
-    /*
+    /**
      * Return the Module file of the Module node enclosing this node
+     * 
+     * @return Module File
      */
     public File getParentModuleFile() {
       final MyTreeNode parentNode = getParentModuleNode();
@@ -629,7 +628,7 @@ public class ModuleManagerWindow extends JFrame {
     }
   }
   
-  /* *************************************************************************
+  /** *************************************************************************
    * All tree nodes encapsulate a User-defined object holding the user
    * data for that node. In the ModuleManager, all user-defined objects
    * are subclasses of AbstractInfo 
@@ -677,6 +676,7 @@ public class ModuleManagerWindow extends JFrame {
         return file.getPath();
       }
     }
+    
     /*
      * Sort by Type, then File name.
      */
@@ -700,6 +700,17 @@ public class ModuleManagerWindow extends JFrame {
     public void setIcon (Icon open, Icon closed) {
       openIcon = open;
       closedIcon = closed;
+    }
+    
+    public String getValueAt(int column) {
+      switch (column) {
+      case KEY_COLUMN:
+        return toString();
+      case VERSION_COLUMN:
+        return getVersion();
+      default:
+        return null;
+      }
     }
     
     public void readBuildFile(String type) {
@@ -738,24 +749,16 @@ public class ModuleManagerWindow extends JFrame {
 
       setValid(true);
     }
-    
-    /*
-     * Parse the buildFile opened on the BufferedReader and record any data we need
+
+    /**
+     * Parse the buildFile opened on the BufferedReader 
+     * and record any data we need. Most Info type do not
+     * need to parse a buildFile
+     * 
+     * @param br Input BufferedReader
      */
-    // FIXME: Over-ride this in ModuleInfo when we add additional metadata
     public void parseBuildFile(BufferedReader br) {
-      try {
-        br.readLine();
-        final String s = br.readLine();
-        // FIXME: Parse xml properly, and do it in the concrete class files.
-        final int p1 = s.indexOf("version=");
-        final int p2 = s.indexOf("\"", p1+9);
-        version = s.substring(p1+9, p2);
-      }
-      catch (IOException ioe) {
-        version = "unknown";
-        setValid(false);
-      }
+      return; 
     }
     
     public void setValid(boolean b) {
@@ -778,17 +781,32 @@ public class ModuleManagerWindow extends JFrame {
       return version;
     }    
     
-    /*
+    public void setVersion(String v) {
+      version = v;
+    }
+    
+    /**
      * Return a String used to sort different types of AbstractInfo's that are
      * children of the same parent.
+     * 
+     * @return sort key
      */
     public String getSortKey() {
       return "5";
     }
     
+    /**
+     * Return the color of the text used to display the name in column 1.
+     * Over-ride this to change color depending on item state.
+     * 
+     *  @return cell text color
+     */
+    public Color getTreeCellFgColor() {
+      return Color.black;
+    }
   }
   
-  /* *************************************************************************
+  /** *************************************************************************
    * Root Node User Information - Root node is hidden, so not much action here.
    */
   private class RootInfo extends AbstractInfo {
@@ -797,13 +815,14 @@ public class ModuleManagerWindow extends JFrame {
     } 
   }
   
-  /* *************************************************************************
+  /** *************************************************************************
    * Module Node User Information
    */
   public class ModuleInfo extends AbstractInfo {
 
     private ExtensionsManager extMgr;
     private List<File> gameFolders = new ArrayList<File>();
+    private String moduleName = "";
     
     private Action newExtensionAction =
       new NewExtensionLaunchAction(ModuleManagerWindow.this);
@@ -860,9 +879,11 @@ public class ModuleManagerWindow extends JFrame {
       extMgr = new ExtensionsManager(f);   
     }
     
-    /*
+    /**
      * Initialise ModuleInfo based on a saved preference string.
      * See encode().
+     * 
+     * @param s Preference String
      */
     public ModuleInfo(String s) {
       SequenceEncoder.Decoder sd = new SequenceEncoder.Decoder(s, ';');
@@ -876,10 +897,12 @@ public class ModuleManagerWindow extends JFrame {
       Collections.sort(gameFolders);
     }
     
-    /*
-     * Encode any informaiton which needs to be recorded in the Preference entry for this module:-
+    /**
+     * Encode any information which needs to be recorded in the Preference entry for this module:-
      *  - Path to Module File
      *  - Paths to any child Save Game Folders
+     *  
+     *  @return encoded data
      */
     public String encode() {
       final SequenceEncoder se = new SequenceEncoder(file.getPath(), ';');
@@ -905,9 +928,11 @@ public class ModuleManagerWindow extends JFrame {
       for (File file : f.listFiles()) {
         if (file.isFile()) {
           final SaveFileInfo fileInfo = new SaveFileInfo(file, folderInfo);
-          final MyTreeNode fileNode = new MyTreeNode(fileInfo);
-          treeModel.insertNodeInto(fileNode, folderNode,
-                                   folderNode.findInsertIndex(fileInfo));
+          if (fileInfo.isValid() && fileInfo.belongsToModule()) {
+            final MyTreeNode fileNode = new MyTreeNode(fileInfo);
+            treeModel.insertNodeInto(fileNode, folderNode,
+                                     folderNode.findInsertIndex(fileInfo));
+          }
         }
       }
       updateModuleList();
@@ -965,9 +990,37 @@ public class ModuleManagerWindow extends JFrame {
       return AbstractLaunchAction.isInUse(file) || AbstractLaunchAction.isEditing(file);
     }
     
+    /*
+     * Parse the module buildfile
+     */
+    public void parseBuildFile(BufferedReader br) {
+      try {
+        br.readLine();
+        final String s = br.readLine();
+        // FIXME: Parse xml properly
+        int p1 = s.indexOf("version=");
+        int p2 = s.indexOf("\"", p1+9);
+        version = s.substring(p1+9, p2);
+        p1 = s.indexOf("name=");
+        p2 = s.indexOf("\"", p1+6);
+        moduleName = s.substring(p1+6, p2);
+      }
+      catch (IOException ioe) {
+        version = "unknown";
+        setValid(false);
+      }
+    }
+    
+    public String getModuleName() {
+      return moduleName;
+    }
+    
+    public String toString() {
+      return moduleName;
+    }
   }
   
-  /* *************************************************************************
+  /** *************************************************************************
    * Extension Node User Information
    */
   private class ExtensionInfo extends AbstractInfo {
@@ -1013,11 +1066,34 @@ public class ModuleManagerWindow extends JFrame {
       return m;
     }
     
+    public Color getTreeCellFgColor() {
+     // FIXME: should get colors from LAF
+      return isActive() ? Color.black : Color.gray;
+    }
+    
     /*
      * Is the extension, or its owning module currently being Played or Edited?
      */
     public boolean isInUse() {
       return AbstractLaunchAction.isInUse(file) || AbstractLaunchAction.isEditing(file);
+    }
+    
+    /*
+     * Parse the module buildfile
+     */
+    public void parseBuildFile(BufferedReader br) {
+      try {
+        br.readLine();
+        final String s = br.readLine();
+        // FIXME: Parse xml properly
+        final int p1 = s.indexOf("version=");
+        final int p2 = s.indexOf("\"", p1+9);
+        version = s.substring(p1+9, p2);
+      }
+      catch (IOException ioe) {
+        version = "unknown";
+        setValid(false);
+      }
     }
     
     private class ActivateExtensionAction extends AbstractAction {
@@ -1038,7 +1114,7 @@ public class ModuleManagerWindow extends JFrame {
     }
   }
   
-  /* *************************************************************************
+  /** *************************************************************************
    * Saved Game Folder Node User Information
    */
   private class GameFolderInfo extends AbstractInfo {
@@ -1052,6 +1128,14 @@ public class ModuleManagerWindow extends JFrame {
     
     public JPopupMenu buildPopup(int row) {
       final JPopupMenu m = new JPopupMenu();
+      m.add(new AbstractAction(Resources.getString("General.refresh")) {
+        private static final long serialVersionUID = 1L;
+        
+        public void actionPerformed(ActionEvent e) {
+          refresh();
+        }        
+      });
+      m.addSeparator();
       m.add(new AbstractAction(Resources.getString("General.remove")) {
         private static final long serialVersionUID = 1L;
 
@@ -1071,6 +1155,14 @@ public class ModuleManagerWindow extends JFrame {
       return moduleInfo;
     }
     
+    public void refresh() {
+      MyTreeNode moduleNode = rootNode.findNode(moduleInfo.getFile());
+      MyTreeNode folderNode = moduleNode.findNode(getFile());
+      treeModel.removeNodeFromParent(folderNode);
+      moduleInfo.removeFolder(getFile());
+      moduleInfo.addFolder(getFile());
+    }
+    
     /*
      * Force Game Folders to sort after extensions
      */
@@ -1079,16 +1171,20 @@ public class ModuleManagerWindow extends JFrame {
     }
   }
   
-  /* *************************************************************************
+  /** *************************************************************************
    * Saved Game File Node User Information
    */
   private class SaveFileInfo extends AbstractInfo {
 
-    protected GameFolderInfo folderInfo;
+    protected GameFolderInfo folderInfo;  // Owning Folder
+    protected SaveGameData metadata;      // Save file metadata
     
     public SaveFileInfo(File f, GameFolderInfo folder) {
       super(f, fileIcon);  
       folderInfo = folder;
+      metadata = new SaveGameData(file);
+      setValid(metadata.isValid());
+      setVersion(metadata.getModuleVersion());
     }
     
     public JPopupMenu buildPopup(int row) {
@@ -1106,10 +1202,35 @@ public class ModuleManagerWindow extends JFrame {
       new Player.LaunchAction(
         ModuleManagerWindow.this, getModuleFile(), file).actionPerformed(null);
     } 
+    
+    public String getValueAt(int column) {
+      return column == SPARE_COLUMN ? buildComments() : super.getValueAt(column);
+    }
+    
+    private String buildComments() {
+      String comments = "";
+      if (!belongsToModule()) {
+        if (metadata.getModuleName().length() > 0) {
+          comments = "[" + metadata.getModuleName() +  "] ";
+        }
+      }
+      comments += metadata.getComments();
+      return comments;
+    }
+    
+    private boolean belongsToModule() {
+      return metadata.getModuleName().length() == 0 || folderInfo.getModuleInfo().getModuleName().equals(metadata.getModuleName());
+    }
+    
+    public Color getTreeCellFgColor() {
+      // FIXME: should get colors from LAF
+       return belongsToModule() ? Color.black : Color.gray;
+     }
   }
   
-  /* *************************************************************************
+  /** *************************************************************************
    * Action to create a New Extension and edit it in another process
+   *
    */
   private class NewExtensionLaunchAction extends AbstractLaunchAction {
     private static final long serialVersionUID = 1L;
@@ -1155,7 +1276,7 @@ public class ModuleManagerWindow extends JFrame {
     }
   }
 
-  /* *************************************************************************
+  /** *************************************************************************
    * Action to Edit an Extension in another process
    */
   private class EditExtensionLaunchAction extends AbstractLaunchAction {
