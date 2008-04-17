@@ -1387,10 +1387,10 @@ public class ADC2Module extends Importer {
 	private final String infoPages[] = new String[10];
 	private String infoPageName;
 	
-//	public static final Color FLAG_BACKGROUND = new Color(1.0f, 1.0f, 0.8f);
-//	public static final Color FLAG_FOREGROUND = new Color(0.5f, 0.0f, 0.5f);
-	public static final Color FLAG_BACKGROUND = Color.BLACK;
-	public static final Color FLAG_FOREGROUND = Color.WHITE;
+	public static final Color FLAG_BACKGROUND = new Color(1.0f, 1.0f, 0.8f, 0.8f);
+	public static final Color FLAG_FOREGROUND = new Color(0.5f, 0.0f, 0.5f, 1.0f);
+//	public static final Color FLAG_BACKGROUND = Color.BLACK;
+//	public static final Color FLAG_FOREGROUND = Color.WHITE;
 	
 	public enum StateFlag {
 		MOVE("M", FLAG_BACKGROUND, FLAG_FOREGROUND, 0),
@@ -1411,7 +1411,8 @@ public class ADC2Module extends Importer {
 			this.tab = tab;
 		}
 	}
-	
+
+	// TODO: allow offsets to layer images.
 	protected String getFlagImage(Dimension d, StateFlag flag) throws IOException {
 		if (hiddenFlagImages == null)
 			hiddenFlagImages = new HashMap<StateFlag, HashMap<Dimension,String>>();
@@ -1424,17 +1425,21 @@ public class ADC2Module extends Importer {
 		
 		String imageName = map.get(d);
 		if (imageName == null) {
-			BufferedImage icon = new BufferedImage(d.width + 20, d.height, BufferedImage.TYPE_INT_ARGB);
+			int tabHeight = 15;
+			int tabSpace = d.height < 43 ? (d.height-tabHeight)/2 : tabHeight-1;
+			int tabWidth = 10;
+			BufferedImage icon = new BufferedImage(d.width + 2*tabWidth, d.height, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = icon.createGraphics();
 			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 			g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
 			g.setColor(flag.background);
-			g.fillRoundRect(d.width, 15*flag.tab, 20, 15, 5, 5);
+			g.fillRoundRect(d.width, tabSpace*flag.tab, 2*tabWidth, tabHeight, 6, 6);
 			g.setColor(flag.foreground);
+			g.drawRoundRect(d.width, tabSpace*flag.tab, 2*tabWidth-1, tabHeight-1, 6, 6);
 			g.setFont(new Font("Dialog", Font.PLAIN, 9));
 			Rectangle2D r = g.getFontMetrics().getStringBounds(flag.name, g);
-			g.drawString(flag.name, d.width + 15 - (int) (r.getWidth()/2.0), 11 + 15*flag.tab);
+			g.drawString(flag.name, d.width + 3*tabWidth/2 - (int) (r.getWidth()/2.0) - 1, 11 + tabSpace*flag.tab);
 
 			g.setBackground(new Color(0,0,0,0));
 			g.clearRect(0, 0, d.width+10, d.height);
@@ -2190,6 +2195,7 @@ public class ADC2Module extends Importer {
 		dice.setAttribute(DiceButton.PROMPT_ALWAYS, Boolean.TRUE);
 		dice.setAttribute(DiceButton.TOOLTIP, "Roll the dice");
 		dice.setAttribute(DiceButton.BUTTON_TEXT, "Roll");
+		dice.setAttribute(DiceButton.REPORT_FORMAT, "** $name$ $nDice$d$nSides$ (+$plus$ each) = $result$ *** <$playerName$>");
 	}
 
 	protected void configureMouseOverStackViewer(GameModule gameModule) {
