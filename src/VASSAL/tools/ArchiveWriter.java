@@ -64,7 +64,7 @@ public class ArchiveWriter extends DataArchive {
     if (archiveName == null) {
       archive = null;
     }
-    else {
+    else { 
       try {
         archive = new ZipFile(archiveName);
       }
@@ -257,7 +257,12 @@ public class ArchiveWriter extends DataArchive {
     final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(temp));
     try {
       if (closeWhenNotInUse && archive == null && archiveName != null) {
-        archive = new ZipFile(archiveName);
+        try {
+          archive = new ZipFile(archiveName);
+        }
+        catch (Exception exc) {
+           // No stack trace 
+        }
       }
       if (archive != null) {
         try {
