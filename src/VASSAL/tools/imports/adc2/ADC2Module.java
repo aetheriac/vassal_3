@@ -61,6 +61,7 @@ import VASSAL.build.module.ChartWindow;
 import VASSAL.build.module.DiceButton;
 import VASSAL.build.module.GlobalOptions;
 import VASSAL.build.module.Map;
+import VASSAL.build.module.MultiActionButton;
 import VASSAL.build.module.PieceWindow;
 import VASSAL.build.module.PlayerHand;
 import VASSAL.build.module.PlayerRoster;
@@ -73,6 +74,7 @@ import VASSAL.build.module.map.CounterDetailViewer;
 import VASSAL.build.module.map.DrawPile;
 import VASSAL.build.module.map.LOS_Thread;
 import VASSAL.build.module.map.LayeredPieceCollection;
+import VASSAL.build.module.map.MassKeyCommand;
 import VASSAL.build.module.map.SetupStack;
 import VASSAL.build.module.map.boardPicker.Board;
 import VASSAL.build.module.map.boardPicker.board.MapGrid;
@@ -943,7 +945,7 @@ public class ADC2Module extends Importer {
 			se.append(getHiddenSymbol().getFileName()); // hide image
 			se.append("Hide Piece"); // menu name
 			BufferedImage image = getSymbol().getImage();
-			se.append("G" + getFlagImage(new Dimension(image.getWidth(), image.getHeight()), StateFlag.MARKER)); // display style
+			se.append("G" + getFlagLayer(new Dimension(image.getWidth(), image.getHeight()), StateFlag.MARKER)); // display style
 			se.append(getHiddenName()); // mask name
 			if (getOwner() == Player.NO_PLAYERS || getOwner() == Player.ALL_PLAYERS) {
 				se.append("side:");
@@ -1084,7 +1086,9 @@ public class ADC2Module extends Importer {
 		
 		private Embellishment getCombatEmbellishmentDecorator(String command, String key, StateFlag flag) throws IOException {
 			BufferedImage image = getSymbol().getImage();
-			String imageName = getFlagImage(new Dimension(image.getWidth(), image.getHeight()), flag);
+			int xOffset = (image.getWidth()+1)/2 + 5;
+			int yOffset = 0;
+			String imageName = getFlagTab(image.getHeight(), flag);
 			SequenceEncoder se = new SequenceEncoder(';');
 			se.append(command)                   // Activate command
 			  .append(InputEvent.CTRL_MASK)      // Activate modifiers
@@ -1099,8 +1103,8 @@ public class ADC2Module extends Importer {
 			  .append("")                        // Reset key
 			  .append("")                        // Reset level
 			  .append(false)                     // Draw underneath when selected
-			  .append(0)                         // x offset
-			  .append(0)                         // y offset
+			  .append(xOffset)                   // x offset
+			  .append(yOffset)                   // y offset
 			  .append(StringArrayConfigurer.arrayToString(new String[] {imageName})) // Image name
 			  .append(StringArrayConfigurer.arrayToString(new String[] {""}))
 			  .append(false)                     // loop levels
@@ -1115,6 +1119,7 @@ public class ADC2Module extends Importer {
 			return layer;
 		}
 		
+		// TODO: permit offset to mask image.
 		public Obscurable getPieceValueMask() throws IOException {
 			if (getOwner().useHiddenPieces()) {
 				SequenceEncoder se = new SequenceEncoder(';');
@@ -1122,7 +1127,7 @@ public class ADC2Module extends Importer {
 				se.append(getImageName()); // hide image
 				se.append("Hide Info"); // menu name
 				BufferedImage image = getSymbol().getImage();
-				se.append("G" + getFlagImage(new Dimension(image.getWidth(), image.getHeight()), StateFlag.INFO)); // display style
+				se.append("G" + getFlagLayer(new Dimension(image.getWidth(), image.getHeight()), StateFlag.INFO)); // display style
 				if (name == null)
 					se.append(getName());
 				else
@@ -1140,9 +1145,9 @@ public class ADC2Module extends Importer {
 		public MovementMarkable getMovementMarkableDecorator() throws IOException {
 			SequenceEncoder se = new SequenceEncoder(';');
 			BufferedImage img = getSymbol().getImage();
-			int xOffset = -img.getWidth()/2 - 10;
+			int xOffset = (img.getWidth()+1)/2;
 			int yOffset = -img.getHeight()/2;
-			String movedIcon = getFlagImage(new Dimension(img.getWidth(), img.getHeight()), StateFlag.MOVE);
+			String movedIcon = getFlagTab(img.getHeight(), StateFlag.MOVE);
 			se.append(movedIcon).append(xOffset).append(yOffset);
 			MovementMarkable p = new MovementMarkable();
 			p.mySetType(MovementMarkable.ID + se.getValue());
@@ -1173,7 +1178,7 @@ public class ADC2Module extends Importer {
 					se.append(getHiddenSymbol().getFileName()); // hide image
 					se.append("Hide Piece"); // menu name
 					BufferedImage image = getSymbol().getImage();
-					se.append("G" + getFlagImage(new Dimension(image.getWidth(), image.getHeight()), StateFlag.MARKER)); // display style
+					se.append("G" + getFlagLayer(new Dimension(image.getWidth(), image.getHeight()), StateFlag.MARKER)); // display style
 					se.append(getHiddenName()); // mask name
 					se.append(sides); // owning player
 					p = new Obscurable();
@@ -1392,28 +1397,98 @@ public class ADC2Module extends Importer {
 //	public static final Color FLAG_BACKGROUND = Color.BLACK;
 //	public static final Color FLAG_FOREGROUND = Color.WHITE;
 	
-	public enum StateFlag {
-		MOVE("M", FLAG_BACKGROUND, FLAG_FOREGROUND, 0),
-		ATTACK("A", FLAG_BACKGROUND, FLAG_FOREGROUND, 1),
-		DEFEND("D", FLAG_BACKGROUND, FLAG_FOREGROUND, 1),
-		INFO("h", FLAG_BACKGROUND, FLAG_FOREGROUND, 2),
-		MARKER("H", FLAG_BACKGROUND, FLAG_FOREGROUND, 2);
+	public static class StateFlag {
+		public static final StateFlag MOVE = new StateFlag("M", FLAG_BACKGROUND, FLAG_FOREGROUND, 0);
+		public static final StateFlag ATTACK = new StateFlag("A", FLAG_BACKGROUND, FLAG_FOREGROUND, 1);
+		public static final StateFlag DEFEND = new StateFlag("D", FLAG_BACKGROUND, FLAG_FOREGROUND, 1);
+		public static final StateFlag INFO = new StateFlag("h", FLAG_BACKGROUND, FLAG_FOREGROUND, 2);
+		public static final StateFlag MARKER = new StateFlag("H", FLAG_BACKGROUND, FLAG_FOREGROUND, 2);
+		public static final StateFlag COMBAT = new StateFlag("C", FLAG_BACKGROUND, FLAG_FOREGROUND, 1);		
 		
-		public final String name;
-		public final Color background;
-		public final Color foreground;
-		public final int tab;
+		private final String name;
+		private final Color background;
+		private final Color foreground;
+		private final int tab;
+		private String imageName;
+		private final ArrayList<StatusDots> statusDots = new ArrayList<StatusDots>();
 
-		private StateFlag(String flag, Color background, Color foreground, int tab) {
+		public StateFlag(String flag, Color background, Color foreground, int tab) {
 			this.name = flag;
 			this.background = background;
 			this.foreground = foreground;
 			this.tab = tab;
 		}
+		
+		public String getStatusIconName() throws IOException {
+			if (imageName == null) {
+				BufferedImage icon = new BufferedImage(10, 15, BufferedImage.TYPE_INT_ARGB);
+				Graphics2D g = icon.createGraphics();
+				drawFlagImage(g);
+				imageName = getUniqueImageFileName(name);
+
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+				ImageIO.write(icon, "png", out);
+				byte[] imageDataArray = out.toByteArray();
+				GameModule.getGameModule().getArchiveWriter().addImage(imageName, imageDataArray);
+			}
+			return imageName;
+		}
+		
+		public void addStatusDots(StatusDots dots) {
+			statusDots.add(dots);
+		}
+		
+		public void drawFlagImage(Graphics2D g) {
+			final int tabHeight = 15;
+			final int tabWidth = 10;
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+			g.setColor(background);
+			g.fillRoundRect(-tabWidth, 0, 2*tabWidth, tabHeight, 6, 6);
+			g.setColor(foreground);
+			g.drawRoundRect(-tabWidth, 0, 2*tabWidth-1, tabHeight-1, 6, 6);
+			g.setFont(new Font("Dialog", Font.PLAIN, 9));
+			Rectangle2D r = g.getFontMetrics().getStringBounds(name, g);
+			g.drawString(name, tabWidth/2 - (int) (r.getWidth()/2.0) - 1, 11);
+			g.setBackground(new Color(0,0,0,0));
+			g.clearRect(-tabWidth, 0, tabWidth, tabHeight);	
+		}
 	}
 
-	// TODO: allow offsets to layer images.
-	protected String getFlagImage(Dimension d, StateFlag flag) throws IOException {
+	private String getFlagTab(int height, StateFlag flag) throws IOException {
+		if (hiddenFlagImages == null)
+			hiddenFlagImages = new HashMap<StateFlag, HashMap<Dimension,String>>();
+		
+		HashMap<Dimension,String> map = hiddenFlagImages.get(flag);		
+		if (map == null) {
+			map = new HashMap<Dimension,String>();
+			hiddenFlagImages.put(flag, map);
+		}
+		
+		Dimension d = new Dimension(0, height);
+		String imageName = map.get(d);
+		if (imageName == null) {
+			int tabHeight = 15;
+			int tabSpace = height < 43 ? (height-tabHeight)/2 : tabHeight-1;
+			int tabWidth = 10;
+			BufferedImage icon = new BufferedImage(tabWidth, height, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g = icon.createGraphics();
+			g.translate(0, tabSpace*flag.tab);
+			flag.drawFlagImage(g);
+			
+			imageName = getUniqueImageFileName(flag.name + 0 + "x" + height);
+			map.put(d, imageName);
+			
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			ImageIO.write(icon, "png", out);
+			byte[] imageDataArray = out.toByteArray();
+			GameModule.getGameModule().getArchiveWriter().addImage(imageName, imageDataArray);
+		}
+		
+		return imageName;
+	}
+
+	private String getFlagLayer(Dimension d, StateFlag flag) throws IOException {
 		if (hiddenFlagImages == null)
 			hiddenFlagImages = new HashMap<StateFlag, HashMap<Dimension,String>>();
 		
@@ -1430,19 +1505,8 @@ public class ADC2Module extends Importer {
 			int tabWidth = 10;
 			BufferedImage icon = new BufferedImage(d.width + 2*tabWidth, d.height, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = icon.createGraphics();
-			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-			g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-
-			g.setColor(flag.background);
-			g.fillRoundRect(d.width, tabSpace*flag.tab, 2*tabWidth, tabHeight, 6, 6);
-			g.setColor(flag.foreground);
-			g.drawRoundRect(d.width, tabSpace*flag.tab, 2*tabWidth-1, tabHeight-1, 6, 6);
-			g.setFont(new Font("Dialog", Font.PLAIN, 9));
-			Rectangle2D r = g.getFontMetrics().getStringBounds(flag.name, g);
-			g.drawString(flag.name, d.width + 3*tabWidth/2 - (int) (r.getWidth()/2.0) - 1, 11 + tabSpace*flag.tab);
-
-			g.setBackground(new Color(0,0,0,0));
-			g.clearRect(0, 0, d.width+10, d.height);
+			g.translate(d.width+tabWidth, tabSpace*flag.tab);
+			flag.drawFlagImage(g);
 			
 			imageName = getUniqueImageFileName(flag.name + d.width + "x" + d.height);
 			map.put(d, imageName);
@@ -1712,6 +1776,7 @@ public class ADC2Module extends Importer {
 			int color = in.readUnsignedByte();
 			int position = in.readByte();
 			in.read(size);
+			
 			statusDots[i] = new StatusDots(type, show, ADC2Utils.getColorFromIndex(color), position, size[2]);
 		}
 	}
@@ -2085,6 +2150,8 @@ public class ADC2Module extends Importer {
 		configureMouseOverStackViewer(gameModule);
 		writePrototypesToArchive(gameModule);
 		getMap().writeToArchive();
+		getMainMap().setAttribute(Map.MARK_UNMOVED_ICON, StateFlag.MOVE.getStatusIconName());
+		configureStatusFlagButtons();
 		configureMapLayers();				
 		writeClassesToArchive(gameModule);
 		writeForcePoolsToArchive(gameModule);
@@ -2099,6 +2166,47 @@ public class ADC2Module extends Importer {
 			configureTurnCounter(gameModule);
 		if (useLOS)
 			insertComponent(new LOS_Thread(), gameModule);
+	}
+
+	private void configureStatusFlagButtons() throws IOException {
+		String imageName;
+		MassKeyCommand command;
+		
+		imageName = StateFlag.ATTACK.getStatusIconName();
+		command = new MassKeyCommand();
+		insertComponent(command, getMainMap());
+		command.setAttribute(MassKeyCommand.TOOLTIP, "Clear attacked status");
+		command.setAttribute(MassKeyCommand.BUTTON_TEXT, "Attacked");
+		command.setAttribute(MassKeyCommand.HOTKEY, null);
+		command.setAttribute(MassKeyCommand.ICON, imageName);
+		command.setAttribute(MassKeyCommand.NAME, "Attacked");
+		command.setAttribute(MassKeyCommand.KEY_COMMAND, KeyStroke.getKeyStroke('A', InputEvent.CTRL_DOWN_MASK));
+		command.setAttribute(MassKeyCommand.PROPERTIES_FILTER, "Mark Attacked_Active = true");
+		command.setAttribute(MassKeyCommand.DECK_COUNT, new Integer(-1));
+		command.setAttribute(MassKeyCommand.REPORT_SINGLE, Boolean.TRUE);
+		command.setAttribute(MassKeyCommand.REPORT_FORMAT, "");
+
+		imageName = StateFlag.DEFEND.getStatusIconName();
+		command = new MassKeyCommand();
+		insertComponent(command, getMainMap());
+		command.setAttribute(MassKeyCommand.TOOLTIP, "Clear defended status");
+		command.setAttribute(MassKeyCommand.BUTTON_TEXT, "Defended");
+		command.setAttribute(MassKeyCommand.HOTKEY, null);
+		command.setAttribute(MassKeyCommand.ICON, imageName);
+		command.setAttribute(MassKeyCommand.NAME, "Defended");
+		command.setAttribute(MassKeyCommand.KEY_COMMAND, KeyStroke.getKeyStroke('D', InputEvent.CTRL_DOWN_MASK));
+		command.setAttribute(MassKeyCommand.PROPERTIES_FILTER, "Mark Defended_Active = true");
+		command.setAttribute(MassKeyCommand.DECK_COUNT, new Integer(-1));
+		command.setAttribute(MassKeyCommand.REPORT_SINGLE, Boolean.TRUE);
+		command.setAttribute(MassKeyCommand.REPORT_FORMAT, "");
+		
+		MultiActionButton button = new MultiActionButton();
+		insertComponent(button, getMainMap());
+		button.setAttribute(MultiActionButton.BUTTON_TEXT, "");
+		button.setAttribute(MultiActionButton.TOOLTIP, "Clear combat status flags.");
+		button.setAttribute(MultiActionButton.BUTTON_ICON, StateFlag.COMBAT.getStatusIconName());
+		button.setAttribute(MultiActionButton.BUTTON_HOTKEY, KeyStroke.getKeyStroke('C', InputEvent.CTRL_DOWN_MASK));
+		button.setAttribute(MultiActionButton.MENU_ITEMS, StringArrayConfigurer.arrayToString(new String[] {"Attacked", "Defended"}));		
 	}
 
 	protected void writeInfoPagesToArchive(GameModule gameModule) throws IOException {

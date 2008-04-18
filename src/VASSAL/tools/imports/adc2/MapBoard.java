@@ -17,6 +17,7 @@
 
 package VASSAL.tools.imports.adc2;
 
+import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -98,9 +99,9 @@ public class MapBoard extends Importer {
 		private final ArrayList<? extends MapDrawable> elements; 
 		private final String name;
 		private final boolean switchable;
-		protected boolean dirty = false;
 		protected ArrayList<MapLayer> layers = null;
 		protected String imageName;
+		boolean shouldDraw = true;
 		
 		MapLayer(ArrayList<? extends MapDrawable> elements, String name, boolean switchable) {
 			this.elements = elements;
@@ -238,38 +239,42 @@ public class MapBoard extends Importer {
 			layers.add(layer);
 		}
 		
+		protected AlphaComposite getComposite() {
+			return AlphaComposite.SrcAtop;
+		}
+		
 		BufferedImage getLayerImage() {
-			dirty = false;
 			Dimension d = getLayout().getBoardSize();
 			BufferedImage image = new BufferedImage(d.width, d.height, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = image.createGraphics();
-			draw(g);
-
-			if (layers != null) {
-				for (MapLayer l : layers) {
-					l.draw(g);
-					if (l.hasDrawn()) {
-						dirty = true;
+			if (draw(g)) {
+				if (layers != null) {
+					g.setComposite(getComposite());
+					for (MapLayer l : layers) {
+						l.draw(g);
 					}
 				}
 			}
-			if (!dirty) {
+			else {
 				image = null;
-				return null;
 			}
 			return image;
 		}
 		
-		void draw(Graphics2D g) {
-			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,   RenderingHints.VALUE_ANTIALIAS_OFF);
-			g.setRenderingHint(RenderingHints.KEY_RENDERING,      RenderingHints.VALUE_RENDER_QUALITY);
-			g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-			
-			for (MapDrawable m : elements) {
-				if (m.draw(g)) {
-					dirty = true;
+		boolean draw(Graphics2D g) {
+			if (shouldDraw) {
+				shouldDraw = false;
+				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,   RenderingHints.VALUE_ANTIALIAS_OFF);
+				g.setRenderingHint(RenderingHints.KEY_RENDERING,      RenderingHints.VALUE_RENDER_QUALITY);
+				g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+
+				for (MapDrawable m : elements) {
+					if (m.draw(g)) {
+						shouldDraw = true;
+					}
 				}
 			}
+			return shouldDraw;
 		}
 		
 		boolean isSwitchable() {
@@ -282,10 +287,6 @@ public class MapBoard extends Importer {
 		
 		boolean hasElements() {
 			return !elements.isEmpty();
-		}
-		
-		boolean hasDrawn() {
-			return dirty;
 		}
 	}
 
@@ -305,12 +306,11 @@ public class MapBoard extends Importer {
 		}
 		
 		@Override
-		void draw(Graphics2D g) {
+		boolean draw(Graphics2D g) {
 			// set background color
 			g.setBackground(tableColor);
 			Dimension d = getLayout().getBoardSize();
 			g.clearRect(0, 0, d.width, d.height);
-			dirty = true;
 			
 			// See if map image file exists
 			File sml = action.getCaseInsensitiveFile(new File(forceExtension(path, "sml")), null, false, null);
@@ -330,7 +330,8 @@ public class MapBoard extends Importer {
 						g.drawImage(img, null, 0, 0);
 					} catch (IOException e) {}					
 				}
-			}			
+			}	
+			return true;			
 		}		
 
 		@Override
@@ -349,6 +350,11 @@ public class MapBoard extends Importer {
 		@Override
 		protected Rectangle getCropRectangle(BufferedImage image) {
 			return new Rectangle(getLayout().getBoardSize());
+		}
+
+		@Override
+		protected AlphaComposite getComposite() {
+			return AlphaComposite.SrcOver;
 		}
 	}
 	
@@ -2170,9 +2176,6 @@ public class MapBoard extends Importer {
 	// line definitions needed for hex sides and lines
 	private LineDefinition[] lineDefinitions;
 
-	// actual map image which is drawn on request
-	private BufferedImage map;
-
 	// organizes all the drawable elements in order of drawing priority
 	private ArrayList<MapLayer> mapElements = new ArrayList<MapLayer>();
 
@@ -2228,25 +2231,6 @@ public class MapBoard extends Importer {
 		mapElements.add(new MapLayer(attributes, "Attributes", false));
 		mapElements.add(new MapLayer(overlaySymbol, "Overlay Symbol", true));
 		mapElements.add(new MapLayer(placeNames, "Place Names", true));
-	}
-
-	/**
-	 * Generate and return the map image. Will only be generated once.
-	 * 
-	 * @throws IOException if some IO error occurs when reading in the map info.
-	 */
-	protected BufferedImage getMapImage() throws IOException {
-		if (map == null) {
-			MapLayer base = new BaseLayer();
-			
-			// go through the list of drawable elements and put them on after getting the (optional) scanned sheets.
-			for (MapLayer layer : mapElements) {
-				base.overlay(layer);
-			}
-			
-			map = base.getLayerImage();
-		}
-		return map;
 	}
 
 	/**
@@ -2847,16 +2831,19 @@ public class MapBoard extends Importer {
 			mapElements.add(base);
 		}
 		else {
-			MapLayer last = base;
+			mapElements.add(0, base);
 			Iterator<MapLayer> iter = mapElements.iterator();
+			iter.next();
 			while(iter.hasNext()) {
 				MapLayer next = iter.next();
-				if (!last.isSwitchable() && !next.isSwitchable()) {
-					last.overlay(next);
+				if (!next.isSwitchable()) {
+					Iterator<MapLayer> iter2 = mapElements.iterator();
+					MapLayer under = iter2.next();
+					while (under != next) {
+						under.overlay(next);
+						under = iter2.next();
+					}
 					iter.remove();
-				}
-				else {
-					last = next;
 				}
 			}
 			mapElements.add(0, base);
