@@ -43,8 +43,9 @@ public class PredefinedSetup extends AbstractConfigurable {
   public static final String FILE = "file"; //$NON-NLS-1$
   public static final String USE_FILE = "useFile"; //$NON-NLS-1$
   public static final String IS_MENU = "isMenu"; //$NON-NLS-1$
+
   protected boolean isMenu;
-  protected boolean useFile=true;
+  protected boolean useFile = true;
   protected String fileName;
   protected JMenuItem menuItem;
   protected JMenu menu;
@@ -55,16 +56,19 @@ public class PredefinedSetup extends AbstractConfigurable {
   public PredefinedSetup() {
     menuItem = new JMenuItem();
     menu = new JMenu();
+ 
     menuItem.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         launch();
       }
     });
+
     showFile = new VisibilityCondition() {
       public boolean shouldBeVisible() {
         return !isMenu && useFile;
       }
     };
+
     showUseFile = new VisibilityCondition() {
       public boolean shouldBeVisible() {
         return !isMenu;
@@ -124,7 +128,10 @@ public class PredefinedSetup extends AbstractConfigurable {
       menu.setText((String) value);
     }
     else if (USE_FILE.equals(key)) {
-      useFile = "true".equals(value) || Boolean.TRUE.equals(value); //$NON-NLS-1$
+      if (value instanceof String) {
+        value = Boolean.valueOf((String) value);
+      }
+      useFile = ((Boolean) value).booleanValue();
     }
     else if (FILE.equals(key)) {
       if (value instanceof File) {
@@ -153,13 +160,15 @@ public class PredefinedSetup extends AbstractConfigurable {
   }
 
   public void launch() {
-    if (useFile
-      && fileName != null) {
+    if (useFile && fileName != null) {
       try {
-        GameModule.getGameModule().getGameState().loadGameInBackground(fileName, getSavedGameContents());
+        GameModule.getGameModule()
+                  .getGameState()
+                  .loadGameInBackground(fileName, getSavedGameContents());
       }
       catch (IOException e) {
-        GameModule.getGameModule().warn(Resources.getString("GameState.invalid_savefile", fileName));
+        GameModule.getGameModule().warn(
+          Resources.getString("GameState.invalid_savefile", fileName));
       }
     }
     else {
@@ -177,22 +186,23 @@ public class PredefinedSetup extends AbstractConfigurable {
   }
 
   private void setMenu(boolean isMenu) {
-    if (isMenu != this.isMenu
-        && getMenuInUse().getParent() != null) {
-      JMenuItem inUse = getMenuInUse();
+    if (isMenu != this.isMenu && getMenuInUse().getParent() != null) {
+      final JMenuItem inUse = getMenuInUse();
       int index = -1;
-      for (int i = 0,n = inUse.getParent().getComponentCount(); i < n; ++i) {
+      for (int i = 0, n = inUse.getParent().getComponentCount(); i < n; ++i) {
         if (inUse.getParent().getComponent(i) == inUse) {
           index = i;
           break;
         }
       }
+
       if (index >= 0) {
-        JMenuItem notInUse = this.isMenu ? menuItem : menu;
+        final JMenuItem notInUse = this.isMenu ? menuItem : menu;
         inUse.getParent().add(notInUse, index);
         inUse.getParent().remove(inUse);
       }
     }
+
     this.isMenu = isMenu;
   }
 
@@ -212,7 +222,7 @@ public class PredefinedSetup extends AbstractConfigurable {
 */
     }
     else if (parent instanceof PredefinedSetup) {
-      PredefinedSetup setup = (PredefinedSetup) parent;
+      final PredefinedSetup setup = (PredefinedSetup) parent;
       setup.menu.add(getMenuInUse());
     }
     GameModule.getGameModule().getWizardSupport().addPredefinedSetup(this);
@@ -243,7 +253,7 @@ public class PredefinedSetup extends AbstractConfigurable {
 */
     }
     else if (parent instanceof PredefinedSetup) {
-      PredefinedSetup setup = (PredefinedSetup) parent;
+      final PredefinedSetup setup = (PredefinedSetup) parent;
       setup.menu.remove(getMenuInUse());
     }
     GameModule.getGameModule().getWizardSupport().removePredefinedSetup(this);
