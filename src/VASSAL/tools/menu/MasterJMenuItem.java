@@ -19,6 +19,7 @@
 
 package VASSAL.tools.menu;
 
+import java.awt.Container;
 import java.awt.event.ActionListener;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -27,7 +28,9 @@ import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JMenuItem;
 
-public class MasterJMenuItem extends JMenuItem { 
+public class MasterJMenuItem extends JMenuItem {
+  private static final long serialVersionUID = 1L;
+ 
   private List<WeakReference<JMenuItem>> slaves =
     new ArrayList<WeakReference<JMenuItem>>();
   
@@ -55,7 +58,22 @@ public class MasterJMenuItem extends JMenuItem {
     super(text, mnemonic);
   }
 
-  public JMenuItem createSlave() {
+  void unparent() {
+    final Container parent = getParent();
+    if (parent != null) parent.remove(this);
+
+    for (WeakReference<JMenuItem> ref : slaves) {
+      final JMenuItem item = ref.get();
+      if (item != null) {
+        final Container p = item.getParent();
+        if (p != null) {
+          p.remove(item);
+        }
+      }
+    }
+  }
+
+  JMenuItem createSlave() {
     final JMenuItem item;
     final Action a = getAction();
     if (a != null) {
@@ -71,4 +89,15 @@ public class MasterJMenuItem extends JMenuItem {
     slaves.add(new WeakReference<JMenuItem>(item));
     return item;
   }
+
+/*
+  List<JMenuItem> getSlaves() {
+    final ArrayList<JMenuItem> l = new ArrayList<JMenuItem>(slaves.size());
+    for (WeakReference<JMenuItem> ref : slaves) {
+      final JMenuItem item = ref.get();
+      if (item != null) l.add(item);
+    }
+    return l;
+  }
+*/
 }

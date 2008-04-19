@@ -19,6 +19,7 @@
 
 package VASSAL.tools.menu;
 
+import java.awt.Container;
 import java.awt.event.ActionListener;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -61,7 +62,22 @@ public class MasterJCheckBoxMenuItem extends JCheckBoxMenuItem {
     super(text, icon, state);
   }
 
-  public JCheckBoxMenuItem createSlave() {
+  void unparent() {
+    final Container parent = getParent();
+    if (parent != null) parent.remove(this);
+
+    for (WeakReference<JCheckBoxMenuItem> ref : slaves) {
+      final JCheckBoxMenuItem item = ref.get();
+      if (item != null) {
+        final Container p = item.getParent();
+        if (p != null) {
+          p.remove(item);
+        }
+      }
+    }
+  }
+
+  JCheckBoxMenuItem createSlave() {
     final JCheckBoxMenuItem item;
     final Action a = getAction();
     if (a != null) {

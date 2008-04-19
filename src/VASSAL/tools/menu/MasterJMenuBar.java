@@ -19,6 +19,7 @@
 
 package VASSAL.tools.menu;
 
+import java.awt.Component;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +46,14 @@ public class MasterJMenuBar extends JMenuBar {
     return menu;
   } 
 
-  public JMenuBar createSlave() {
+  @Override
+  public void remove(Component comp) {
+    if (!(comp instanceof MasterJMenu)) throw new IllegalStateException();
+
+    ((MasterJMenu) comp).unparent();
+  }
+
+  JMenuBar createSlave() {
     final JMenuBar mb = new JMenuBar();
 
     final int count = getMenuCount();
@@ -56,4 +64,15 @@ public class MasterJMenuBar extends JMenuBar {
     slaves.add(new WeakReference<JMenuBar>(mb));
     return mb;
   }
+
+/*
+  List<JMenuBar> getSlaves() {
+    final ArrayList<JMenuBar> l = new ArrayList<JMenuBar>(slaves.size());
+    for (WeakReference<JMenuBar> ref : slaves) {
+      final JMenuBar mb = ref.get();
+      if (mb != null) l.add(mb);
+    }
+    return l;
+  }
+*/
 }

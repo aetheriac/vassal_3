@@ -19,6 +19,7 @@
 
 package VASSAL.tools.menu;
 
+import java.awt.Container;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,9 +31,35 @@ public class MasterJSeparator extends JSeparator {
   private List<WeakReference<JSeparator>> slaves =
     new ArrayList<WeakReference<JSeparator>>();
 
-  public JSeparator createSlave() {
+  void unparent() {
+    final Container parent = getParent();
+    if (parent != null) parent.remove(this);
+
+    for (WeakReference<JSeparator> ref : slaves) {
+      final JSeparator sep = ref.get();
+      if (sep != null) {
+        final Container p = sep.getParent();
+        if (p != null) {
+          p.remove(sep);
+        }
+      }
+    }
+  }
+
+  JSeparator createSlave() {
     final JSeparator sep = new JSeparator();
     slaves.add(new WeakReference<JSeparator>(sep));
     return sep;
   }
+
+/*
+  List<JSeparator> getSlaves() {
+    final ArrayList<JSeparator> l = new ArrayList<JSeparator>(slaves.size());
+    for (WeakReference<JSeparator> ref : slaves) {
+      final JSeparator sep = ref.get();
+      if (sep != null) l.add(sep);
+    }
+    return l;
+  }
+*/ 
 }

@@ -19,6 +19,7 @@
 
 package VASSAL.tools.menu;
 
+import java.awt.Container;
 import java.awt.event.ActionListener;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -65,7 +66,22 @@ public class MasterJRadioButtonMenuItem extends JRadioButtonMenuItem {
     super(text, icon, state);
   }
 
-  public JRadioButtonMenuItem createSlave() {
+  void unparent() {
+    final Container parent = getParent();
+    if (parent != null) parent.remove(this);
+
+    for (WeakReference<JRadioButtonMenuItem> ref : slaves) {
+      final JRadioButtonMenuItem item = ref.get();
+      if (item != null) {
+        final Container p = item.getParent();
+        if (p != null) {
+          p.remove(item);
+        }
+      }
+    }
+  }
+
+  JRadioButtonMenuItem createSlave() {
     final JRadioButtonMenuItem item;
     final Action a = getAction();
     if (a != null) {
@@ -85,6 +101,18 @@ public class MasterJRadioButtonMenuItem extends JRadioButtonMenuItem {
     slaves.add(new WeakReference<JRadioButtonMenuItem>(item));
     return item;
   }
+
+/*
+  List<JRadioButtonMenuItem> getSlaves() {
+    final ArrayList<JRadioButtonMenuItem> l =
+      new ArrayList<JRadioButtonMenuItem>(slaves.size());
+    for (WeakReference<JRadioButtonMenuItem> ref : slaves) {
+      final JRadioButtonMenuItem item = ref.get();
+      if (item != null) l.add(item);
+    }
+    return l;
+  }
+*/
 
 /*
   JRadioButtonMenuItem[] getSlaves() {

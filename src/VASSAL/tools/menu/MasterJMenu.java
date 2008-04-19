@@ -20,6 +20,7 @@
 package VASSAL.tools.menu;
 
 import java.awt.Component;
+import java.awt.Container;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,11 +93,48 @@ public class MasterJMenu extends JMenu {
   }
 
   @Override
+  public void remove(Component comp) {
+    if (comp instanceof MasterJMenu) {
+      ((MasterJMenu) comp).unparent(); 
+    }
+    else if (comp instanceof MasterJMenuItem) {
+      ((MasterJMenuItem) comp).unparent(); 
+    }
+    else if (comp instanceof MasterJCheckBoxMenuItem) {
+      ((MasterJCheckBoxMenuItem) comp).unparent(); 
+    }
+    else if (comp instanceof MasterJRadioButtonMenuItem) {
+      ((MasterJRadioButtonMenuItem) comp).unparent(); 
+    }
+    else if (comp instanceof MasterJSeparator) {
+      ((MasterJSeparator) comp).unparent(); 
+    }
+    else {
+      throw new IllegalStateException();
+    }
+  }
+
+  void unparent() {
+    final Container parent = getParent();
+    if (parent != null) parent.remove(this);
+
+    for (WeakReference<JMenu> ref : slaves) {
+      final JMenu menu = ref.get();
+      if (menu != null) {
+        final Container p = menu.getParent();
+        if (p != null) {
+          p.remove(menu);
+        }
+      }
+    }
+  }
+
+  @Override
   public void addSeparator() {
     add(new MasterJSeparator());
   }
 
-  public JMenu createSlave() {
+  JMenu createSlave() {
     final JMenu menu = new JMenu(getText());
 
     for (Component c : getMenuComponents()) {
@@ -113,7 +151,7 @@ public class MasterJMenu extends JMenu {
         menu.add(((MasterJRadioButtonMenuItem) c).createSlave());
       }
       else if (c instanceof MasterJSeparator) {
-          menu.add(((MasterJSeparator) c).createSlave());
+        menu.add(((MasterJSeparator) c).createSlave());
       }
       else {
         throw new IllegalStateException();
@@ -123,4 +161,15 @@ public class MasterJMenu extends JMenu {
     slaves.add(new WeakReference<JMenu>(menu));
     return menu;
   }
+
+/*
+  List<JMenu> getSlaves() {
+    final ArrayList<JMenu> l = new ArrayList<JMenu>(slaves.size());
+    for (WeakReference<JMenu> ref : slaves) {
+      final JMenu menu = ref.get();
+      if (menu != null) l.add(menu);
+    }
+    return l;
+  }
+*/
 }
