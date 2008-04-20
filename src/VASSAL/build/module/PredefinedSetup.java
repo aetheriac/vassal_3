@@ -32,11 +32,12 @@ import VASSAL.build.GameModule;
 import VASSAL.build.module.documentation.HelpFile;
 import VASSAL.configure.VisibilityCondition;
 import VASSAL.i18n.Resources;
-import VASSAL.tools.menu.AbstractProxy;
+import VASSAL.tools.menu.ChildProxy;
 import VASSAL.tools.menu.MenuBarProxy;
 import VASSAL.tools.menu.MenuItemProxy;
 import VASSAL.tools.menu.MenuProxy;
 import VASSAL.tools.menu.MenuManager;
+import VASSAL.tools.menu.ParentProxy;
 
 /**
  * Defines a saved game that is accessible from the File menu.
@@ -187,19 +188,19 @@ public class PredefinedSetup extends AbstractConfigurable {
     return GameModule.getGameModule().getDataArchive().getFileStream(fileName);
   }
 
-  private AbstractProxy<?> getMenuInUse() {
+  private ChildProxy<?> getMenuInUse() {
     return isMenu ? menu : menuItem;
   }
 
   private void setMenu(boolean isMenu) {
     if (isMenu == this.isMenu) return;
 
-    final AbstractProxy<?> inUse = getMenuInUse();
-    final AbstractProxy<?> parent = inUse.getParent();
+    final ChildProxy<?> inUse = getMenuInUse();
+    final ParentProxy parent = inUse.getParent();
 
     if (parent != null) {
       // swap our items if one is already in the menu
-      final AbstractProxy<?> notInUse = this.isMenu ? menuItem : menu;
+      final ChildProxy<?> notInUse = this.isMenu ? menuItem : menu;
 
       parent.insert(notInUse, parent.getIndex(inUse));
       parent.remove(inUse);

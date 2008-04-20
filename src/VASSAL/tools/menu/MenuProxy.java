@@ -19,92 +19,16 @@
 
 package VASSAL.tools.menu;
 
-import java.awt.Container;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.List;
 import javax.swing.JMenu;
 
-public class MenuProxy extends AbstractProxy<JMenu> {
-  private final List<AbstractProxy<?>> children =
-    new ArrayList<AbstractProxy<?>>();
-
+public class MenuProxy extends AbstractParent<JMenu> {
   private String text;
 
-  public MenuProxy() {
-  }
+  public MenuProxy() { }
 
   public MenuProxy(String text) {
     this.text = text;
-  }
-
-  @Override
-  public void add(final AbstractProxy<?> item) {
-    children.add(item);
-    item.parent = this;
-
-    if (item instanceof Marker) return;
-
-    forEachPeer(new Functor<JMenu>() {
-      public void apply(JMenu menu) {
-        menu.add(item.createPeer());
-      }
-    });
-  } 
-
-  protected int proxyIndexToRealIndex(int pos) {
-    // find the true position, neglecting markers
-    int j = -1;
-    for (int i = 0; i <= pos; i++) {
-      if (!(children.get(i) instanceof Marker)) j++;
-    }
-    return j;
-  }
-
-  @Override
-  public void insert(final AbstractProxy<?> item, int pos) {
-    children.add(pos, item);
-    item.parent = this;
-    
-    if (item instanceof Marker) return;
-
-    final int rpos = proxyIndexToRealIndex(pos);
-
-    forEachPeer(new Functor<JMenu>() {
-      public void apply(JMenu menu) {
-        menu.add(item.createPeer(), rpos);
-      }
-    });
-  }
-
-  @Override
-  public void remove(AbstractProxy<?> item) {
-    if (children.remove(item)) {
-      item.parent = null;
-      item.unparent();
-    }
-  }
-
-  @Override
-  public void remove(int pos) {
-    final AbstractProxy<?> item = children.remove(pos);
-    item.parent = null;
-    item.unparent();
-  }
-
-  @Override
-  public int getChildCount() {
-    return children.size();
-  }  
-  
-  @Override
-  public AbstractProxy<?>[] getChildren() {
-    return children.toArray(new AbstractProxy<?>[children.size()]);
-  }
-
-  @Override
-  public AbstractProxy<?> getChild(int pos) {
-    return children.get(pos);
   }
 
   public SeparatorProxy addSeparator() {
@@ -130,17 +54,12 @@ public class MenuProxy extends AbstractProxy<JMenu> {
   }
 
   @Override
-  public int getIndex(AbstractProxy<?> child) {
-    return children.indexOf(child);
-  }
-
-  @Override
-  JMenu createPeer() {
+  public JMenu createPeer() {
     final JMenu menu = new JMenu(text);
 
-    for (AbstractProxy<?> item : children) {
-      if (item instanceof Marker) continue;
-      menu.add(item.createPeer());
+    for (ChildProxy<?> child : children) {
+      if (child instanceof Marker) continue;
+      menu.add(child.createPeer());
     }
     
     peers.add(new WeakReference<JMenu>(menu, queue));

@@ -22,10 +22,7 @@ package VASSAL.tools.menu;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.List;
 import javax.swing.Action;
-import javax.swing.Icon;
 import javax.swing.JCheckBoxMenuItem;
 
 public class CheckBoxMenuItemProxy
@@ -77,7 +74,7 @@ public class CheckBoxMenuItemProxy
   }
 
   @Override
-  JCheckBoxMenuItem createPeer() {
+  public JCheckBoxMenuItem createPeer() {
     final JCheckBoxMenuItem item = new JCheckBoxMenuItem(action);
     item.setSelected(state);
     item.addItemListener(this);

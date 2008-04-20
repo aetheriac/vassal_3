@@ -24,7 +24,7 @@ import javax.swing.JSeparator;
 
 public class SeparatorProxy extends AbstractProxy<JSeparator> {
   @Override
-  JSeparator createPeer() {
+  public JSeparator createPeer() {
     final JSeparator sep = new JSeparator();
     peers.add(new WeakReference<JSeparator>(sep, queue));
     return sep;

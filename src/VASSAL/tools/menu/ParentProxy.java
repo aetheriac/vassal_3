@@ -19,40 +19,20 @@
 
 package VASSAL.tools.menu;
 
-import java.lang.ref.WeakReference;
-import javax.swing.Action;
-import javax.swing.JMenuItem;
+public interface ParentProxy {
+  public void add(ChildProxy<?> child);
 
-public class MenuItemProxy extends AbstractProxy<JMenuItem> {
-  protected Action action;
+  public void insert(ChildProxy<?> child, int pos);
 
-  public MenuItemProxy() {
-    this(null);
-  }
+  public void remove(ChildProxy<?> child);
 
-  public MenuItemProxy(Action action) {
-    this.action = action;
-  }
-
-  public Action getAction() {
-    return action;
-  }
-
-  public void setAction(final Action action) {
-    this.action = action;
-
-    forEachPeer(new Functor<JMenuItem>() {
-      public void apply(JMenuItem item) {
-        item.setAction(action);
-      }
-    });
-  }
-
-  @Override
-  public JMenuItem createPeer() {
-    final JMenuItem item = new JMenuItem(action);
+  public void remove(int pos);
   
-    peers.add(new WeakReference<JMenuItem>(item, queue));
-    return item;
-  }
+  public int getChildCount();
+
+  public ChildProxy<?>[] getChildren();
+
+  public ChildProxy<?> getChild(int pos);
+
+  public int getIndex(ChildProxy<?> child);
 }
