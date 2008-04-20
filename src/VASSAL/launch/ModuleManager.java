@@ -25,7 +25,8 @@ import javax.swing.SwingUtilities;
 
 import VASSAL.Info;
 import VASSAL.tools.ErrorLog;
-import VASSAL.tools.menu.GeneralMenuManager;
+import VASSAL.tools.menu.MenuBarProxy;
+import VASSAL.tools.menu.MenuManager;
 import VASSAL.tools.menu.MacOSXMenuManager;
 
 /**
@@ -61,10 +62,16 @@ public class ModuleManager {
     if (isFirstTime) new FirstTimeDialog(w).setVisible(true);
   }
 
-  private static class ModuleManagerMenuManager extends GeneralMenuManager {
-    private final JMenuBar menuBar = new JMenuBar();
+  private static class ModuleManagerMenuManager extends MenuManager {
+    private final MenuBarProxy menuBar = new MenuBarProxy();
 
+    @Override
     public JMenuBar getMenuBarFor(JFrame fc) {
+      return (fc instanceof ModuleManagerWindow) ? menuBar.createPeer() : null;
+    }
+
+    @Override
+    public MenuBarProxy getMenuBarProxyFor(JFrame fc) {
       return (fc instanceof ModuleManagerWindow) ? menuBar : null;
     }
   }

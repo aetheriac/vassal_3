@@ -46,7 +46,8 @@ import VASSAL.preferences.Prefs;
 import VASSAL.tools.DataArchive;
 import VASSAL.tools.ErrorLog;
 import VASSAL.tools.JarArchive;
-import VASSAL.tools.menu.GeneralMenuManager;
+import VASSAL.tools.menu.MenuBarProxy;
+import VASSAL.tools.menu.MenuManager;
 import VASSAL.tools.menu.MacOSXMenuManager;
 
 public class Player {
@@ -276,14 +277,16 @@ public class Player {
     }
   }
 
-  private static class PlayerMenuManager extends GeneralMenuManager {
-    private final JMenuBar menuBar = new JMenuBar();
+  private static class PlayerMenuManager extends MenuManager {
+    private final MenuBarProxy menuBar = new MenuBarProxy();
 
-    public PlayerMenuManager() {
-      super();
+    @Override
+    public JMenuBar getMenuBarFor(JFrame fc) {
+      return (fc instanceof PlayerWindow) ? menuBar.createPeer() : null;
     }
 
-    public JMenuBar getMenuBarFor(JFrame fc) {
+    @Override
+    public MenuBarProxy getMenuBarProxyFor(JFrame fc) {
       return (fc instanceof PlayerWindow) ? menuBar : null;
     }
   }

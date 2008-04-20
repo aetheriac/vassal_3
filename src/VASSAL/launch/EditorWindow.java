@@ -54,6 +54,8 @@ import VASSAL.configure.ValidationReport;
 import VASSAL.configure.ValidationReportDialog;
 import VASSAL.i18n.Resources;
 import VASSAL.i18n.TranslateVassalWindow;
+import VASSAL.tools.menu.MenuBarProxy;
+import VASSAL.tools.menu.MenuProxy;
 import VASSAL.tools.menu.MenuManager;
 
 /**
@@ -92,10 +94,11 @@ public abstract class EditorWindow extends JFrame {
 
     // setup menubar and actions
     final MenuManager mm = MenuManager.getInstance();
-    final JMenuBar mb = mm.getMenuBarFor(this);
+    final MenuBarProxy mb = mm.getMenuBarProxyFor(this);
 
     // file menu
-    final JMenu fileMenu = mm.createMenu(Resources.getString("General.file"));
+    final MenuProxy fileMenu =
+      new MenuProxy(Resources.getString("General.file"));
   
     fileMenu.add(mm.addKey("Editor.save"));
     fileMenu.add(mm.addKey("Editor.save_as"));
@@ -106,7 +109,8 @@ public abstract class EditorWindow extends JFrame {
     }
 
     // edit menu
-    final JMenu editMenu = mm.createMenu(Resources.getString("General.edit"));
+    final MenuProxy editMenu =
+      new MenuProxy(Resources.getString("General.edit"));
     
     editMenu.add(mm.addKey("Editor.cut"));
     editMenu.add(mm.addKey("Editor.copy"));
@@ -117,13 +121,15 @@ public abstract class EditorWindow extends JFrame {
     editMenu.add(mm.addKey("Editor.ModuleEditor.translate"));
 
     // tools menu
-    final JMenu toolsMenu = mm.createMenu(Resources.getString("General.tools"));
+    final MenuProxy toolsMenu =
+      new MenuProxy(Resources.getString("General.tools"));
 
     toolsMenu.add(mm.addKey("create_module_updater"));
     toolsMenu.add(mm.addKey("Editor.ModuleEditor.update_saved"));
 
     // help menu
-    final JMenu helpMenu = mm.createMenu(Resources.getString("General.help"));
+    final MenuProxy helpMenu =
+      new MenuProxy(Resources.getString("General.help"));
 
     helpMenu.add(mm.addKey("General.help"));
     helpMenu.add(mm.addKey("Editor.ModuleEditor.reference_manual"));
@@ -139,8 +145,6 @@ public abstract class EditorWindow extends JFrame {
     mb.add(editMenu);
     mb.add(toolsMenu);
     mb.add(helpMenu);
-    setJMenuBar(mb);
-
 
     final int mask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
@@ -208,6 +212,8 @@ public abstract class EditorWindow extends JFrame {
   
     mm.addAction("AboutScreen.about_vassal", AboutVASSAL.getAction());
  
+    setJMenuBar(mm.getMenuBarFor(this));
+
     // the presence of the panel prevents a NullPointerException on packing
     final JPanel panel = new JPanel();
     panel.setPreferredSize(new Dimension(250,400));

@@ -22,30 +22,104 @@ package VASSAL.tools.menu;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import javax.swing.Action;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
 import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JSeparator;
 
 import com.apple.eawt.Application;
 import com.apple.eawt.ApplicationAdapter;
 import com.apple.eawt.ApplicationEvent;
 
 public class MacOSXMenuManager extends MenuManager {
-  private final MasterJMenuBar menuBar = new MasterJMenuBar();
-
-  public MacOSXMenuManager() {
-    super();
-  }
+  private final MenuBarProxy menuBar = new MenuBarProxy();
 
   @Override
   public JMenuBar getMenuBarFor(JFrame fc) {
-    return menuBar.createSlave();
+    return menuBar.createPeer();
   }
 
+  @Override
+  public MenuBarProxy getMenuBarProxyFor(JFrame fc) {
+    return menuBar;
+  }
+
+  @Override
+  public MenuItemProxy addKey(String key) {
+    // don't reserve slots for Quit, Preferences, or About on Macs
+    if ("General.quit".equals(key) ||
+        "Prefs.edit_preferences".equals(key) ||
+        "AboutScreen.about_vassal".equals(key))
+      return null;
+
+    return super.addKey(key);
+  }
+
+  @Override
+  public void addAction(String key, final Action action) {
+    // Quit, Preferences, and About go on the special application menu
+
+    if ("General.quit".equals(key)) {
+      final Application app = Application.getApplication();
+      app.addApplicationListener(new ApplicationAdapter() {
+        @Override
+        public void handleQuit(ApplicationEvent e) {
+          e.setHandled(false);
+          action.actionPerformed(null);
+        }
+      });
+
+      // no need to track enabled state, quit is always active
+    }
+    else if ("Prefs.edit_preferences".equals(key)) {
+      final Application app = Application.getApplication();
+      app.addApplicationListener(new ApplicationAdapter() {
+        @Override
+        public void handlePreferences(ApplicationEvent e) {
+          e.setHandled(true);
+          action.actionPerformed(null);
+        }
+      });
+
+      app.addPreferencesMenuItem();
+      app.setEnabledPreferencesMenu(action.isEnabled());
+
+      // track the enabled state of the prefs action
+      action.addPropertyChangeListener(new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent e) {
+          if ("enabled".equals(e.getPropertyName())) {
+            app.setEnabledPreferencesMenu((Boolean) e.getNewValue());
+          }
+        }
+      });
+    }
+    else if ("AboutScreen.about_vassal".equals(key)) {
+      final Application app = Application.getApplication();
+      app.addApplicationListener(new ApplicationAdapter() {
+        @Override
+        public void handleAbout(ApplicationEvent e) {
+          e.setHandled(true);
+          action.actionPerformed(null);
+        }
+      });
+
+      app.addAboutMenuItem();
+      app.setEnabledAboutMenu(action.isEnabled());
+
+      // track the enabled state of the prefs action
+      action.addPropertyChangeListener(new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent e) {
+          if ("enabled".equals(e.getPropertyName())) {
+            app.setEnabledAboutMenu((Boolean) e.getNewValue());
+          }
+        }
+      });
+    }
+    else {
+      // this is not one of the special actions
+      super.addAction(key, action);
+    }
+  }
+
+/*
   @Override
   public JMenu createMenu(String text) {
     return new MasterJMenu(text);
@@ -147,4 +221,5 @@ public class MacOSXMenuManager extends MenuManager {
       super.addAction(key, action);
     }
   }
+*/
 }

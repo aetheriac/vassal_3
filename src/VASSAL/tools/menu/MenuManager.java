@@ -24,13 +24,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.Action;
-import javax.swing.JCheckBoxMenuItem;
+//import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
+//import javax.swing.JMenu;
 import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JSeparator;
+//import javax.swing.JMenuItem;
+//import javax.swing.JRadioButtonMenuItem;
+//import javax.swing.JSeparator;
 
 import VASSAL.Info;
 
@@ -50,37 +50,31 @@ public abstract class MenuManager {
 
   public abstract JMenuBar getMenuBarFor(JFrame fc);
 
-  public abstract JMenu createMenu(String text);
+  public abstract MenuBarProxy getMenuBarProxyFor(JFrame fc);
 
-  public abstract JMenuItem createMenuItem(Action action);
+  private Map<String,List<MenuItemProxy>> actionLocations =
+    new HashMap<String,List<MenuItemProxy>>();
 
-  public abstract JCheckBoxMenuItem createCheckBoxMenuItem(Action action);
-
-  public abstract JRadioButtonMenuItem createRadioButtonMenuItem(Action action);
-
-  public abstract JSeparator createSeparator();
-
-  private Map<String,List<JMenuItem>> actionLocations =
-    new HashMap<String,List<JMenuItem>>();
-
-  public JMenuItem addKey(String key) {
-    List<JMenuItem> items = actionLocations.get(key);
+  public MenuItemProxy addKey(String key) {
+    List<MenuItemProxy> items = actionLocations.get(key);
     if (items == null) {
-      items = new ArrayList<JMenuItem>();
+      items = new ArrayList<MenuItemProxy>();
       actionLocations.put(key, items);
     }
 
-    final JMenuItem item = createMenuItem(null);
-    items.add(item);
+    final MenuItemProxy item = new MenuItemProxy();
+    item.setVisible(false);
+    items.add(item);    
     return item;
   }
 
   public void addAction(String key, Action a) {
-    final List<JMenuItem> items = actionLocations.get(key);
+    final List<MenuItemProxy> items = actionLocations.get(key);
     if (items != null) {
-      for (JMenuItem i : items) {
+      for (MenuItemProxy i : items) {
         i.setAction(a);
+        i.setVisible(true);
       }
     }
-  }  
+  }
 }

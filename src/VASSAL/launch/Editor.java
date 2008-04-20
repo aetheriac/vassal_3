@@ -46,7 +46,8 @@ import VASSAL.tools.DataArchive;
 import VASSAL.tools.ErrorLog;
 import VASSAL.tools.FileChooser;
 import VASSAL.tools.imports.ImportAction;
-import VASSAL.tools.menu.GeneralMenuManager;
+import VASSAL.tools.menu.MenuBarProxy;
+import VASSAL.tools.menu.MenuManager;
 import VASSAL.tools.menu.MacOSXMenuManager;
 
 public class Editor {
@@ -295,11 +296,19 @@ public class Editor {
     }
   }
 
-  private static class EditorMenuManager extends GeneralMenuManager {
-    private final JMenuBar editorBar = new JMenuBar();
-    private final JMenuBar playerBar = new JMenuBar();
+  private static class EditorMenuManager extends MenuManager {
+    private final MenuBarProxy editorBar = new MenuBarProxy();
+    private final MenuBarProxy playerBar = new MenuBarProxy();
 
+    @Override
     public JMenuBar getMenuBarFor(JFrame fc) {
+      if (fc instanceof PlayerWindow) return playerBar.createPeer();
+      else if (fc instanceof EditorWindow) return editorBar.createPeer();
+      else return null;
+    }
+
+    @Override
+    public MenuBarProxy getMenuBarProxyFor(JFrame fc) {
       if (fc instanceof PlayerWindow) return playerBar;
       else if (fc instanceof EditorWindow) return editorBar;
       else return null;

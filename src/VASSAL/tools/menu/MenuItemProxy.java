@@ -19,41 +19,44 @@
 
 package VASSAL.tools.menu;
 
+import java.awt.event.ActionListener;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.Action;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
+import javax.swing.Icon;
 import javax.swing.JMenuItem;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JSeparator;
 
-public abstract class GeneralMenuManager extends MenuManager {
-  public GeneralMenuManager() {
-    super();
+public class MenuItemProxy extends AbstractProxy<JMenuItem> {
+  private Action action;
+
+  public MenuItemProxy() {
+    this(null);
+  }
+
+  public MenuItemProxy(Action action) {
+    this.action = action;
+  }
+
+  public Action getAction() {
+    return action;
+  }
+
+  public void setAction(final Action action) {
+    this.action = action;
+
+    forEachPeer(new Functor<JMenuItem>() {
+      public void apply(JMenuItem item) {
+        item.setAction(action);
+      }
+    });
   }
 
   @Override
-  public JMenu createMenu(String text) {
-    return new JMenu(text);
-  }
-
-  @Override
-  public JMenuItem createMenuItem(Action action) {
-    return new JMenuItem(action);
-  }
-
-  @Override
-  public JCheckBoxMenuItem createCheckBoxMenuItem(Action action) {
-    return new JCheckBoxMenuItem(action);
-  }
-
-  @Override
-  public JRadioButtonMenuItem createRadioButtonMenuItem(Action action) {
-    return new JRadioButtonMenuItem(action);
-  }
-
-  @Override
-  public JSeparator createSeparator() {
-    return new JSeparator();
+  JMenuItem createPeer() {
+    final JMenuItem item = new JMenuItem(action);
+  
+    peers.add(new WeakReference<JMenuItem>(item, queue));
+    return item;
   }
 }

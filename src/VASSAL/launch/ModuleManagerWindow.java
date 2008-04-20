@@ -96,6 +96,9 @@ import VASSAL.tools.ComponentSplitter;
 import VASSAL.tools.ErrorLog;
 import VASSAL.tools.FileChooser;
 import VASSAL.tools.SequenceEncoder;
+import VASSAL.tools.menu.CheckBoxMenuItemProxy;
+import VASSAL.tools.menu.MenuBarProxy;
+import VASSAL.tools.menu.MenuProxy;
 import VASSAL.tools.menu.MenuManager;
 
 public class ModuleManagerWindow extends JFrame {
@@ -149,10 +152,11 @@ public class ModuleManagerWindow extends JFrame {
 
     // setup menubar and actions
     final MenuManager mm = MenuManager.getInstance();
-    final JMenuBar mb = mm.getMenuBarFor(this);    
+    final MenuBarProxy mb = mm.getMenuBarProxyFor(this);
 
     // file menu
-    final JMenu fileMenu = mm.createMenu(Resources.getString("General.file"));
+    final MenuProxy fileMenu =
+      new MenuProxy(Resources.getString("General.file"));
     
     fileMenu.add(mm.addKey("Main.play_module"));
     fileMenu.add(mm.addKey("Main.edit_module"));
@@ -165,9 +169,10 @@ public class ModuleManagerWindow extends JFrame {
     }
 
     // tools menu
-    final JMenu toolsMenu = mm.createMenu(Resources.getString("General.tools"));
+    final MenuProxy toolsMenu =
+      new MenuProxy(Resources.getString("General.tools"));
     
-    toolsMenu.add(mm.createCheckBoxMenuItem(new AbstractAction(
+    toolsMenu.add(new CheckBoxMenuItemProxy(new AbstractAction(
                    Resources.getString("Chat.server_status")) {
       private static final long serialVersionUID = 1L;
 
@@ -184,7 +189,8 @@ public class ModuleManagerWindow extends JFrame {
    toolsMenu.add(mm.addKey("Editor.ModuleEditor.translate_vassal"));
 
     // help menu
-    final JMenu helpMenu = mm.createMenu(Resources.getString("General.help"));
+    final MenuProxy helpMenu =
+      new MenuProxy(Resources.getString("General.help"));
 
     helpMenu.add(mm.addKey("General.help"));
     helpMenu.add(mm.addKey("Main.tour"));
@@ -194,18 +200,16 @@ public class ModuleManagerWindow extends JFrame {
       helpMenu.add(mm.addKey("AboutScreen.about_vassal"));
     }
 
-
     mb.add(fileMenu);
     mb.add(toolsMenu);
     mb.add(helpMenu);
-
-    setJMenuBar(mb);
 
     // add actions
     mm.addAction("Main.play_module", new Player.PromptLaunchAction(this));
     mm.addAction("Main.edit_module", new Editor.PromptLaunchAction(this));
     mm.addAction("Main.new_module", new Editor.NewModuleLaunchAction(this));
-    mm.addAction("Editor.import_module", new Editor.ImportModuleLaunchAction(this));
+    mm.addAction("Editor.import_module",
+      new Editor.ImportModuleLaunchAction(this));
     mm.addAction("General.quit", shutDownAction);
 
     mm.addAction("Editor.ModuleEditor.translate_vassal",
@@ -223,6 +227,8 @@ public class ModuleManagerWindow extends JFrame {
     
     mm.addAction("Main.tour", new LaunchTourAction(this));
     mm.addAction("AboutScreen.about_vassal", AboutVASSAL.getAction());
+
+    setJMenuBar(mm.getMenuBarFor(this));
 
     // Load Icons
     moduleIcon = new ImageIcon(

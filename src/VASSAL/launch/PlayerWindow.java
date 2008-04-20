@@ -31,6 +31,8 @@ import javax.swing.JToolBar;
 import VASSAL.Info;
 import VASSAL.i18n.Resources;
 import VASSAL.tools.WrapLayout;
+import VASSAL.tools.menu.MenuBarProxy;
+import VASSAL.tools.menu.MenuProxy;
 import VASSAL.tools.menu.MenuManager;
 
 public class PlayerWindow extends JFrame {
@@ -54,10 +56,11 @@ public class PlayerWindow extends JFrame {
 
     // setup menubar and actions
     final MenuManager mm = MenuManager.getInstance();
-    final JMenuBar mb = mm.getMenuBarFor(this);
+    final MenuBarProxy mb = mm.getMenuBarProxyFor(this);
 
     // file menu
-    final JMenu fileMenu = mm.createMenu(Resources.getString("General.file"));
+    final MenuProxy fileMenu =
+      new MenuProxy(Resources.getString("General.file"));
 
     fileMenu.add(mm.addKey("GameState.new_game"));
     fileMenu.add(mm.addKey("GameState.load_game"));
@@ -77,7 +80,8 @@ public class PlayerWindow extends JFrame {
     mm.addAction("General.quit", new ShutDownAction());
 
     // help menu
-    final JMenu helpMenu = mm.createMenu(Resources.getString("General.help"));
+    final MenuProxy helpMenu =
+      new MenuProxy(Resources.getString("General.help"));
     
     helpMenu.add(mm.addKey("General.help"));
 
@@ -91,7 +95,7 @@ public class PlayerWindow extends JFrame {
     mb.add(fileMenu);
     mb.add(helpMenu);
 
-    setJMenuBar(mb);
+    setJMenuBar(mm.getMenuBarFor(this));
 
     // build toolbar
     toolBar.setLayout(new WrapLayout(FlowLayout.LEFT, 0, 0));
