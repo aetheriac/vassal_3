@@ -416,7 +416,7 @@ public class ModuleManagerWindow extends JFrame {
     });
     
     columnHeadings[KEY_COLUMN] = "";
-    columnHeadings[VERSION_COLUMN] = Resources.getString("ModuleManager.Version");
+    columnHeadings[VERSION_COLUMN] = Resources.getString("ModuleManager.version");
     columnHeadings[SPARE_COLUMN] = "";
     
     // FIXME: Width handling needs improvement. Also save in prefs

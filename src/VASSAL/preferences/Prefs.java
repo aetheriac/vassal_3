@@ -21,12 +21,14 @@ package VASSAL.preferences;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
 import VASSAL.Info;
 import VASSAL.configure.Configurer;
 import VASSAL.configure.DirectoryConfigurer;
@@ -120,9 +122,17 @@ public class Prefs {
 
   public void init(String moduleName) {
     name = moduleName;
+    InputStream in = null;
+    
+    try {
+      getEditor().getArchive().ensureExists(moduleName);
+    }
+    catch (IOException e) {
+      e.printStackTrace();
+    }
 
     try {
-      final InputStream in = editor.getArchive().getFileStream(name);
+      in = editor.getArchive().getFileStream(name);
       try {
         storedValues.clear();
         storedValues.load(in);
@@ -139,9 +149,9 @@ public class Prefs {
     catch (IOException e) {
       e.printStackTrace();
     }
-    
-    editor.getArchive().closeWhenNotInUse();
 
+    editor.getArchive().closeWhenNotInUse();
+    
     // FIXME: Use stringPropertyNames() in 1.6+
 //    for (String key : storedValues.stringPropertyNames()) {   
     for (Enumeration<?> e = storedValues.keys(); e.hasMoreElements(); ) {
@@ -190,8 +200,20 @@ public class Prefs {
    * @return
    */
   public static Prefs getGlobalPrefs() {
+
     if (globalPrefs == null) {
       File prefsFile = new File(Info.getHomeDir(), "Preferences");  //$NON-NLS-1$
+
+      try {
+        ArchiveWriter.ensureExists(prefsFile, "VASSAL");
+      }
+      catch (FileNotFoundException e) {
+        e.printStackTrace();
+      }
+      catch (IOException e) {
+        e.printStackTrace();
+      }      
+      
       globalPrefs = new Prefs(new PrefsEditor(new ArchiveWriter(prefsFile.getPath())), "VASSAL");  //$NON-NLS-1$
       try {
         globalPrefs.write();

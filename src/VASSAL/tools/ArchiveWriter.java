@@ -21,9 +21,11 @@ package VASSAL.tools;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -410,4 +412,69 @@ public class ArchiveWriter extends DataArchive {
     v.addAll(setOfImageNames());
   }
 
+  /**
+   * Ensure the specified Zip archive exists and contains the named entry. Create them
+   * if necessary
+   * 
+   * @param archiveName
+   * @param entryName
+   */ 
+  public static void ensureExists(File archiveFile, String entryName) throws FileNotFoundException, IOException {
+    ZipOutputStream zis = null;
+    ZipFile zip = null;
+    if (archiveFile.exists()) {
+      try {
+        zip = new ZipFile(archiveFile);
+        ZipEntry entry = zip.getEntry(entryName);
+        if (entry == null) {
+           zip.close();
+           zis = new ZipOutputStream(
+               (OutputStream)new FileOutputStream(archiveFile));
+           entry = new ZipEntry(entryName);
+           zis.putNextEntry(entry);
+           zis.finish();
+           zis.close();
+        }
+      }
+      catch (IOException e) {
+        throw e;
+      }
+      finally {
+        if (zip != null) {
+          try {
+            zip.close();
+          }
+          catch (IOException e) {
+            // No stack trace
+          }
+        }
+      }
+    }
+    else {
+      try {
+        zis = new ZipOutputStream(
+          (OutputStream)new FileOutputStream(archiveFile));
+        ZipEntry entry = new ZipEntry(entryName);
+        zis.putNextEntry(entry);
+        zis.finish();
+        zis.close();
+      }
+      finally {
+        if (zis != null) {
+          try {
+            zis.close();
+          }
+          catch (IOException e) {
+            // No stack trace
+          }
+        }
+      }
+    }
+  }
+  
+  public void ensureExists(String entryName) throws FileNotFoundException, IOException {
+    archive.close();
+    ensureExists(new File(this.getArchive().getName()), entryName);
+    archive = new ZipFile(archiveName);
+  }
 }
