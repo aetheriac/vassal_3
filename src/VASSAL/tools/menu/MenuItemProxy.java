@@ -28,7 +28,7 @@ import javax.swing.Icon;
 import javax.swing.JMenuItem;
 
 public class MenuItemProxy extends AbstractProxy<JMenuItem> {
-  private Action action;
+  protected Action action;
 
   public MenuItemProxy() {
     this(null);

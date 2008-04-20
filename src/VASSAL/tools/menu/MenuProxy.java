@@ -42,7 +42,9 @@ public class MenuProxy extends AbstractProxy<JMenu> {
   public void add(final AbstractProxy<?> item) {
     children.add(item);
     item.parent = this;
- 
+
+    if (item instanceof Marker) return;
+
     forEachPeer(new Functor<JMenu>() {
       public void apply(JMenu menu) {
         menu.add(item.createPeer());
@@ -50,14 +52,27 @@ public class MenuProxy extends AbstractProxy<JMenu> {
     });
   } 
 
+  protected int proxyIndexToRealIndex(int pos) {
+    // find the true position, neglecting markers
+    int j = -1;
+    for (int i = 0; i <= pos; i++) {
+      if (!(children.get(i) instanceof Marker)) j++;
+    }
+    return j;
+  }
+
   @Override
-  public void insert(final AbstractProxy<?> item, final int pos) {
+  public void insert(final AbstractProxy<?> item, int pos) {
     children.add(pos, item);
     item.parent = this;
     
+    if (item instanceof Marker) return;
+
+    final int rpos = proxyIndexToRealIndex(pos);
+
     forEachPeer(new Functor<JMenu>() {
       public void apply(JMenu menu) {
-        menu.add(item.createPeer(), pos);
+        menu.add(item.createPeer(), rpos);
       }
     });
   }
@@ -78,6 +93,11 @@ public class MenuProxy extends AbstractProxy<JMenu> {
   }
 
   @Override
+  public int getChildCount() {
+    return children.size();
+  }  
+  
+  @Override
   public AbstractProxy<?>[] getChildren() {
     return children.toArray(new AbstractProxy<?>[children.size()]);
   }
@@ -87,12 +107,16 @@ public class MenuProxy extends AbstractProxy<JMenu> {
     return children.get(pos);
   }
 
-  public void addSeparator() {
-    add(new SeparatorProxy());
+  public SeparatorProxy addSeparator() {
+    final SeparatorProxy sep = new SeparatorProxy();
+    add(sep);
+    return sep;
   }
 
-  public void insertSeparator(int pos) {
-    insert(new SeparatorProxy(), pos);
+  public SeparatorProxy insertSeparator(int pos) {
+    final SeparatorProxy sep = new SeparatorProxy();
+    insert(sep, pos);
+    return sep;
   }
 
   public void setText(final String text) {
@@ -115,6 +139,7 @@ public class MenuProxy extends AbstractProxy<JMenu> {
     final JMenu menu = new JMenu(text);
 
     for (AbstractProxy<?> item : children) {
+      if (item instanceof Marker) continue;
       menu.add(item.createPeer());
     }
     

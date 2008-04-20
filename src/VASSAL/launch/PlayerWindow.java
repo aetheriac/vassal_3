@@ -62,6 +62,9 @@ public class PlayerWindow extends JFrame {
     final MenuProxy fileMenu =
       new MenuProxy(Resources.getString("General.file"));
 
+    fileMenu.add(mm.addMarker("PredefinedSetup.start"));
+    fileMenu.add(mm.addMarker("PredefinedSetup.end"));
+ 
     fileMenu.add(mm.addKey("GameState.new_game"));
     fileMenu.add(mm.addKey("GameState.load_game"));
     fileMenu.add(mm.addKey("GameState.save_game"));

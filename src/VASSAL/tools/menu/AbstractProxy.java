@@ -40,6 +40,10 @@ public abstract class AbstractProxy<T extends JComponent> {
     }
   }
 
+  public int getChildCount() {
+    return 0;
+  }
+
   public AbstractProxy<?>[] getChildren() {
     return new AbstractProxy<?>[0];
   } 
@@ -74,18 +78,18 @@ public abstract class AbstractProxy<T extends JComponent> {
     throw new UnsupportedOperationException();
   } 
 
-  protected boolean visible = true;
+  protected boolean enabled = true;
 
-  public boolean isVisible() {
-    return visible;
+  public boolean isEnabled() {
+    return enabled;
   }
 
-  public void setVisible(final boolean visible) {
-    this.visible = visible;
+  public void setEnabled(final boolean enabled) {
+    this.enabled = enabled;
 
     forEachPeer(new Functor<T>() {
       public void apply(T peer) {
-        peer.setVisible(visible);
+        peer.setEnabled(enabled);
       }
     });
   }
@@ -113,48 +117,6 @@ public abstract class AbstractProxy<T extends JComponent> {
       }
     });
   }
-
-/*
-  protected Iterator<T> peerIterator() {
-    processQueue();
-
-    return new Iterator<T>() {
-      private final Iterator<WeakReference<T>> i = peers.iterator();
-      private T next;
-
-      public boolean hasNext() {
-        if (next != null) return true;
-
-        while (i.hasNext()) {
-          next = i.next().get();
-          if (next != null) return true; 
-        }
-        
-        return false; 
-      }
-
-      public T next() {
-        if (next != null) {
-          final T ret = next;
-          next = null;
-          return ret;
-        }
-
-        for ( ; ; next = i.next().get()) {
-          if (next != null) {
-            final T ret = next;
-            next = null;
-            return ret;
-          }
-        }
-      }
-
-      public void remove() {
-        throw new UnsupportedOperationException();
-      }
-    };
-  }
-*/
 
   interface Functor<T> {
     public void apply(T peer);

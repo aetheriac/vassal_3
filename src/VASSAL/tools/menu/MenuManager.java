@@ -24,16 +24,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.Action;
-//import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
-//import javax.swing.JMenu;
 import javax.swing.JMenuBar;
-//import javax.swing.JMenuItem;
-//import javax.swing.JRadioButtonMenuItem;
-//import javax.swing.JSeparator;
 
 import VASSAL.Info;
-
 
 public abstract class MenuManager {
   protected static MenuManager instance;
@@ -63,9 +57,12 @@ public abstract class MenuManager {
     }
 
     final MenuItemProxy item = new MenuItemProxy();
-    item.setVisible(false);
     items.add(item);    
     return item;
+  }
+
+  public List<MenuItemProxy> getItems(String key) {
+    return actionLocations.get(key);
   }
 
   public void addAction(String key, Action a) {
@@ -73,8 +70,19 @@ public abstract class MenuManager {
     if (items != null) {
       for (MenuItemProxy i : items) {
         i.setAction(a);
-        i.setVisible(true);
       }
     }
+  }
+
+  public MenuItemProxy addMarker(String key) {
+    List<MenuItemProxy> items = actionLocations.get(key);
+    if (items == null) {
+      items = new ArrayList<MenuItemProxy>();
+      actionLocations.put(key, items);
+    }
+
+    final MenuItemProxy item = new Marker();
+    items.add(item);    
+    return item;
   }
 }

@@ -25,56 +25,82 @@ import java.util.List;
 import javax.swing.JMenuBar;
 
 public class MenuBarProxy extends AbstractProxy<JMenuBar> {
-  private final List<MenuProxy> children = new ArrayList<MenuProxy>();
+  private final List<AbstractProxy<?>> children =
+    new ArrayList<AbstractProxy<?>>();
 
 /*
   private final List<ButtonGroupProxy> groups =
     new ArrayList<ButtonGroupProxy>();
 */
 
-  public void add(final MenuProxy menu) {
-    children.add(menu);
-    menu.parent = this;
+  @Override
+  public void add(final AbstractProxy<?> item) {
+    children.add(item);
+    item.parent = this;
+
+    if (item instanceof Marker) return;
+    if (!(item instanceof MenuProxy)) throw new UnsupportedOperationException();
 
     forEachPeer(new Functor<JMenuBar>() {
       public void apply(JMenuBar mb) {
-        mb.add(menu.createPeer());
+        mb.add(item.createPeer());
       }
     });
-  } 
+  }
+  
+  protected int proxyIndexToRealIndex(int pos) {
+    // find the true position, neglecting markers
+    int j = -1;
+    for (int i = 0; i <= pos; i++) {
+      if (!(children.get(i) instanceof Marker)) j++;
+    }
+    return j;
+  }
 
-  public void insert(final MenuProxy menu, final int pos) {
-    children.add(pos, menu);
-    menu.parent = this;
+  @Override
+  public void insert(final AbstractProxy<?> item, int pos) {
+    children.add(pos, item);
+    item.parent = this;
     
+    if (item instanceof Marker) return;
+    if (!(item instanceof MenuProxy)) throw new UnsupportedOperationException();
+
+    final int rpos = proxyIndexToRealIndex(pos);
+
     forEachPeer(new Functor<JMenuBar>() {
       public void apply(JMenuBar mb) {
-        mb.add(menu.createPeer(), pos);
+        mb.add(item.createPeer(), rpos);
       }
     });
   }
 
-  public void remove(MenuProxy menu) {
-    if (children.remove(menu)) {
-      menu.parent = null;
-      menu.unparent();
+  @Override
+  public void remove(AbstractProxy<?> item) {
+    if (children.remove(item)) {
+      item.parent = null;
+      item.unparent();
     }
   }
 
   @Override
   public void remove(int pos) {
-    final MenuProxy menu = children.remove(pos);
-    menu.parent = null;
-    menu.unparent();
+    final AbstractProxy<?> item = children.remove(pos);
+    item.parent = null;
+    item.unparent();
   }
 
+  @Override
+  public int getChildCount() {
+    return children.size();
+  }  
+  
   @Override
   public AbstractProxy<?>[] getChildren() {
     return children.toArray(new AbstractProxy<?>[children.size()]);
   }
 
   @Override
-  public MenuProxy getChild(int pos) {
+  public AbstractProxy<?> getChild(int pos) {
     return children.get(pos);
   }
 
@@ -104,8 +130,9 @@ public class MenuBarProxy extends AbstractProxy<JMenuBar> {
   public JMenuBar createPeer() {
     final JMenuBar mb = new JMenuBar();
  
-    for (MenuProxy menu : children) {
-      mb.add(menu.createPeer());
+    for (AbstractProxy<?> item : children) {
+      if (item instanceof Marker) continue;
+      mb.add(item.createPeer());
     }
 
 /*
