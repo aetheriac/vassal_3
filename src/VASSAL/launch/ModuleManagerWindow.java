@@ -67,11 +67,14 @@ import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
+import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.event.TreeWillExpandListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreePath;
 
 import org.jdesktop.swingx.JXTreeTable;
@@ -367,38 +370,63 @@ public class ModuleManagerWindow extends JFrame {
     tree.setTreeCellRenderer(new MyTreeCellRenderer());
     
     tree.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        if (e.getClickCount() == 2) {
+          final TreePath path =
+            tree.getPathForLocation(e.getPoint().x, e.getPoint().y);
+          if (path == null) return;
+
+          selectedNode = (MyTreeNode) path.getLastPathComponent();
+
+          final int row = tree.getRowForPath(path);          
+          if (row < 0) return;
+
+          final AbstractInfo target =
+            (AbstractInfo) selectedNode.getUserObject();
+
+          // launch module or load save, otherwise expand or collapse node
+          if (target instanceof ModuleInfo) {
+            ((ModuleInfo) target).play();
+          }
+          else if (target instanceof SaveFileInfo) {
+            ((SaveFileInfo) target).play();
+          }
+          else if (tree.isExpanded(row)) {
+            tree.collapseRow(row);
+          }
+          else {
+            tree.expandRow(row); 
+          }
+        }
+      } 
+
+      @Override
       public void mouseReleased(MouseEvent e) {
+        System.out.println("released");
         final TreePath path =
           tree.getPathForLocation(e.getPoint().x, e.getPoint().y);
-        if (path == null) {
-          return;
-        }
+        if (path == null) return;
               
         selectedNode = (MyTreeNode) path.getLastPathComponent();
-        final AbstractInfo target = (AbstractInfo) selectedNode.getUserObject();
 
         if (e.isMetaDown()) {
           final int row = tree.getRowForPath(path);          
           if (row >= 0) {
             tree.clearSelection();
             tree.addRowSelectionInterval(row, row);
+            final AbstractInfo target =
+              (AbstractInfo) selectedNode.getUserObject();
             target.buildPopup(row).show(tree, e.getX(), e.getY());
-          }
-        }
-        else if (e.getClickCount() == 2) {
-          final int row = tree.getRowForPath(path);          
-          if (row >= 0) {
-            if (target instanceof ModuleInfo) {
-              ((ModuleInfo) target).play();
-            }
-            else if (target instanceof SaveFileInfo) {
-              ((SaveFileInfo) target).play();
-            }
           }
         }
       }
     });
-    
+
+    // This ensures that double-clicks always start the module but
+    // doesn't prevent single-clicks on the handles from working. 
+    tree.setToggleClickCount(3); 
+
     tree.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     tree.addTreeSelectionListener(new TreeSelectionListener() {
       public void valueChanged(TreeSelectionEvent e) {
