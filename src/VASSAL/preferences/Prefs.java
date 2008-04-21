@@ -123,13 +123,6 @@ public class Prefs {
   public void init(String moduleName) {
     name = moduleName;
     InputStream in = null;
-    
-    try {
-      getEditor().getArchive().ensureExists(moduleName);
-    }
-    catch (IOException e) {
-      e.printStackTrace();
-    }
 
     try {
       in = editor.getArchive().getFileStream(name);

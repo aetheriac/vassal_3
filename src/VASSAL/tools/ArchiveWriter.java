@@ -267,7 +267,6 @@ public class ArchiveWriter extends DataArchive {
         }
       }
       if (archive != null) {
-        try {
           // Copy old non-overwritten entries into temp file
           final ZipInputStream zis =
             new ZipInputStream(new FileInputStream(archive.getName()));
@@ -303,15 +302,6 @@ public class ArchiveWriter extends DataArchive {
               e.printStackTrace();
             }
           }
-        }
-        finally {
-          try {
-            archive.close();
-          }
-          catch (IOException e) {
-            e.printStackTrace();
-          }
-        }
       }
 
       // Write new entries into temp file
@@ -326,6 +316,11 @@ public class ArchiveWriter extends DataArchive {
       catch (IOException e) {
         e.printStackTrace();
       }
+    }
+    
+    if (archive != null) {
+      archive.close();
+      archive = null;
     }
 
     final File original = new File(archiveName);
@@ -413,68 +408,21 @@ public class ArchiveWriter extends DataArchive {
   }
 
   /**
-   * Ensure the specified Zip archive exists and contains the named entry. Create them
-   * if necessary
+   * Ensure the specified Zip archive exists. Create it and the specified
+   * entry if it does not.
    * 
-   * @param archiveName
-   * @param entryName
+   * @param archiveName Archive file
+   * @param entryName Entry Name
    */ 
   public static void ensureExists(File archiveFile, String entryName) throws FileNotFoundException, IOException {
-    ZipOutputStream zis = null;
-    ZipFile zip = null;
-    if (archiveFile.exists()) {
-      try {
-        zip = new ZipFile(archiveFile);
-        ZipEntry entry = zip.getEntry(entryName);
-        if (entry == null) {
-           zip.close();
-           zis = new ZipOutputStream(
-               (OutputStream)new FileOutputStream(archiveFile));
-           entry = new ZipEntry(entryName);
-           zis.putNextEntry(entry);
-           zis.finish();
-           zis.close();
-        }
-      }
-      catch (IOException e) {
-        throw e;
-      }
-      finally {
-        if (zip != null) {
-          try {
-            zip.close();
-          }
-          catch (IOException e) {
-            // No stack trace
-          }
-        }
-      }
-    }
-    else {
-      try {
-        zis = new ZipOutputStream(
-          (OutputStream)new FileOutputStream(archiveFile));
-        ZipEntry entry = new ZipEntry(entryName);
-        zis.putNextEntry(entry);
-        zis.finish();
-        zis.close();
-      }
-      finally {
-        if (zis != null) {
-          try {
-            zis.close();
-          }
-          catch (IOException e) {
-            // No stack trace
-          }
-        }
-      }
+    if (!archiveFile.exists()) {
+      ZipOutputStream zis = new ZipOutputStream(
+        (OutputStream)new FileOutputStream(archiveFile));
+      ZipEntry entry = new ZipEntry(entryName);
+      zis.putNextEntry(entry);
+      zis.finish();
+      zis.close();
     }
   }
-  
-  public void ensureExists(String entryName) throws FileNotFoundException, IOException {
-    archive.close();
-    ensureExists(new File(this.getArchive().getName()), entryName);
-    archive = new ZipFile(archiveName);
-  }
+
 }
