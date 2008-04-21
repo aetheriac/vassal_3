@@ -67,14 +67,11 @@ import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
-import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.event.TreeWillExpandListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreePath;
 
 import org.jdesktop.swingx.JXTreeTable;
