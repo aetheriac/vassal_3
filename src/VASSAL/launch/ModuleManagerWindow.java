@@ -400,7 +400,6 @@ public class ModuleManagerWindow extends JFrame {
 
       @Override
       public void mouseReleased(MouseEvent e) {
-        System.out.println("released");
         final TreePath path =
           tree.getPathForLocation(e.getPoint().x, e.getPoint().y);
         if (path == null) return;
