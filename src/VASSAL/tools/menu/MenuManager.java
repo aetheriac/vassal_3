@@ -27,8 +27,6 @@ import javax.swing.Action;
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 
-import VASSAL.Info;
-
 public abstract class MenuManager {
   protected static MenuManager instance;
 
