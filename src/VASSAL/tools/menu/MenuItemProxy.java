@@ -1,5 +1,5 @@
 /*
- * $Id: Info.java 3388 2008-03-30 21:51:32Z uckelman $
+ * $Id$
  *
  * Copyright (c) 2008 by Joel Uckelman 
  *

@@ -1,5 +1,5 @@
 /*
- * $Id: ModuleMetaData.java 3423 2008-04-13 21:51:32Z swampwallaby $
+ * $Id$
  *
  * Copyright (c) 2008 by Brent Easton and Joel Uckelman
  *

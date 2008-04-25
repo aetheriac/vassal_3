@@ -1,5 +1,5 @@
 /*
- * $Id: GameModule.java 3077 2008-02-15 13:37:08Z uckelman $
+ * $Id$
  *
  * Copyright (c) 2008 by Joel Uckelman
  *
