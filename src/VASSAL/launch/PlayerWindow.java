@@ -21,7 +21,9 @@ package VASSAL.launch;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -29,7 +31,10 @@ import javax.swing.JPanel;
 import javax.swing.JToolBar;
 
 import VASSAL.Info;
+import VASSAL.build.module.Documentation;
+import VASSAL.configure.ShowHelpAction;
 import VASSAL.i18n.Resources;
+import VASSAL.tools.ErrorLog;
 import VASSAL.tools.WrapLayout;
 import VASSAL.tools.menu.MenuBarProxy;
 import VASSAL.tools.menu.MenuProxy;
@@ -92,6 +97,16 @@ public class PlayerWindow extends JFrame {
       helpMenu.addSeparator();
       helpMenu.add(mm.addKey("AboutScreen.about_vassal"));
     }
+
+    URL url = null; 
+    try {
+      url = new File(Documentation.getDocumentationBaseDir(),
+                     "README.html").toURI().toURL();
+    }
+    catch (MalformedURLException e) {
+      ErrorLog.warn(e);
+    }
+    mm.addAction("General.help", new ShowHelpAction(url, null));
 
     mm.addAction("AboutScreen.about_vassal", AboutVASSAL.getAction());
     
