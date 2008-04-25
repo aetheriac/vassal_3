@@ -74,7 +74,7 @@ public class BasicLogger implements Logger, Buildable, GameComponent, CommandEnc
   protected Command beginningState;
   protected File outputFile;
   protected Action stepAction = new StepAction();
-  protected String comments = "";
+  protected SaveMetaData metadata;
 
   public BasicLogger() {
     super();
@@ -277,15 +277,7 @@ public class BasicLogger implements Logger, Buildable, GameComponent, CommandEnc
 
       final ArchiveWriter saver = new ArchiveWriter(outputFile.getPath());
       saver.addFile(GameState.SAVEFILE_ZIP_ENTRY, out.toInputStream()); //$NON-NLS-1$
-      comments  = (String) JOptionPane.showInputDialog(
-          GameModule.getGameModule().getFrame(),
-          Resources.getString("BasicLogger.enter_comments"),
-          Resources.getString("BasicLogger.log_file_comments"),
-          JOptionPane.PLAIN_MESSAGE,
-          null,
-          null,
-          comments);
-      (new SaveGameData(comments)).save(saver);
+      metadata.save(saver);
       saver.write();
 
       GameModule.getGameModule().getGameState().setModified(false);
@@ -312,6 +304,7 @@ public class BasicLogger implements Logger, Buildable, GameComponent, CommandEnc
       endLogAction.setEnabled(true);
       GameModule.getGameModule().appendToTitle(Resources.getString("BasicLogger.logging_to", outputFile.getName()));  //$NON-NLS-1$
       newLogAction.setEnabled(false);
+      metadata = new SaveMetaData();
     }
   }
 

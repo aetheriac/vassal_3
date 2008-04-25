@@ -1,5 +1,5 @@
 /*
- * $Id: SaveGameData.java 3423 2008-04-13 21:51:32Z swampwallaby $
+ * $Id: ModuleMetaData.java 3423 2008-04-13 21:51:32Z swampwallaby $
  *
  * Copyright (c) 2008 by Brent Easton and Joel Uckelman
  *
@@ -18,18 +18,14 @@
  */
 package VASSAL.build.module;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -38,11 +34,8 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -51,79 +44,41 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+import VASSAL.Info;
 import VASSAL.build.GameModule;
 import VASSAL.tools.ArchiveWriter;
 import VASSAL.tools.BridgeStream;
 
 /**
  * 
- * Class representing the metadata for a Save Game/Log File
+ * Class representing the metadata for a Module or an Extension. Modules
+ * and extensions can't be differentiated until either the metadata or the
+ * buildfile is parsed, so they share the same metadata structure.
  * 
  * @author Brent Easton
  * @since 3.1.0
  *
  */
-public class SaveGameData {
+public class ModuleMetaData extends MetaData {
 
-  public static final String ZIP_ENTRY_NAME = "metadata";
-  public static final String SAVE_VERSION = "1.0";
-  public static final String ROOT_NODE = "data";
-  public static final String MODULE_NODE = "module";
-  public static final String NAME_ENTRY = "name";
-  public static final String VERSION_ENTRY = "version";
-  public static final String COMMENTS_NODE = "comments";
+  public static final String ZIP_ENTRY_NAME = "moduledata";
+  public static final String DATA_VERSION = "1";
+    
+  protected String name;
 
-  public static final String NAME_ATTR = "name";
-  public static final String VERSION_ATTR = "version";
-
-  public static final String ROOT_ELEMENT = "data";
-  public static final String MODULE_ELEMENT = "module";
-  public static final String COMMENTS_ELEMENT = "comments";
-
-  protected boolean valid = false;
-  protected String moduleName;
-  protected String moduleVersion;
-  protected String comments;
-
-  public SaveGameData() {
-    moduleName = GameModule.getGameModule().getGameName();
-    moduleVersion = GameModule.getGameModule().getGameVersion();
+  public ModuleMetaData(ZipFile zip) {
+    read(zip);
   }
   
-  public SaveGameData(String comments) {
-    this();
-    this.comments = comments;
+  public ModuleMetaData(GameModule module) {
+    name = GameModule.getGameModule().getGameName();
+    version = GameModule.getGameModule().getGameVersion();
+    vassalVersion = Info.getVersion();
+    description = GameModule.getGameModule().getAttributeValueString(GameModule.DESCRIPTION);
   }
 
-  public SaveGameData(File file) {
-    read(file);
-  }
-
-  public String getModuleName() {
-    return moduleName;
-  }
-
-  public String getModuleVersion() {
-    return moduleVersion;
-  }
-  
-  public String getComments() {
-    return comments;
-  }
-
-  /*
-   * valid indicates whether or not this represents the metadata for a valid
-   * save file. valid = true means the save file was a valid Zip archive
-   * containing an entry named 'savedgame'. If the metadata entry is missing or
-   * corrupt, valid will still be true, but the metadata will be set to blanks.
-   * 
-   */
-  public boolean isValid() {
-    return valid;
-  }
-
-  public void setValid(boolean b) {
-    valid = b;
+  public String getName() {
+    return name;
   }
 
   /**
@@ -133,25 +88,33 @@ public class SaveGameData {
    */
   public void save(ArchiveWriter archive) throws IOException {
     Document doc = null;
-    Element e = null;
-    Node n = null;
     try {
       doc = DocumentBuilderFactory.newInstance()
                                   .newDocumentBuilder()
                                   .newDocument();
       
-      final Element root = doc.createElement(ROOT_ELEMENT);
-      root.setAttribute(VERSION_ATTR, SAVE_VERSION);
-      doc.appendChild(root);
+      final Element rootEl = doc.createElement(ROOT_ELEMENT);
+      rootEl.setAttribute(VERSION_ATTR, DATA_VERSION);
+      doc.appendChild(rootEl);
+      
+      Element e = doc.createElement(NAME_ELEMENT);
+      e.appendChild(doc.createTextNode(getName()));
+      rootEl.appendChild(e);
+      // FIXME: Extend to include any translations of the name
 
-      final Element module = doc.createElement(MODULE_ELEMENT);
-      module.setAttribute(NAME_ATTR, moduleName);
-      module.setAttribute(VERSION_ATTR, moduleVersion);
-      root.appendChild(module);
+      e = doc.createElement(VERSION_ELEMENT);
+      e.appendChild(doc.createTextNode(getVersion()));
+      rootEl.appendChild(e);
 
-      final Element comments = doc.createElement(COMMENTS_ELEMENT);
-      comments.appendChild(doc.createTextNode(getComments()));
-      root.appendChild(comments);
+      e = doc.createElement(VASSAL_VERSION_ELEMENT);
+      e.appendChild(doc.createTextNode(getVassalVersion()));
+      rootEl.appendChild(e);
+      
+      e = doc.createElement(DESCRIPTION_ELEMENT);
+      e.appendChild(doc.createTextNode(getDescription()));
+      rootEl.appendChild(e);
+      // FIXME: Extend to include any translations of the description
+      
     }
     catch (ParserConfigurationException ex) {
       throw new IOException(ex.getMessage());
@@ -180,50 +143,37 @@ public class SaveGameData {
   }
 
   /**
-   * Read and validate a Saved Game/Log file.
-   *  - Check it is a Zip file
-   *  - Check it has a Zip Entry named savedgame
+   * Read and validate a Module file.
+   *  - Check it has a Zip Entry named buildfile
    *  - If it has a metadata file, read and parse it.
-   *  - 
-   * @param file Saved Game File
+   *  
+   * @param file Module File
    */
-  public void read(File file) {
-    comments = moduleName = moduleVersion = "";
-    setValid(true);
+  public void read(ZipFile zip) {
+    description = name = version = "";
 
-    ZipFile zip = null;
     InputStream is = null;
     try {
-      try {
-        zip = new ZipFile(file);
-
-        // This may be an old-style saved game with no metadata. Check that
-        // it is a valid zip file and has a 'savedgame' entry.
-        if (zip.getEntry(GameState.SAVEFILE_ZIP_ENTRY) == null) {
-          throw new IOException("Not a valid saved game."); 
-        }  
-      }
-      catch (ZipException e) {
-        // print no stack trace, this is likely not a zip file
-        setValid(false);
-        return;
-      }
-      catch (IOException e) {
-        e.printStackTrace();
-        setValid(false);
-        return;
-      }
 
       // Try to parse the metadata. Failure is not catastrophic, we can
-      // treat it like an old-style save with no metadata.
+      // treat it like an old-style module with no metadata and parse
+      // the first lines of the buildFile
       try {
-        final ZipEntry data = zip.getEntry(GameState.SAVEFILE_METADATA_ENTRY);
-        if (data == null) return;
-
         final XMLReader parser = XMLReaderFactory.createXMLReader();
-
-        // set up the handler
-        final XMLHandler handler = new XMLHandler();
+        DefaultHandler handler = null;
+        ZipEntry data = zip.getEntry(ZIP_ENTRY_NAME);
+        if (data == null) {
+          data = zip.getEntry(GameModule.BUILDFILE);
+          handler = new BuildFileXMLHandler();
+        }
+        else {
+          handler = new MetadataXMLHandler();
+        }
+        
+        if (data == null) {
+          return;
+        }
+        
         parser.setContentHandler(handler);
         parser.setDTDHandler(handler);
         parser.setEntityResolver(handler);
@@ -235,6 +185,9 @@ public class SaveGameData {
       }
       catch (IOException e) {
         e.printStackTrace();
+      }
+      catch (SAXEndException e) {
+        // Indicates End of module/extension parsing. not an error.
       }
       catch (SAXException e) {
         e.printStackTrace();
@@ -261,7 +214,10 @@ public class SaveGameData {
     }
   }
 
-  private class XMLHandler extends DefaultHandler {
+  /**
+   * XML Handler for parsing a Module/Extension metadata file
+   */
+  private class MetadataXMLHandler extends DefaultHandler {
     final StringBuilder accumulator = new StringBuilder();
 
     @Override
@@ -271,27 +227,19 @@ public class SaveGameData {
       accumulator.setLength(0);
 
       // handle element attributes we care about
-      if (MODULE_ELEMENT.equals(qName)) {
-        moduleName = getAttr(attrs, NAME_ATTR);
-        moduleVersion = getAttr(attrs, VERSION_ATTR);
-      }
-/*
-      else if (VASSAL_ELEMENT.equals(localName)) {
-        vassalVersion = attrs.getName(VERSION_ATTR);
-      }
-*/
-    }
-
-    private String getAttr(Attributes attrs, String qName) {
-      final String value = attrs.getValue(qName);
-      return value == null ? "" : value;
     }
 
     @Override
     public void endElement(String uri, String localName, String qName) {
       // handle all of the elements which have CDATA here
-      if (COMMENTS_ELEMENT.equals(qName)) {
-        comments = accumulator.toString().trim();
+      if (NAME_ELEMENT.equals(qName)) {
+         name = accumulator.toString().trim();
+      }
+      else if (VERSION_ELEMENT.equals(qName)) {
+         version = accumulator.toString().trim();
+      }
+      if (DESCRIPTION_ELEMENT.equals(qName)) {
+        description = accumulator.toString().trim();
       }
     }
 
@@ -315,4 +263,59 @@ public class SaveGameData {
       throw e;
     }
   }
+  
+  /**
+   * XML Handle for parsing a buildFile. Used to read minimal data from
+   * modules saved prior to 3.1.0. 
+   */
+  private class BuildFileXMLHandler extends DefaultHandler {
+    final StringBuilder accumulator = new StringBuilder();
+
+    @Override
+    public void startElement(String uri, String localName,
+                             String qName, Attributes attrs) 
+        throws SAXEndException {
+      // clear the content accumulator
+      accumulator.setLength(0);
+
+      // handle element attributes we care about
+      if (BUILDFILE_MODULE_ELEMENT1.equals(qName) || BUILDFILE_MODULE_ELEMENT2.equals(qName)) {
+        name = getAttr(attrs, NAME_ATTR);
+        version = getAttr(attrs, VERSION_ATTR);
+        vassalVersion  = getAttr(attrs, VASSAL_VERSION_ATTR);
+        throw new SAXEndException();
+      }
+    }
+
+    private String getAttr(Attributes attrs, String qName) {
+      final String value = attrs.getValue(qName);
+      return value == null ? "" : value;
+    }
+    
+    @Override
+    public void endElement(String uri, String localName, String qName) {
+      // handle all of the elements which have CDATA here
+    }
+
+    @Override
+    public void characters(char[] ch, int start, int length) {
+      accumulator.append(ch, start, length);
+    }
+
+    @Override
+    public void warning(SAXParseException e) throws SAXException {
+      e.printStackTrace();
+    }
+
+    @Override
+    public void error(SAXParseException e) throws SAXException {
+      e.printStackTrace();
+    }
+
+    @Override
+    public void fatalError(SAXParseException e) throws SAXException {
+      throw e;
+    }
+  }
+
 }

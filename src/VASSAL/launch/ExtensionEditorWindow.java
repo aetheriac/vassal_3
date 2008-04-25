@@ -20,8 +20,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 
+import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
 import javax.swing.JOptionPane;
 
 import VASSAL.build.GameModule;
@@ -52,6 +52,9 @@ public class ExtensionEditorWindow extends EditorWindow {
 
     final MenuManager mm = MenuManager.getInstance();
     mm.addAction("Editor.ModuleEditor.reference_manual", tree.getHelpAction());
+    
+    toolBar.addSeparator();
+    toolBar.add(extension.getEditAction(new JDialog(this)));
     
     saveAction.setEnabled(true);
     saveAsAction.setEnabled(true);

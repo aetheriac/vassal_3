@@ -73,7 +73,7 @@ public class BasicModule extends GameModule {
   }
 
   protected void build() throws IOException {
-    final String fileName = "buildFile"; //$NON-NLS-1$
+    final String fileName = BUILDFILE; 
 
     InputStream in = null;
     try {

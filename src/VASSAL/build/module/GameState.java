@@ -435,8 +435,6 @@ public class GameState implements CommandEncoder {
   }
   
   public static final String SAVEFILE_ZIP_ENTRY = "savedGame";  //$NON-NLS-1$
-  public static final String SAVEFILE_METADATA_ENTRY = "metadata";
-  public static final String SAVEFILE_VERSION = "1.0";
   
   /**
    * Return a {@link Command} that, when executed, will restore the
@@ -504,15 +502,7 @@ public class GameState implements CommandEncoder {
 
     final ArchiveWriter saver = new ArchiveWriter(f.getPath());
     saver.addFile(SAVEFILE_ZIP_ENTRY, out.toInputStream());
-    String comments  = (String) JOptionPane.showInputDialog(
-        GameModule.getGameModule().getFrame(),
-        Resources.getString("BasicLogger.enter_comments"),
-        Resources.getString("BasicLogger.log_file_comments"),
-        JOptionPane.PLAIN_MESSAGE,
-        null,
-        null,
-        "");
-    (new SaveGameData(comments)).save(saver);
+    (new SaveMetaData()).save(saver);
     saver.write();
     if (saver.getArchive() != null) {
       saver.getArchive().close();

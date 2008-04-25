@@ -34,17 +34,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.zip.ZipFile;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -54,8 +50,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -80,8 +74,11 @@ import org.jdesktop.swingx.treetable.DefaultTreeTableModel;
 
 import VASSAL.Info;
 import VASSAL.build.module.Documentation;
+import VASSAL.build.module.ExtensionMetaData;
 import VASSAL.build.module.ExtensionsManager;
-import VASSAL.build.module.SaveGameData;
+import VASSAL.build.module.MetaData;
+import VASSAL.build.module.ModuleMetaData;
+import VASSAL.build.module.SaveMetaData;
 import VASSAL.chat.CgiServerStatus;
 import VASSAL.chat.ui.ServerStatusView;
 import VASSAL.configure.BooleanConfigurer;
@@ -98,8 +95,8 @@ import VASSAL.tools.FileChooser;
 import VASSAL.tools.SequenceEncoder;
 import VASSAL.tools.menu.CheckBoxMenuItemProxy;
 import VASSAL.tools.menu.MenuBarProxy;
-import VASSAL.tools.menu.MenuProxy;
 import VASSAL.tools.menu.MenuManager;
+import VASSAL.tools.menu.MenuProxy;
 
 public class ModuleManagerWindow extends JFrame {
   private static final long serialVersionUID = 1L;
@@ -667,7 +664,6 @@ public class ModuleManagerWindow extends JFrame {
     protected File file;
     protected Icon openIcon;
     protected Icon closedIcon;
-    protected String version = "";
     protected boolean valid = true;
     protected String error = "";
     
@@ -743,54 +739,6 @@ public class ModuleManagerWindow extends JFrame {
       }
     }
     
-    public void readBuildFile(String type) {
-      ZipFile zip = null;
-      BufferedReader br = null;
-      try {
-        zip = new ZipFile(file);
-        br = new BufferedReader(new InputStreamReader(
-          zip.getInputStream(zip.getEntry("buildFile"))));
-        parseBuildFile(br);
-      }
-      catch (Exception e) {
-        setValid(false);
-        setError(Resources.getString(
-          "ModuleManager.add_error", file.getName(), type));
-        return;
-      }
-      finally {
-        if (br != null) {
-          try {
-            br.close();
-          }
-          catch (IOException e) {
-            e.printStackTrace();  
-          }
-        }
-        if (zip != null) {
-          try {
-            zip.close();
-          }
-          catch (IOException e) {
-            e.printStackTrace();  
-          }
-        }
-      }
-
-      setValid(true);
-    }
-
-    /**
-     * Parse the buildFile opened on the BufferedReader 
-     * and record any data we need. Most Info type do not
-     * need to parse a buildFile
-     * 
-     * @param br Input BufferedReader
-     */
-    public void parseBuildFile(BufferedReader br) {
-      return; 
-    }
-    
     public void setValid(boolean b) {
       valid = b;
     }
@@ -808,12 +756,13 @@ public class ModuleManagerWindow extends JFrame {
     }
     
     public String getVersion() {
-      return version;
-    }    
-    
-    public void setVersion(String v) {
-      version = v;
+      return "";
     }
+    
+    public String getComments() {
+      return "";
+    }
+
     
     /**
      * Return a String used to sort different types of AbstractInfo's that are
@@ -852,7 +801,7 @@ public class ModuleManagerWindow extends JFrame {
 
     private ExtensionsManager extMgr;
     private List<File> gameFolders = new ArrayList<File>();
-    private String moduleName = "";
+    private ModuleMetaData metadata;
     
     private Action newExtensionAction =
       new NewExtensionLaunchAction(ModuleManagerWindow.this);
@@ -905,7 +854,15 @@ public class ModuleManagerWindow extends JFrame {
     
     public ModuleInfo(File f) {
       super(f, moduleIcon);
-      readBuildFile(Resources.getString("ModuleManager.module"));
+      MetaData data = MetaData.buildMetaData(file);
+      if (data != null && data instanceof ModuleMetaData) {
+        setValid(true);
+        metadata = (ModuleMetaData) data;
+      }
+      else {
+        setValid(false);
+        return;
+      }
       extMgr = new ExtensionsManager(f);   
     }
     
@@ -919,7 +876,15 @@ public class ModuleManagerWindow extends JFrame {
       SequenceEncoder.Decoder sd = new SequenceEncoder.Decoder(s, ';');
       setFile(new File(sd.nextToken()));
       setIcon(moduleIcon);
-      readBuildFile(Resources.getString("ModuleManager.module"));
+      MetaData data = MetaData.buildMetaData(getFile());
+      if (data != null && data instanceof ModuleMetaData) {
+        setValid(true);
+        metadata = (ModuleMetaData) data;
+      }
+      else {
+        setValid(false);
+        return;
+      }
       extMgr = new ExtensionsManager(getFile());  
       while (sd.hasMoreTokens()) {
         gameFolders.add(new File(sd.nextToken()));
@@ -1020,33 +985,24 @@ public class ModuleManagerWindow extends JFrame {
       return AbstractLaunchAction.isInUse(file) || AbstractLaunchAction.isEditing(file);
     }
     
-    /*
-     * Parse the module buildfile
-     */
-    public void parseBuildFile(BufferedReader br) {
-      try {
-        br.readLine();
-        final String s = br.readLine();
-        // FIXME: Parse xml properly
-        int p1 = s.indexOf("version=");
-        int p2 = s.indexOf("\"", p1+9);
-        version = s.substring(p1+9, p2);
-        p1 = s.indexOf("name=");
-        p2 = s.indexOf("\"", p1+6);
-        moduleName = s.substring(p1+6, p2);
-      }
-      catch (IOException ioe) {
-        version = "unknown";
-        setValid(false);
-      }
+    public String getVersion() {
+      return metadata.getVersion();
+    }
+    
+    public String getDescription() {
+      return metadata.getDescription();
     }
     
     public String getModuleName() {
-      return moduleName;
+      return metadata.getName();
     }
     
     public String toString() {
-      return moduleName;
+      return metadata.getName();
+    }
+    
+    public String getValueAt(int column) {
+      return column == SPARE_COLUMN ? getDescription() : super.getValueAt(column);
     }
   }
   
@@ -1057,12 +1013,20 @@ public class ModuleManagerWindow extends JFrame {
     
     private boolean active;
     private ModuleInfo moduleInfo;
+    private ExtensionMetaData metadata;
     
     public ExtensionInfo(File file, boolean active, ModuleInfo module) {
       super(file, active ? activeExtensionIcon : inactiveExtensionIcon);
       this.active = active;
       moduleInfo = module;
-      readBuildFile(Resources.getString("ModuleManager.extension"));
+      MetaData data = MetaData.buildMetaData(file);
+      if (data != null && data instanceof ExtensionMetaData) {
+        setValid(true);
+        metadata = (ExtensionMetaData) data;
+      }
+      else {
+        setValid(false);
+      }
     }
     
     public boolean isActive() {
@@ -1074,15 +1038,32 @@ public class ModuleManagerWindow extends JFrame {
       setIcon(active ? activeExtensionIcon : inactiveExtensionIcon);
     }
     
+    public String getVersion() {
+      return metadata == null ? "" : metadata.getVersion();
+    }
+    
+    public String getDescription() {
+      return metadata == null ? "" : metadata.getDescription();
+    }
+    
     public ExtensionsManager getExtensionsManager() {
       return moduleInfo == null ? null : moduleInfo.getExtensionsManager();
     }
 
     public String toString() {
-      String s = super.toString();
-      if (!active) {
-        s += " (" + Resources.getString("ModuleManager.inactive") + ")";
+      String s = getFile().getName();
+      String st = "";
+      if (metadata == null) {
+        st = Resources.getString("ModuleManager.invalid");
       }
+      if (!active) {
+        st += st.length() > 0 ? "," : "";
+        st += Resources.getString("ModuleManager.inactive");
+      }
+      if (st.length() > 0) {
+        s += " (" + st + ")";
+      }
+      
       return s;
     }
     
@@ -1097,8 +1078,17 @@ public class ModuleManagerWindow extends JFrame {
     }
     
     public Color getTreeCellFgColor() {
-     // FIXME: should get colors from LAF
-      return isActive() ? Color.black : Color.gray;
+      // FIXME: should get colors from LAF
+      if (isActive()) {
+        return metadata == null ? Color.red : Color.black;
+      }
+      else {
+        return metadata == null ? Color.pink : Color.gray;
+      }
+    }
+    
+    public String getValueAt(int column) {
+      return column == SPARE_COLUMN ? getDescription() : super.getValueAt(column);
     }
     
     /*
@@ -1106,24 +1096,6 @@ public class ModuleManagerWindow extends JFrame {
      */
     public boolean isInUse() {
       return AbstractLaunchAction.isInUse(file) || AbstractLaunchAction.isEditing(file);
-    }
-    
-    /*
-     * Parse the module buildfile
-     */
-    public void parseBuildFile(BufferedReader br) {
-      try {
-        br.readLine();
-        final String s = br.readLine();
-        // FIXME: Parse xml properly
-        final int p1 = s.indexOf("version=");
-        final int p2 = s.indexOf("\"", p1+9);
-        version = s.substring(p1+9, p2);
-      }
-      catch (IOException ioe) {
-        version = "unknown";
-        setValid(false);
-      }
     }
     
     private class ActivateExtensionAction extends AbstractAction {
@@ -1207,14 +1179,20 @@ public class ModuleManagerWindow extends JFrame {
   private class SaveFileInfo extends AbstractInfo {
 
     protected GameFolderInfo folderInfo;  // Owning Folder
-    protected SaveGameData metadata;      // Save file metadata
+    protected SaveMetaData metadata;      // Save file metadata
+    protected ModuleMetaData moduleMetadata; // Module metadata
     
     public SaveFileInfo(File f, GameFolderInfo folder) {
       super(f, fileIcon);  
       folderInfo = folder;
-      metadata = new SaveGameData(file);
-      setValid(metadata.isValid());
-      setVersion(metadata.getModuleVersion());
+      MetaData data = MetaData.buildMetaData(file);
+      if (data != null && data instanceof SaveMetaData) {
+        metadata = (SaveMetaData) data;
+        setValid(true);
+      }
+      else {
+        setValid(false);
+      }
     }
     
     public JPopupMenu buildPopup(int row) {
@@ -1256,6 +1234,15 @@ public class ModuleManagerWindow extends JFrame {
       // FIXME: should get colors from LAF
        return belongsToModule() ? Color.black : Color.gray;
      }
+    
+    public String getVersion() {
+      return metadata.getModuleVersion();
+    }
+    
+    public String getComments() {
+      return metadata.getComments();
+    }
+    
   }
   
   /** *************************************************************************
