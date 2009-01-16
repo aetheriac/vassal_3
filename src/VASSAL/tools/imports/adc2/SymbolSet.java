@@ -41,6 +41,7 @@ import java.util.HashMap;
 import javax.imageio.ImageIO;
 
 import VASSAL.build.GameModule;
+import VASSAL.tools.ArrayUtils;
 import VASSAL.tools.filechooser.BMPFileFilter;
 import VASSAL.tools.imports.FileFormatException;
 import VASSAL.tools.imports.ImportAction;
@@ -599,8 +600,7 @@ public class SymbolSet extends Importer{
       try {
         input = new BufferedReader(new FileReader(sdx));
 
-        SymbolData[] pieces = new SymbolData[gamePieceData.length];
-        System.arraycopy(gamePieceData, 0, pieces, 0, pieces.length);
+        final SymbolData[] pieces = ArrayUtils.copyOf(gamePieceData);
 
         String line = null;      
         try {
