@@ -83,13 +83,15 @@ public class GlobalProperties extends AbstractConfigurable implements MutablePro
 
   public void addTo(Buildable parent) {
     this.parent = (MutablePropertiesContainer) parent;
-    for (String key : initialValues.keySet()) {
-      MutableProperty p = initialValues.get(key);
-      this.parent.addMutableProperty(key, p);
+
+    for (Map.Entry<String,MutableProperty> e : initialValues.entrySet()) {
+      this.parent.addMutableProperty(e.getKey(), e.getValue());
     }
+
     tempToolbar.setDelegate((ToolBarComponent) parent);
     propertySource = (PropertySource) parent;
-    GameModule.getGameModule().addCommandEncoder(new ChangePropertyCommandEncoder(this));
+    GameModule.getGameModule().addCommandEncoder(
+      new ChangePropertyCommandEncoder(this));
   }
   
   public void addMutableProperty(String key, MutableProperty p) {
