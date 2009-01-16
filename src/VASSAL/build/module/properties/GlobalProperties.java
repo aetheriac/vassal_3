@@ -70,7 +70,6 @@ public class GlobalProperties extends AbstractConfigurable implements MutablePro
   }
 
   public void removeFrom(Buildable parent) {
-    parent = null;
   }
 
   public HelpFile getHelpFile() {
@@ -78,7 +77,7 @@ public class GlobalProperties extends AbstractConfigurable implements MutablePro
   }
 
   public Class<?>[] getAllowableConfigureComponents() {
-    return new Class[] {GlobalProperty.class};
+    return new Class<?>[] {GlobalProperty.class};
   }
 
   public void addTo(Buildable parent) {
