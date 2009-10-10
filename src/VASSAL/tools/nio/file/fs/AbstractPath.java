@@ -35,8 +35,8 @@ public abstract class AbstractPath extends Path {
         );
       }
 
-      InputStream in;
-      OutputStream out;
+      InputStream in = null;
+      OutputStream out = null;
       try {
         in = this.newInputStream();
         out = target.newOutputStream();
