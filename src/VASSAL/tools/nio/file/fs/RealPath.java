@@ -47,7 +47,10 @@ import static VASSAL.tools.nio.file.StandardOpenOption.*;
 abstract class RealPath extends AbstractPath {
   final File file;
   final RealFileSystem fs;
-  
+ 
+  final String path; 
+  final int[] parts;
+
   protected RealPath(String path, RealFileSystem fs) {
     this(new File(path), fs);
   }
@@ -55,7 +58,36 @@ abstract class RealPath extends AbstractPath {
   protected RealPath(File file, RealFileSystem fs) {
     this.file = file;
     this.fs = fs;
+
+    path = file.toString();
+    parts = splitPath(path);
   }
+
+  protected int[] splitPath(String path) {
+    // File ctor removes duplicate and trailing separators. Hence, each
+    // instance of separator splits two names.
+
+    final ArrayList<Integer> l = new ArrayList<Integer>();
+    int i = 0;
+
+    // find end of root, if present
+    i = findRootSep(path);
+    l.add(++i);
+
+    // if at end, then we are just a root
+    if (i >= path.length()) return new int[0];
+
+    // record positions of all separators
+    while ((i = path.indexOf(File.separator, i)) >= 0) l.add(++i);
+    
+    // convert from List<Integer> to int[]
+    final int[] parts = new int[l.size()];
+    for (i = 0; i < parts.length; ++i) parts[i] = l.get(i);
+
+    return parts;
+  }
+
+  protected abstract int findRootSep(String s);
 
   public void checkAccess(AccessMode... modes) throws IOException {
     if (!file.exists()) throw new NoSuchFileException(file.toString());
@@ -83,12 +115,14 @@ abstract class RealPath extends AbstractPath {
     if (attrs.length > 0) throw new UnsupportedOperationException();
     if (file.exists()) throw new FileAlreadyExistsException(file.toString());
     if (!file.mkdir()) throw new FileSystemException(file.toString());
+    return this;
   }
 
   public Path createFile(FileAttribute<?>... attrs) throws IOException {
     if (attrs.length > 0) throw new UnsupportedOperationException();
     if (file.exists()) throw new FileAlreadyExistsException(file.toString());
     if (!file.createNewFile()) throw new FileSystemException(file.toString());
+    return this;
   }
 
   public void delete() throws IOException {
@@ -102,7 +136,16 @@ abstract class RealPath extends AbstractPath {
     if (exists()) delete();
   }
 
-  public abstract boolean endsWith(Path other);
+  public boolean endsWith(Path other) {
+    if (other.isAbsolute()) {
+      return this.isAbsolute() ? this.equals(other) : false;
+    }
+    else {
+      final int oc = other.getNameCount();
+      final int tc = this.getNameCount();
+      return oc <= tc ? other.equals(this.subpath(tc-oc, tc)) : false;
+    }
+  }
 
   @Override
   public boolean equals(Object o) {
@@ -173,16 +216,23 @@ abstract class RealPath extends AbstractPath {
   }
 
   public Path getName() {
-    return fs.getPath(file.getName());
+    return parts.length == 0 ? null : subpath(parts.length-1, parts.length);
   }
 
-  public abstract int getNameCount();
+  public int getNameCount() {
+    return parts.length;
+  }
 
   public Path getParent() {
-    return fs.getPath(file.getParent());
+    if (parts.length == 0) return null;  // a root has no parent
+    return fs.getPath(path.substring(0, parts[parts.length-1]-1));
   }
 
-  public abstract Path getRoot();
+  public Path getRoot() {
+    if (parts.length == 0) return this;  // we are a root
+    if (parts[0] == 0) return null;      // we are relative
+    return fs.getPath(path.substring(0, parts[0]));
+  }
 
   @Override
   public int hashCode() {
@@ -190,7 +240,7 @@ abstract class RealPath extends AbstractPath {
   }
 
   public boolean isAbsolute() {
-    return file.isAbsolute();
+    return parts.length == 0 || parts[0] != 0;
   }
 
   public boolean isHidden() throws IOException {
@@ -261,6 +311,8 @@ abstract class RealPath extends AbstractPath {
         throw new UnsupportedOperationException(o.toString());
       }
     }
+
+    return opt;
   }
 
   public FileChannelAdapter newByteChannel(
@@ -386,9 +438,22 @@ abstract class RealPath extends AbstractPath {
     }   
   }
 
-  public abstract boolean startsWith(Path other);
+  public boolean startsWith(Path other) {
+    if (this.isAbsolute() != other.isAbsolute()) return false;
 
-  public abstract Path subpath(int beginIndex, int endIndex);
+    final int oc = other.getNameCount();
+    final int tc = this.getNameCount();
+    return oc <= tc ? other.equals(this.subpath(0, oc)) : false;
+  }
+
+  public Path subpath(int start, int end) {
+    if (start < 0) throw new IllegalArgumentException();
+    if (start >= parts.length) throw new IllegalArgumentException();
+    if (end <= start) throw new IllegalArgumentException();
+    if (end > parts.length) throw new IllegalArgumentException();
+
+    return fs.getPath(path.substring(parts[start], parts[end]));
+  }
 
   public Path toAbsolutePath() {
     return fs.getPath(file.getAbsolutePath());

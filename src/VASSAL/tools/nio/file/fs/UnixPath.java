@@ -11,4 +11,8 @@ class UnixPath extends RealPath {
   public UnixPath(File file, UnixFileSystem fs) {
     super(file, fs);
   }
+
+  protected int findRootSep(String s) {
+    return s.startsWith("/") ? 0 : -1;
+  }
 }
