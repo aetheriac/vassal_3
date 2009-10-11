@@ -214,7 +214,10 @@ abstract class RealPath extends AbstractPath {
     return null;
   }
 
-  public abstract FileStore getFileStore() throws IOException;
+  public FileStore getFileStore() throws IOException {
+    // RealFileSystem has only one FileStore
+    return fs.getFileStores().iterator().next();
+  }
 
   public FileSystem getFileSystem() {
     return fs;
@@ -355,8 +358,10 @@ abstract class RealPath extends AbstractPath {
     return new RealDirectoryStream(this, filter);
   }
 
-  public abstract DirectoryStream<Path> newDirectoryStream(String glob)
-                                                            throws IOException;
+  public DirectoryStream<Path> newDirectoryStream(String glob)
+                                                           throws IOException {
+    throw new UnsupportedOperationException();
+  }
 
   public FileInputStream newInputStream(OpenOption... options)
                                                            throws IOException {

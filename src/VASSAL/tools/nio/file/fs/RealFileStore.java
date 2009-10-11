@@ -6,6 +6,7 @@ import VASSAL.tools.nio.file.FileStore;
 import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
 import VASSAL.tools.nio.file.attribute.FileAttributeView;
 import VASSAL.tools.nio.file.attribute.FileStoreAttributeView;
+import VASSAL.tools.nio.file.attribute.FileStoreSpaceAttributes;
 import VASSAL.tools.nio.file.attribute.FileStoreSpaceAttributeView;
 
 class RealFileStore extends FileStore {
@@ -18,6 +19,24 @@ class RealFileStore extends FileStore {
   }
 
   public Object getAttribute(String attribute) throws IOException {
+    if (attribute == null) return null;
+
+    if (attribute.startsWith("space:")) {
+      final String aname = attribute.substring(attribute.indexOf(':')+1);
+      final FileStoreSpaceAttributes attrs = view.readAttributes();
+
+      if ("totalSpace".equals(aname)) {
+        return attrs.totalSpace();
+      }
+      else if ("usableSpace".equals(aname)) {
+        return attrs.usableSpace();
+      }
+      else if ("unallocatedSpace".equals(aname)) {
+        return attrs.unallocatedSpace();
+      }
+    }
+
+    return null;
   }
   
   public <V extends FileStoreAttributeView> V getFileStoreAttributeView(
@@ -27,7 +46,7 @@ class RealFileStore extends FileStore {
       type.cast(view) : null;
   }
 
-   public boolean isReadOnly() {
+  public boolean isReadOnly() {
     return false;
   }
 
