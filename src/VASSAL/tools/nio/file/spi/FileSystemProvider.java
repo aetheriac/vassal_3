@@ -19,7 +19,7 @@ import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.attribute.FileAttribute;
 import VASSAL.tools.nio.file.fs.UnixFileSystemProvider;
 import VASSAL.tools.nio.file.fs.WindowsFileSystemProvider;
-import VASSAL.tools.nio.file.fs.ZipFileSystemProvider;
+//import VASSAL.tools.nio.file.fs.ZipFileSystemProvider;
 
 public abstract class FileSystemProvider {
   protected FileSystemProvider() {}
@@ -33,7 +33,7 @@ public abstract class FileSystemProvider {
   protected static List<FileSystemProvider> providers =
     Collections.unmodifiableList(
       Arrays.<FileSystemProvider>asList(
-        new ZipFileSystemProvider(),
+//        new ZipFileSystemProvider(),
         Info.isWindows() ? new WindowsFileSystemProvider()
                          : new UnixFileSystemProvider()
       )
