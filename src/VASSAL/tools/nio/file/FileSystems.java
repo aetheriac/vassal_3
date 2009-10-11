@@ -48,6 +48,7 @@ public final class FileSystems {
     ClassLoader loader) throws IOException
   {
     if (file == null) throw new NullPointerException();
+    if (loader != null) throw new UnsupportedOperationException();
 
     for (FileSystemProvider p : FileSystemProvider.installedProviders()) {
       try {
