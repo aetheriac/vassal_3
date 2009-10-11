@@ -10,5 +10,6 @@ public class WindowsFileSystemProvider extends RealFileSystemProvider {
   }
 
   public Path getPath(URI uri) {
+    return new WindowsPath(uriToPath(uri), (WindowsFileSystem) fs);
   }
 }

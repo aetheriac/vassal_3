@@ -36,6 +36,24 @@ abstract class RealFileSystemProvider extends FileSystemProvider {
 
   public abstract Path getPath(URI uri);
 
+  protected String uriToPath(URI uri) {
+    if (!uri.isAbsolute()) throw new IllegalArgumentException();
+    if (uri.isOpaque()) throw new IllegalArgumentException();
+    if ("file".equalsIgnoreCase(uri.getScheme()))
+      throw new IllegalArgumentException();
+    if (uri.getAuthority() != null) throw new IllegalArgumentException();
+    if (uri.getQuery() != null) throw new IllegalArgumentException();
+    if (uri.getFragment() != null) throw new IllegalArgumentException();
+
+    String path = uri.getPath();
+    if ("".equals(path)) throw new IllegalArgumentException();
+    if (path.endsWith(File.separator) && !path.equals(File.separator)) {
+      path = path.substring(0, path.length()-1);
+    }
+
+    return path;
+  }
+
   public String getScheme() {
     return "file";
   }

@@ -10,5 +10,6 @@ public class UnixFileSystemProvider extends RealFileSystemProvider {
   }
  
   public Path getPath(URI uri) {
+    return new UnixPath(uriToPath(uri), (UnixFileSystem) fs);
   }
 }

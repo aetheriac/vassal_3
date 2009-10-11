@@ -75,6 +75,7 @@ class RealDirectoryStream implements DirectoryStream<Path> {
       }
       catch (IOException e) {
         throwIt(e);
+        return false; // to make the compiler happy
       }
     }
   }
