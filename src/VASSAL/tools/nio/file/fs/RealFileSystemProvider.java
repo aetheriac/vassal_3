@@ -24,7 +24,7 @@ import VASSAL.tools.nio.file.spi.FileSystemProvider;
 
 import static VASSAL.tools.nio.file.StandardOpenOption.*;
 
-abstract class RealFileSystemProvider extends FileSystemProvider {
+public abstract class RealFileSystemProvider extends FileSystemProvider {
   protected RealFileSystem fs;
 
   public FileSystem getFileSystem(URI uri) {

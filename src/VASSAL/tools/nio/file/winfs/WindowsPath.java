@@ -4,9 +4,10 @@ import java.io.File;
 import java.io.IOException;
 
 import VASSAL.tools.nio.file.fs.RealPath;
+import VASSAL.tools.nio.file.fs.RealFileSystem;
 
 class WindowsPath extends RealPath {
-  public WindowsPath(String path, WindowsFileSystem fs) {
+  public WindowsPath(String path, RealFileSystem fs) {
     super(path, fs);
   }
   

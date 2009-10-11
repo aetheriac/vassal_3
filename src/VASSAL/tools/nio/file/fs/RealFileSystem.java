@@ -11,7 +11,7 @@ import VASSAL.tools.nio.file.FileStore;
 import VASSAL.tools.nio.file.FileSystem;
 import VASSAL.tools.nio.file.Path;
 
-abstract class RealFileSystem extends AbstractFileSystem {
+public abstract class RealFileSystem extends AbstractFileSystem {
   protected final RealFileStore store;
 
   protected RealFileSystem() {

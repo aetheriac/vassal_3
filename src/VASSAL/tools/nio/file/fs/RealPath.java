@@ -44,7 +44,7 @@ import VASSAL.tools.nio.file.attribute.FileTime;
 import static VASSAL.tools.nio.file.StandardCopyOption.*;
 import static VASSAL.tools.nio.file.StandardOpenOption.*;
 
-abstract class RealPath extends AbstractPath {
+public abstract class RealPath extends AbstractPath {
   final File file;
   final RealFileSystem fs;
  
