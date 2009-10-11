@@ -73,10 +73,6 @@ abstract class RealPath extends AbstractPath {
         }
         break;
       case EXECUTE:
-        if (!file.canExecute()) {
-          throw new AccessDeniedException(file.toString());
-        }
-        break;
       default:
         throw new UnsupportedOperationException(m.toString());
       }
