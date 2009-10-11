@@ -19,6 +19,9 @@
 
 package VASSAL.tools.nio.file.attribute;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import VASSAL.tools.HashCode;
@@ -52,10 +55,14 @@ public final class FileTime implements Comparable<FileTime> {
     return ms;
   }  
 
+  protected static final DateFormat ISO8601 =
+    new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
   /** {@inheritDoc} */
   @Override
   public String toString() {
-    return String.valueOf(ms);
+// FIXME: need to check that this is correct for UTC
+    return ISO8601.format(new Date(ms));
   }
 
   /** {@inheritDoc} */
