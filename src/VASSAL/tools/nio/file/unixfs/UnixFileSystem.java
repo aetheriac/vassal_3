@@ -1,6 +1,7 @@
-package VASSAL.tools.nio.file.fs;
+package VASSAL.tools.nio.file.unixfs;
 
 import VASSAL.tools.nio.file.Path;
+import VASSAL.tools.nio.file.fs.RealFileSystem;
 import VASSAL.tools.nio.file.spi.FileSystemProvider;
 
 class UnixFileSystem extends RealFileSystem {

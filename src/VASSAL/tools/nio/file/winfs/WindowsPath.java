@@ -1,7 +1,9 @@
-package VASSAL.tools.nio.file.fs;
+package VASSAL.tools.nio.file.winfs;
 
 import java.io.File;
 import java.io.IOException;
+
+import VASSAL.tools.nio.file.fs.RealPath;
 
 class WindowsPath extends RealPath {
   public WindowsPath(String path, WindowsFileSystem fs) {

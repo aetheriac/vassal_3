@@ -17,8 +17,8 @@ import VASSAL.tools.nio.file.FileSystem;
 import VASSAL.tools.nio.file.OpenOption;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.attribute.FileAttribute;
-import VASSAL.tools.nio.file.fs.UnixFileSystemProvider;
-import VASSAL.tools.nio.file.fs.WindowsFileSystemProvider;
+import VASSAL.tools.nio.file.unixfs.UnixFileSystemProvider;
+import VASSAL.tools.nio.file.winfs.WindowsFileSystemProvider;
 //import VASSAL.tools.nio.file.fs.ZipFileSystemProvider;
 
 public abstract class FileSystemProvider {

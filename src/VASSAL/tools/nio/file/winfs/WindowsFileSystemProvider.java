@@ -1,8 +1,9 @@
-package VASSAL.tools.nio.file.fs;
+package VASSAL.tools.nio.file.winfs;
 
 import java.net.URI;
 
 import VASSAL.tools.nio.file.Path;
+import VASSAL.tools.nio.file.fs.RealFileSystemProvider;
 
 public class WindowsFileSystemProvider extends RealFileSystemProvider {
   public WindowsFileSystemProvider() {

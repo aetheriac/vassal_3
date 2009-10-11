@@ -1,7 +1,8 @@
-package VASSAL.tools.nio.file.fs;
+package VASSAL.tools.nio.file.winfs;
 
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.spi.FileSystemProvider;
+import VASSAL.tools.nio.file.fs.RealFileSystem;
 
 class WindowsFileSystem extends RealFileSystem {
   private final WindowsFileSystemProvider provider;

@@ -1,7 +1,9 @@
-package VASSAL.tools.nio.file.fs;
+package VASSAL.tools.nio.file.unixfs;
 
 import java.io.File;
 import java.io.IOException;
+
+import VASSAL.tools.nio.file.fs.RealPath;
 
 class UnixPath extends RealPath {
   public UnixPath(String path, UnixFileSystem fs) {
