@@ -63,7 +63,7 @@ abstract class RealPath extends AbstractPath {
     parts = splitPath(path);
   }
 
-  protected int[] splitPath(String path) {
+  private int[] splitPath(String path) {
     // File ctor removes duplicate and trailing separators. Hence, each
     // instance of separator splits two names.
 
@@ -80,13 +80,15 @@ abstract class RealPath extends AbstractPath {
     // record positions of all separators
     while ((i = path.indexOf(File.separator, i)) >= 0) l.add(++i);
    
-    // record end of path
-    l.add(path.length());
+    // record end of path + 1
+    l.add(path.length()+1);
  
     // convert from List<Integer> to int[]
     final int[] parts = new int[l.size()];
     for (i = 0; i < parts.length; ++i) parts[i] = l.get(i);
 
+    // The result is a list of offsets for the starts of the names, plus
+    // a final element for the position of end of the path.
     return parts;
   }
 
@@ -388,6 +390,31 @@ abstract class RealPath extends AbstractPath {
   }
 
   public Path normalize() {
+    if (parts.length == 0) return this;   // root is already normalized
+
+    final ArrayList<String> l = new ArrayList<String>(parts.length);
+
+    // Remove redundant parts.
+    for (int i = parts.length; i > 0; --i) {
+      final String n = path.substring(parts[i-1], parts[i]-1);
+
+      // ".": Skip.
+      if (n.equals(".")) continue;
+
+      // "..": If not at the beginning, skip the previous name
+      if (n.equals("..") && i != 1) { --i; continue; }
+      
+      l.add(n);
+    }
+
+    // Rebuild the normalized path.
+    final StringBuilder sb =
+      new StringBuilder(parts[0] == 0 ? "" : path.substring(0, parts[0]-1));
+    for (int i = l.size()-1; i >= 0; --i) {
+      sb.append(File.separator).append(l.get(i));
+    } 
+
+    return fs.getPath(sb.toString());
   }
 
   public boolean notExists() {
@@ -414,18 +441,15 @@ abstract class RealPath extends AbstractPath {
     return map;
   }
 
-  public abstract Path relativize(Path other);
-
-  public Path resolve(RealPath other) {
-    if (other == null) return this;
-    if (other.isAbsolute()) return other;
-    return fs.getPath(new File(file, other.file.toString()).toString());     
+  public Path relativize(Path other) {
+    // FIXME: Implementing this will require some thought...
+    throw new UnsupportedOperationException();
   }
 
   public Path resolve(Path other) {
     if (other == null) return this;
     if (other.isAbsolute()) return other;
-    return null;
+    return fs.getPath(new File(file, other.toString()).toString());     
   }
 
   public Path resolve(String other) {
