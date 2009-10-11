@@ -38,7 +38,7 @@ public final class FileSystems {
     Map<String,?> env,
     ClassLoader loader) throws IOException
   {
-    // ignore the ClassLoader, since we don't have ServiceLoader yet
+    if (loader != null) throw new UnsupportedOperationException();
     return newFileSystem(uri, env);
   }
 
