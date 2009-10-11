@@ -79,7 +79,10 @@ abstract class RealPath extends AbstractPath {
 
     // record positions of all separators
     while ((i = path.indexOf(File.separator, i)) >= 0) l.add(++i);
-    
+   
+    // record end of path
+    l.add(path.length());
+ 
     // convert from List<Integer> to int[]
     final int[] parts = new int[l.size()];
     for (i = 0; i < parts.length; ++i) parts[i] = l.get(i);
@@ -216,16 +219,16 @@ abstract class RealPath extends AbstractPath {
   }
 
   public Path getName() {
-    return parts.length == 0 ? null : subpath(parts.length-1, parts.length);
+    return parts.length == 0 ? null : subpath(parts.length-2, parts.length-1);
   }
 
   public int getNameCount() {
-    return parts.length;
+    return parts.length > 0 ? parts.length-1 : 0;
   }
 
   public Path getParent() {
     if (parts.length == 0) return null;  // a root has no parent
-    return fs.getPath(path.substring(0, parts[parts.length-1]-1));
+    return fs.getPath(path.substring(0, parts[parts.length-2]-1));
   }
 
   public Path getRoot() {
@@ -251,7 +254,23 @@ abstract class RealPath extends AbstractPath {
     return this.equals(other);
   }
 
-  public abstract Iterator<Path> iterator();
+  public Iterator<Path> iterator() {
+    return new Iterator<Path>() {
+      private int i = 0;
+
+      public boolean hasNext() {
+        return i < parts.length-1;
+      }
+
+      public Path next() {
+        return fs.getPath(path.substring(parts[i], parts[i+1]-1));
+      }
+
+      public void remove() {
+        throw new UnsupportedOperationException();
+      }
+    };
+  }
 
   public Path moveTo(Path target, CopyOption... options) throws IOException {
     if (!target.isSameFile(this)) {
@@ -452,7 +471,7 @@ abstract class RealPath extends AbstractPath {
     if (end <= start) throw new IllegalArgumentException();
     if (end > parts.length) throw new IllegalArgumentException();
 
-    return fs.getPath(path.substring(parts[start], parts[end]));
+    return fs.getPath(path.substring(parts[start], parts[end]-1));
   }
 
   public Path toAbsolutePath() {
