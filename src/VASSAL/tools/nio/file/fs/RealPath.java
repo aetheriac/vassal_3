@@ -67,25 +67,27 @@ public abstract class RealPath extends AbstractPath {
     // File ctor removes duplicate and trailing separators. Hence, each
     // instance of separator splits two names.
 
-    final ArrayList<Integer> l = new ArrayList<Integer>();
+    final ArrayList<Integer> pl = new ArrayList<Integer>();
     int i = 0;
 
     // find end of root, if present
     i = findRootSep(path);
-    l.add(++i);
+    pl.add(++i);
 
     // if at end, then we are just a root
     if (i >= path.length()) return new int[0];
 
     // record positions of all separators
-    while ((i = path.indexOf(File.separator, i)) >= 0) l.add(++i);
+    while ((i = path.indexOf(File.separator, i)) >= 0) pl.add(++i);
    
     // record end of path + 1
-    l.add(path.length()+1);
- 
+    pl.add(path.length()+1);
+
+// FIXME: replace with a method in ArrayUtils or something from Apache Commons
     // convert from List<Integer> to int[]
-    final int[] parts = new int[l.size()];
-    for (i = 0; i < parts.length; ++i) parts[i] = l.get(i);
+    final int[] parts = new int[pl.size()];
+    for (i = 0; i < parts.length; ++i) parts[i] = pl.get(i);
+// END FIXME
 
     // The result is a list of offsets for the starts of the names, plus
     // a final element for the position of end of the path.
