@@ -31,13 +31,13 @@ public abstract class AbstractPathTest {
   public abstract void testCopyTo();
 
   @Test
-  public abstract void testCreateLink();
+  public abstract void testCreateLink() throws Exception;
 
   @Test
-  public abstract void testCreateSymbolicLink();
+  public abstract void testCreateSymbolicLink() throws Exception;
 
   @Test
-  public abstract void testReadSymbolicLink();
+  public abstract void testReadSymbolicLink() throws Exception;
 
   @Test
   public abstract void testRegisterWatchServiceKindOfQArray();

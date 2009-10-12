@@ -88,7 +88,7 @@ public abstract class RealPathTest extends AbstractPathTest {
   public abstract void testNewDirectoryStreamFilterOfQsuperPath();
 
   @Test
-  public abstract void testNewDirectoryStreamString();
+  public abstract void testNewDirectoryStreamString() throws IOException;
 
   @Test
   public abstract void testNormalize();
