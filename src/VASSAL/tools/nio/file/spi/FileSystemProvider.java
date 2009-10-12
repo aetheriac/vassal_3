@@ -10,15 +10,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
-import VASSAL.Info;
 import VASSAL.tools.nio.channels.AsynchronousFileChannel;
 import VASSAL.tools.nio.file.FileRef;
 import VASSAL.tools.nio.file.FileSystem;
 import VASSAL.tools.nio.file.OpenOption;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.attribute.FileAttribute;
-import VASSAL.tools.nio.file.unixfs.UnixFileSystemProvider;
-import VASSAL.tools.nio.file.winfs.WindowsFileSystemProvider;
+import VASSAL.tools.nio.file.fs.RealFileSystemProvider;
 //import VASSAL.tools.nio.file.fs.ZipFileSystemProvider;
 
 public abstract class FileSystemProvider {
@@ -34,8 +32,7 @@ public abstract class FileSystemProvider {
     Collections.unmodifiableList(
       Arrays.<FileSystemProvider>asList(
 //        new ZipFileSystemProvider(),
-        Info.isWindows() ? new WindowsFileSystemProvider()
-                         : new UnixFileSystemProvider()
+        new RealFileSystemProvider()
       )
     );
 

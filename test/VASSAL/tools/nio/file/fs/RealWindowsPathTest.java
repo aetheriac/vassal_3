@@ -1,6 +1,7 @@
-package VASSAL.tools.nio.file.winfs;
+package VASSAL.tools.nio.file.fs;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,20 +17,18 @@ import org.junit.Test;
 
 import sun.security.krb5.internal.ccache.FileCredentialsCache;
 
+import VASSAL.Info;
 import VASSAL.tools.nio.file.AccessMode;
 import VASSAL.tools.nio.file.NoSuchFileException;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.Paths;
 import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
-import VASSAL.tools.nio.file.fs.RealDirectoryStream;
-import VASSAL.tools.nio.file.fs.RealFileAttributeView;
-import VASSAL.tools.nio.file.fs.RealPathTest;
 
-public class WindowsPathTest extends RealPathTest {
+public class RealWindowsPathTest extends AbstractPathTest {
 
   final String separator = File.separator;
   final String stringPathToWinFsTest = "test" + separator + "VASSAL" + separator + "tools"
-      + separator + "nio" + separator + "file" + separator + "winfs";
+      + separator + "nio" + separator + "file" + separator + "fs";
 
   final File pwd = new File(stringPathToWinFsTest);
 
@@ -46,16 +45,13 @@ public class WindowsPathTest extends RealPathTest {
   File testDirOther;
   String testDirOtherName;
 
-  String pathRootName;
-  WindowsPath pathRoot;
+  RealPath pathFileCreated;
+  RealPath pathFileOther;
+  RealPath pathTestDirOther;
+  RealPath pathTestingDirectory;
 
-  WindowsPath pathFileCreated;
-  WindowsPath pathFileOther;
-  WindowsPath pathTestDirOther;
-  WindowsPath pathTestingDirectory;
-
-  WindowsFileSystem fs;
-  WindowsFileSystemProvider provider;
+  RealFileSystem fs;
+  RealFileSystemProvider provider;
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
@@ -67,30 +63,26 @@ public class WindowsPathTest extends RealPathTest {
 
   @Before
   public void setUp() throws Exception {
-    provider = new WindowsFileSystemProvider();
-    fs = new WindowsFileSystem(provider);
+    provider = new RealFileSystemProvider();
+    fs = new RealFileSystem(provider);
 
     testingDirectoryName = "testingDirectory";
     testingDirectory = new File(pwd.getAbsolutePath() + separator + testingDirectoryName);
-    pathTestingDirectory = new WindowsPath(testingDirectory, fs);
+    pathTestingDirectory = new RealWindowsPath(testingDirectory, fs);
     //   testingDirectory.mkdir();
 
     testFileCreatedName = "testFile1";
     testFileCreated = new File(testingDirectory.getAbsolutePath() + separator + testFileCreatedName);
-    pathFileCreated = new WindowsPath(testFileCreated, fs);
+    pathFileCreated = new RealWindowsPath(testFileCreated, fs);
     //   testFileCreated.createNewFile();
 
     testFileOtherName = "testFile2";
     testFileOther = new File(testingDirectory.getAbsolutePath() + separator + testFileOtherName);
-    pathFileOther = new WindowsPath(testFileOther, fs);
+    pathFileOther = new RealWindowsPath(testFileOther, fs);
 
     testDirOtherName = "testDirOther";
     testDirOther = new File(testingDirectory.getAbsolutePath() + separator + testDirOtherName);
-    pathTestDirOther = new WindowsPath(testDirOther, fs);
-
-    pathRoot = (WindowsPath) pathTestingDirectory.getRoot();
-    pathRootName = pathRoot.toString();
-
+    pathTestDirOther = new RealWindowsPath(testDirOther, fs);
   }
 
   @After
@@ -110,13 +102,15 @@ public class WindowsPathTest extends RealPathTest {
 
   @Test
   public void testWindowsPathStringWindowsFileSystem() {
-    WindowsPath p1 = new WindowsPath(testFileCreated.getPath(), fs);
+    assumeTrue(Info.isWindows());
+    RealPath p1 = new RealWindowsPath(testFileCreated.getPath(), fs);
     assertEquals(p1.toString(), testFileCreated.toString());
   }
 
   @Test
   public void testWindowsPathFileWindowsFileSystem() {
-    WindowsPath p1 = new WindowsPath(testFileCreated, fs);
+    assumeTrue(Info.isWindows());
+    RealPath p1 = new RealWindowsPath(testFileCreated, fs);
     assertEquals(p1.toString(), testFileCreated.toString());
   }
 
@@ -260,7 +254,9 @@ public class WindowsPathTest extends RealPathTest {
 
   @Test
   public void testGetNameCount() {
-    WindowsPath path3 = new WindowsPath("first\\second\\third\\fourth", fs);
+    final String p = "first" + separator + "second" + separator +
+                     "third" + separator + "fourth";
+    RealPath path3 = new RealWindowsPath(p, fs);
     assertEquals(path3.getNameCount(), 4);
   }
 

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import VASSAL.tools.StringUtils;
 import VASSAL.tools.io.IOUtils;
 import VASSAL.tools.nio.channels.FileChannelAdapter;
 import VASSAL.tools.nio.file.AccessDeniedException;
@@ -45,17 +46,17 @@ import static VASSAL.tools.nio.file.StandardCopyOption.*;
 import static VASSAL.tools.nio.file.StandardOpenOption.*;
 
 public abstract class RealPath extends AbstractPath {
-  final File file;
-  final RealFileSystem fs;
+  protected final File file;
+  protected final RealFileSystem fs;
  
-  final String path; 
-  final int[] parts;
+  protected final String path; 
+  protected final int[] parts;
 
-  protected RealPath(String path, RealFileSystem fs) {
+  public RealPath(String path, RealFileSystem fs) {
     this(new File(path), fs);
   }
 
-  protected RealPath(File file, RealFileSystem fs) {
+  public RealPath(File file, RealFileSystem fs) {
     this.file = file;
     this.fs = fs;
 
@@ -63,7 +64,7 @@ public abstract class RealPath extends AbstractPath {
     parts = splitPath(path);
   }
 
-  private int[] splitPath(String path) {
+  protected int[] splitPath(String path) {
     // File ctor removes duplicate and trailing separators. Hence, each
     // instance of separator splits two names.
 
@@ -94,8 +95,16 @@ public abstract class RealPath extends AbstractPath {
     return parts;
   }
 
+  /**
+   * Returns the position of the separator after the root element.
+   *
+   * @param s the {@code String} to check
+   *
+   * @return the position of the separator following the root element, or
+   * -1 if the path is relative
+   */
   protected abstract int findRootSep(String s);
-
+  
   public void checkAccess(AccessMode... modes) throws IOException {
     if (!file.exists()) throw new NoSuchFileException(file.toString());
 
@@ -399,29 +408,31 @@ public abstract class RealPath extends AbstractPath {
   public Path normalize() {
     if (parts.length == 0) return this;   // root is already normalized
 
-    final ArrayList<String> l = new ArrayList<String>(parts.length);
+    final ArrayList<String> pl = new ArrayList<String>(parts.length);
 
     // Remove redundant parts.
-    for (int i = parts.length-1; i > 0; --i) {
-      final String n = path.substring(parts[i-1], parts[i]-1);
+    for (int i = 0; i < parts.length-1; ++i) {
+      final String n = path.substring(parts[i], parts[i+1]-1);
 
       // ".": Skip.
       if (n.equals(".")) continue;
 
-      // "..": If not at the beginning, skip the previous name
-      if (n.equals("..") && i != 1) { --i; continue; }
-      
-      l.add(n);
+      // "..": Scratch this and the previous name, if any.
+      if (n.equals("..")) {
+        final int s = pl.size();
+        if (s > 0) pl.remove(s-1);
+        continue;
+      }
+
+      // Otherwise add this name to the list.
+      pl.add(n);
     }
 
     // Rebuild the normalized path.
-    final StringBuilder sb =
-      new StringBuilder(parts[0] == 0 ? "" : path.substring(0, parts[0]-1));
-    for (int i = l.size()-1; i >= 0; --i) {
-      sb.append(File.separator).append(l.get(i));
-    } 
-
-    return fs.getPath(sb.toString());
+    return fs.getPath(
+      (parts[0] == 0 ? "" : path.substring(0, parts[0]-1)) +
+      StringUtils.join(File.separator, pl)
+    );
   }
 
   public boolean notExists() {

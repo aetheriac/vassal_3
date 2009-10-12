@@ -24,8 +24,12 @@ import VASSAL.tools.nio.file.spi.FileSystemProvider;
 
 import static VASSAL.tools.nio.file.StandardOpenOption.*;
 
-public abstract class RealFileSystemProvider extends FileSystemProvider {
-  protected RealFileSystem fs;
+public class RealFileSystemProvider extends FileSystemProvider {
+  protected final RealFileSystem fs;
+
+  public RealFileSystemProvider() {
+    fs = new RealFileSystem(this);
+  }
 
   public FileSystem getFileSystem(URI uri) {
     if (!URI.create("file:///").equals(uri))
@@ -34,9 +38,11 @@ public abstract class RealFileSystemProvider extends FileSystemProvider {
     return fs;
   }
 
-  public abstract Path getPath(URI uri);
+  public Path getPath(URI uri) {
+    return fs.getPath(uriToPath(uri));
+  }
 
-  protected String uriToPath(URI uri) {
+  protected static String uriToPath(URI uri) {
     if (!uri.isAbsolute()) throw new IllegalArgumentException();
     if (uri.isOpaque()) throw new IllegalArgumentException();
     if ("file".equalsIgnoreCase(uri.getScheme()))
