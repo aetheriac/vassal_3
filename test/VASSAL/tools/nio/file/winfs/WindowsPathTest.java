@@ -88,9 +88,8 @@ public class WindowsPathTest extends RealPathTest {
     testDirOther = new File(testingDirectory.getAbsolutePath() + separator + testDirOtherName);
     pathTestDirOther = new WindowsPath(testDirOther, fs);
 
-    //  FIXME: pathRoot() returns null
-    //    pathRoot = (WindowsPath) pathTestingDirectory.getRoot();
-    //    pathRootName = pathRoot.toString();
+    pathRoot = (WindowsPath) pathTestingDirectory.getRoot();
+    pathRootName = pathRoot.toString();
 
   }
 
@@ -104,9 +103,9 @@ public class WindowsPathTest extends RealPathTest {
 
   @Test
   public void testFindRootSep() {
-    assertEquals(1, pathFileCreated.findRootSep("\\\\"));
-    assertEquals(2, pathFileCreated.findRootSep("z:\\"));
-    assertEquals(-1, pathFileCreated.findRootSep("somethingelse"));
+    assertEquals(1, pathTestingDirectory.findRootSep("\\\\TestServer\\testDir"));
+    assertEquals(2, pathTestingDirectory.findRootSep("D:\\TestDir\\TestDir2"));
+    assertEquals(-1, pathTestingDirectory.findRootSep("somethingelse"));
   }
 
   @Test
@@ -231,9 +230,8 @@ public class WindowsPathTest extends RealPathTest {
 
   @Test
   public void testEqualsObject() {
-    assertTrue("Copied path is not equal to parent ", pathFileCreated.equals(pathFileCreated
-        .subpath(0, pathFileCreated.getNameCount())));
-    assertTrue("Path is not equal with itself", pathFileCreated.equals(pathFileCreated));
+    assertEquals(pathFileCreated, Paths.get(pathFileCreated.toString()));
+    assertEquals("Path is not equal with itself", pathFileCreated, (pathFileCreated));
     assertFalse("Different paths are considered equal", pathFileCreated.equals(pathFileOther));
   }
 
@@ -284,7 +282,7 @@ public class WindowsPathTest extends RealPathTest {
     for (File singleRoot : rootList) {
       Path testRoot = Paths.get(singleRoot.getAbsolutePath());
       Path testPath = pathTestingDirectory.getRoot();
-      if (testPath == testRoot) {
+      if (testPath.equals(testRoot)) {
         rootFound = true;
       }
     }
@@ -362,18 +360,17 @@ public class WindowsPathTest extends RealPathTest {
   }
 
   @Test
-
   public void testNewDirectoryStreamFilterOfQsuperPath() {
-    
+
     RealDirectoryStream rds = new RealDirectoryStream(pathTestingDirectory);
-    
+
     try {
       assertEquals(rds.toString(), pathTestingDirectory.newDirectoryStream().toString());
     }
     catch (IOException e) {
       fail(e.getMessage());
     }
-    
+
   }
 
   @Test(expected = UnsupportedOperationException.class)
@@ -418,7 +415,8 @@ public class WindowsPathTest extends RealPathTest {
 
   @Test
   public void testStartsWith() {
-    assertTrue(pathTestingDirectory.startsWith(pathTestingDirectory.subpath(0, 2)));
+    assertTrue(pathTestingDirectory.startsWith(Paths.get(pathTestingDirectory.getRoot().toString()
+        + pathTestingDirectory.subpath(0, 2).toString())));
     assertFalse(pathTestingDirectory.startsWith(pathTestingDirectory.subpath(1, 3)));
   }
 
@@ -518,8 +516,8 @@ public class WindowsPathTest extends RealPathTest {
 
   @Test
   public void testCompareTo() {
-    assertEquals(pathFileCreated.toString().compareTo(pathFileOther.toString()),
-        pathFileCreated.compareTo(pathFileOther));
+    assertEquals(pathFileCreated.toString().compareTo(pathFileOther.toString()), pathFileCreated
+        .compareTo(pathFileOther));
   }
 
   @Test
@@ -605,20 +603,18 @@ public class WindowsPathTest extends RealPathTest {
     fail("Not yet implemented");
   }
 
-  
- @Test
- @Ignore
+  @Test
+  @Ignore
   public void testRealPathFileRealFileSystem() {
     fail("Not yet implemented");
-    
-  }
- 
 
- @Test
- @Ignore
+  }
+
+  @Test
+  @Ignore
   public void testRealPathStringRealFileSystem() {
     fail("Not yet implemented");
-    
+
   }
 
 }
