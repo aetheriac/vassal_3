@@ -7,7 +7,7 @@ import VASSAL.tools.nio.file.attribute.FileTime;
 import VASSAL.tools.nio.file.attribute.BasicFileAttributes;
 import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
 
-class RealFileAttributeView implements BasicFileAttributeView {
+public class RealFileAttributeView implements BasicFileAttributeView {
   protected final RealPath path;
 
   public RealFileAttributeView(RealPath path) {

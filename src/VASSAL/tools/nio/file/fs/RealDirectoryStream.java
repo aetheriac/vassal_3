@@ -12,7 +12,7 @@ import VASSAL.tools.nio.file.ClosedDirectoryStreamException;
 import VASSAL.tools.nio.file.DirectoryStream;
 import VASSAL.tools.nio.file.Path;
 
-class RealDirectoryStream implements DirectoryStream<Path> {
+public class RealDirectoryStream implements DirectoryStream<Path> {
   private final RealPath parent;
   private final Filter<? super Path> filter;
   private boolean closed = false;

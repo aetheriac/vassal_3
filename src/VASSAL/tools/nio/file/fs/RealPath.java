@@ -400,7 +400,7 @@ public abstract class RealPath extends AbstractPath {
     final ArrayList<String> l = new ArrayList<String>(parts.length);
 
     // Remove redundant parts.
-    for (int i = parts.length; i > 0; --i) {
+    for (int i = parts.length-1; i > 0; --i) {
       final String n = path.substring(parts[i-1], parts[i]-1);
 
       // ".": Skip.
