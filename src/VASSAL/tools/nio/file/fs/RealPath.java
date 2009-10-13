@@ -272,7 +272,8 @@ public abstract class RealPath extends AbstractPath {
       }
 
       public Path next() {
-        return fs.getPath(path.substring(parts[i], parts[i+1]-1));
+        i++;
+        return fs.getPath(path.substring(parts[i-1], parts[i]-1));
       }
 
       public void remove() {

@@ -28,7 +28,7 @@ public class RealUnixPathTest extends RealPathTest {
   }
 
   @Test
-  public void testUnixPathStringUnixFileSystem() {
+  public void testRealPathStringRealFileSystem() {
     RealPath p1 = new RealUnixPath(testFileCreated.getPath(), fs);
     assertEquals(p1.toString(), testFileCreated.toString());
   }

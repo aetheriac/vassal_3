@@ -32,7 +32,7 @@ public class RealWindowsPathTest extends RealPathTest {
   }
 
   @Test
-  public void testRealWindowsPathStringRealFileSystem() {
+  public void testRealPathStringRealFileSystem() {
     RealPath p1 = new RealWindowsPath(testFileCreated.getPath(), fs);
     assertEquals(p1.toString(), testFileCreated.toString());
   }
