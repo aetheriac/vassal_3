@@ -14,9 +14,7 @@ import java.io.IOException;
 import java.util.Scanner;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -28,9 +26,14 @@ import VASSAL.tools.nio.file.Paths;
 import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
 import VASSAL.tools.nio.file.attribute.FileAttributeView;
 
+/*
+ * This test is to be called through its subclasses: RealWindowsPathTest and RealUnixPathTest.
+ */
 public abstract class RealPathTest extends AbstractPathTest {
 
   final String separator = File.separator;
+  final String curDir = "." + separator;
+  final String prevDir = ".." + separator;
   final String stringPathToFileFsTest = "test" + separator + "VASSAL" + separator + "tools"
       + separator + "nio" + separator + "file" + separator + "fs";
 
@@ -52,21 +55,16 @@ public abstract class RealPathTest extends AbstractPathTest {
   String pathRootName;
   RealPath pathRoot;
 
-  RealPath pathFileCreated;
-  RealPath pathFileOther;
+  RealPath pathTestFileCreated;
+  RealPath pathTestFileOther;
   RealPath pathTestDirOther;
   RealPath pathTestingDirectory;
 
+  int nc;
+  Path endPath;
+
   RealFileSystem fs;
   RealFileSystemProvider provider;
-
-  @BeforeClass
-  public static void setUpBeforeClass() throws Exception {
-  }
-
-  @AfterClass
-  public static void tearDownAfterClass() throws Exception {
-  }
 
   @Before
   public void setUp() throws Exception {
@@ -82,12 +80,15 @@ public abstract class RealPathTest extends AbstractPathTest {
 
     testFileCreatedName = "testFile1";
     testFileCreated = new File(testingDirectory.getAbsolutePath() + separator + testFileCreatedName);
-    pathFileCreated = (RealPath) Paths.get(testFileCreated.getPath());
+    pathTestFileCreated = (RealPath) Paths.get(testFileCreated.getPath());
+    nc = pathTestFileCreated.getNameCount();
+    endPath = pathTestFileCreated.subpath(nc - 1, nc);
+
     //   testFileCreated.createNewFile();
 
     testFileOtherName = "testFile2";
     testFileOther = new File(testingDirectory.getAbsolutePath() + separator + testFileOtherName);
-    pathFileOther = (RealPath) Paths.get(testFileOther.getPath());
+    pathTestFileOther = (RealPath) Paths.get(testFileOther.getPath());
 
     testDirOtherName = "testDirOther";
     testDirOther = new File(testingDirectory.getAbsolutePath() + separator + testDirOtherName);
@@ -96,62 +97,48 @@ public abstract class RealPathTest extends AbstractPathTest {
 
   @After
   public void tearDown() throws Exception {
-    //  pathFileCreated.deleteIfExists();
-    pathFileOther.deleteIfExists();
+    //  pathTestFileCreated.deleteIfExists();
+    pathTestFileOther.deleteIfExists();
     pathTestDirOther.deleteIfExists();
     // pathTestingDirectory.deleteIfExists();
   }
 
   @Test
   public void testHashCode() {
-    assertEquals("Path Hashcode does not match File hashcode", pathFileCreated.hashCode(),
+    assertEquals("Path Hashcode does not match File hashcode", pathTestFileCreated.hashCode(),
         testFileCreated.hashCode());
 
   }
 
   @Test(expected = NoSuchFileException.class)
   public void testCheckAccessExist() throws IOException {
-    pathFileOther.checkAccess(AccessMode.WRITE);
+    pathTestFileOther.checkAccess(AccessMode.WRITE);
   }
 
   @Test(expected = UnsupportedOperationException.class)
   public void testCheckAccessExecute() throws IOException {
-    pathFileCreated.checkAccess(AccessMode.EXECUTE);
-
+    pathTestFileCreated.checkAccess(AccessMode.EXECUTE);
   }
 
   @Test
   public void testCheckAccessRead() throws IOException {
-
-    try {
-      pathFileCreated.checkAccess(AccessMode.READ);
-    }
-    catch (Exception e) {
-      fail(e.getMessage());
-    }
-
+    pathTestFileCreated.checkAccess(AccessMode.READ);
   }
 
   @Test
   public void testCheckAccessWrite() throws IOException {
-    try {
-      pathFileCreated.checkAccess(AccessMode.READ);
-    }
-    catch (Exception e) {
-      fail(e.getMessage());
-    }
-
+    pathTestFileCreated.checkAccess(AccessMode.READ);
   }
 
   @Test
   public void testCreateDirectory() {
     try {
       pathTestDirOther.createDirectory();
+      assertTrue("Test directory was not created.", testDirOther.isDirectory());
     }
     catch (IOException e) {
       fail(e.getMessage());
     } finally {
-      assertTrue("Test directory was not created.", testDirOther.isDirectory());
       testDirOther.delete();
     }
 
@@ -160,13 +147,12 @@ public abstract class RealPathTest extends AbstractPathTest {
   @Test
   public void testCreateFile() {
     try {
-      pathFileOther.createFile();
+      pathTestFileOther.createFile();
+      assertTrue("Test file was not created.", testFileOther.exists());
     }
     catch (Exception e) {
       fail(e.getMessage());
     } finally {
-      assertTrue("Test file was not created.", testFileOther.exists());
-
       testFileOther.delete();
     }
   }
@@ -175,7 +161,7 @@ public abstract class RealPathTest extends AbstractPathTest {
   public void testDelete() {
     try {
       testFileOther.createNewFile();
-      pathFileOther.delete();
+      pathTestFileOther.delete();
       assertFalse(testFileOther.exists());
     }
     catch (IOException e) {
@@ -189,7 +175,7 @@ public abstract class RealPathTest extends AbstractPathTest {
   public void testDeleteIfExists() {
     try {
       testFileOther.createNewFile();
-      pathFileOther.delete();
+      pathTestFileOther.delete();
       assertFalse(testFileOther.exists());
     }
     catch (IOException e) {
@@ -200,27 +186,43 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testEndsWith() {
+  public void testEndsWithEndSelf() {
+    assertTrue(pathTestFileCreated.endsWith(pathTestFileCreated));
+  }
 
-    int nc = pathFileCreated.getNameCount();
-    Path endPath = pathFileCreated.subpath(nc - 1, nc);
+  @Test
+  public void testEndsWithEndOther() {
+    assertTrue(pathTestFileCreated.endsWith(endPath));
+  }
 
-    assertTrue(pathFileCreated.endsWith(pathFileCreated));
-    assertTrue(pathFileCreated.endsWith(endPath));
-    assertFalse(pathFileOther.endsWith(endPath));
+  @Test
+  public void testEndsWithFalse() {
+    assertFalse(pathTestFileOther.endsWith(endPath));
   }
 
   @Test
   public void testEqualsObject() {
-    assertEquals(pathFileCreated, Paths.get(pathFileCreated.toString()));
-    assertEquals("Path is not equal with itself", pathFileCreated, (pathFileCreated));
-    assertFalse("Different paths are considered equal", pathFileCreated.equals(pathFileOther));
+    assertTrue(pathTestFileCreated.equals(Paths.get(pathTestFileCreated.toString())));
   }
 
   @Test
-  public void testExists() {
-    assertTrue(pathFileCreated.exists());
-    assertFalse(pathFileOther.exists());
+  public void testEqualsSelf() {
+    assertTrue("Path is not equal with itself", pathTestFileCreated.equals(pathTestFileCreated));
+  }
+
+  @Test
+  public void testEqualsFalse() {
+    assertFalse("Different paths should not equal", pathTestFileCreated.equals(pathTestFileOther));
+  }
+
+  @Test
+  public void testExistsTrue() {
+    assertTrue(pathTestFileCreated.exists());
+  }
+
+  @Test
+  public void testExistsFalse() {
+    assertFalse(pathTestFileOther.exists());
   }
 
   @Test
@@ -232,12 +234,12 @@ public abstract class RealPathTest extends AbstractPathTest {
 
   @Test
   public void testGetFileSystem() {
-    assertEquals(pathFileCreated.getFileSystem(), fs);
+    assertEquals(pathTestFileCreated.getFileSystem(), fs);
   }
 
   @Test
   public void testGetName() {
-    assertEquals(testFileCreated.getName(), pathFileCreated.getName().toString());
+    assertEquals(testFileCreated.getName(), pathTestFileCreated.getName().toString());
   }
 
   @Test
@@ -248,13 +250,16 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
+  public void testGetRootSelf() {
+    assumeTrue(File.listRoots().length > 0);
+    File root = File.listRoots()[0];
+    assertEquals(Paths.get(root.getAbsolutePath()), Paths.get(root.getAbsolutePath()).getRoot());
+  }
+
+  @Test
   public void testGetRoot() {
     File[] rootList = File.listRoots();
-    assumeTrue(rootList.length > 0);
     boolean rootFound = false;
-
-    assertEquals(Paths.get(rootList[0].getAbsolutePath()), Paths.get(rootList[0].getAbsolutePath())
-        .getRoot());
 
     for (File singleRoot : rootList) {
       Path testRoot = Paths.get(singleRoot.getAbsolutePath());
@@ -271,15 +276,19 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testIsAbsolute() {
+  public void testIsAbsoluteTrue() {
     assertTrue((Paths.get(File.listRoots()[0].getAbsolutePath())).isAbsolute());
+  }
+
+  @Test
+  public void testIsAbsoluteFalse() {
     assertFalse(Paths.get("somedir" + separator + "somefile").isAbsolute());
   }
 
   @Test
   public void testIsHidden() {
     try {
-      assertFalse(pathFileCreated.isHidden());
+      assertFalse(pathTestFileCreated.isHidden());
     }
     catch (IOException e) {
       fail(e.getMessage());
@@ -287,8 +296,12 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testGetParent() {
-    assertEquals(pathFileCreated.getParent(), pathTestingDirectory);
+  public void testGetParentTrue() {
+    assertEquals(pathTestFileCreated.getParent(), pathTestingDirectory);
+  }
+
+  @Test
+  public void testGetParentFalse() {
     assertFalse(pathTestingDirectory.getParent().equals(pathTestingDirectory));
   }
 
@@ -311,16 +324,15 @@ public abstract class RealPathTest extends AbstractPathTest {
     Path pathSourceFile = Paths.get(sourceFile.getAbsolutePath());
 
     try {
-      pathFileCreated.copyTo(pathSourceFile);
+      pathTestFileCreated.copyTo(pathSourceFile);
     }
     catch (IOException e1) {
       fail(e1.getMessage());
     }
 
     try {
-      pathSourceFile.moveTo(pathFileOther);
-      assertTrue(pathFileOther.exists());
-      assertFalse(pathSourceFile.exists());
+      pathSourceFile.moveTo(pathTestFileOther);
+      assertTrue("Source file not moved correctly", testFileOther.exists() && !sourceFile.exists());
     }
     catch (IOException e) {
       fail(e.getMessage());
@@ -362,40 +374,61 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testNormalize() {
+  public void testNormalizeCurDir() {
 
-    String curDir = "." + separator;
-    String prevDir = ".." + separator;
+    // in Windows: "C:\thisDir\\.\\.\\dir2\\.\\."
+    String redundantPathString = pathRootName + "thisDir" + separator + curDir + curDir + "dir2"
+        + curDir + curDir;
+    String normalizedPathString = pathRootName + "thisDir" + separator + "dir2";
 
-    // in Windows: "C:\thisDir\\.\\ignoredDir1\\ignoredDir2\\..\\.."
-    String redundantPathString1 = pathRootName + "thisDir" + separator + curDir + "ignoredDir1"
-        + separator + "ignoredDir2" + separator + prevDir + prevDir;
-    String normalizedPathString1 = pathRootName + "thisDir";
+    assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize());
 
-    assertEquals(normalizedPathString1, Paths.get(redundantPathString1).normalize());
-
+  }
+  
+  @Test
+  public void testNormalizePrevDirNonSaturated() {
+    
     // in Windows: "dir1\\dir2\\dir3\\..\\dir4\\dir5\\..\\..\\.."
-    String redundantPathString2 = "dir1" + separator + "dir2" + separator + "dir3" + separator
+    String redundantPathString = "dir1" + separator + "dir2" + separator + "dir3" + separator
         + prevDir + "dir4" + separator + "dir5" + separator + prevDir + prevDir + prevDir;
     // Sanitised to "dir1"
-    String normalizedPathString2 = "dir1";
+    String normalizedPathString = "dir1";
 
-    assertEquals(normalizedPathString2, Paths.get(redundantPathString2).normalize());
-
+    assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize());
+  }
+  
+  @Test
+  public void testNormalizePrevDirSaturatedRelative() {
     // in Windows: "dir1\\dir2\\dir3\\..\\..\\..\\..\\.."
-    String redundantPathString3 = "dir1" + separator + "dir2" + separator + "dir3" + separator
+    String redundantPathString = "dir1" + separator + "dir2" + separator + "dir3" + separator
         + prevDir + prevDir + prevDir + prevDir + prevDir;
     // becomes "..\\.."
-    String normalizedPathString3 = prevDir + "..";
+    String normalizedPathString = prevDir + "..";
 
-    assertEquals(normalizedPathString3, Paths.get(redundantPathString3).normalize());
+    assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize());
+
+  }
+  
+  @Test
+  public void testNormalizePrevDirSaturatedAbsolute() {
+    // in Windows: "dir1\\dir2\\dir3\\..\\..\\..\\..\\.."
+    String redundantPathString = pathRootName + "dir1" + separator + "dir2" + separator + "dir3" + separator
+        + prevDir + prevDir + prevDir + prevDir + prevDir;
+    // becomes "..\\.."
+    String normalizedPathString = pathRootName + prevDir + "..";
+
+    assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize());
 
   }
 
   @Test
-  public void testNotExists() {
-    assertTrue(pathFileOther.notExists());
-    assertFalse(pathFileCreated.notExists());
+  public void testNotExistsTrue() {
+    assertTrue(pathTestFileOther.notExists());
+  }
+  
+  @Test
+  public void testNotExistsFalse() {
+    assertFalse(pathTestFileCreated.notExists());
   }
 
   @Test(expected = UnsupportedOperationException.class)
@@ -404,21 +437,33 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testResolvePath() {
-    assertEquals(pathFileCreated, pathFileCreated.resolve((Path) null));
-    assertEquals(pathFileOther, pathFileCreated.resolve(pathFileOther));
+  public void testResolvePathSelf() {
+    assertEquals(pathTestFileOther, pathTestFileCreated.resolve(pathTestFileOther));
+  }
+  
+  @Test
+  public void testResolvePathNull() {
+    assertEquals(pathTestFileCreated, pathTestFileCreated.resolve((Path) null));
+  }
+  
+  @Test
+  public void testResolvePathOther() {
     fail("actual path resolving TEST not implemented.");
   }
 
   @Test
   public void testResolveString() {
-    assertEquals(pathFileOther, pathFileCreated.resolve(pathFileOther.toString()));
+    assertEquals(pathTestFileOther, pathTestFileCreated.resolve(pathTestFileOther.toString()));
   }
 
   @Test
-  public void testStartsWith() {
+  public void testStartsWithTrue() {
     assertTrue(pathTestingDirectory.startsWith(Paths.get(pathTestingDirectory.getRoot().toString()
         + pathTestingDirectory.subpath(0, 2).toString())));
+  }
+  
+  @Test
+  public void testStartsWithFalse() {
     assertFalse(pathTestingDirectory.startsWith(pathTestingDirectory.subpath(1, 3)));
   }
 
@@ -462,27 +507,28 @@ public abstract class RealPathTest extends AbstractPathTest {
 
   @Test
   public void testToString() {
-    assertEquals(testFileCreated.toString(), pathFileCreated.toString());
+    assertEquals(testFileCreated.toString(), pathTestFileCreated.toString());
   }
 
   @Test
   public void testToUri() {
-    assertEquals(testFileCreated.toURI(), pathFileCreated.toUri());
+    assertEquals(testFileCreated.toURI(), pathTestFileCreated.toUri());
   }
 
   @Test
   public void testGetFileAttributeViewBasicFileAttributeView() {
-    assertNotNull(pathFileCreated.getFileAttributeView(BasicFileAttributeView.class));
+    assertNotNull(pathTestFileCreated.getFileAttributeView(BasicFileAttributeView.class));
   }
 
   @Test
   public void testGetFileAttributeViewFileAttributeView() {
-    assertNull(pathFileCreated.getFileAttributeView(FileAttributeView.class));
+    assertNull(pathTestFileCreated.getFileAttributeView(FileAttributeView.class));
   }
 
   @Test(expected = UnsupportedOperationException.class)
   public void testGetFileAttributeViewLinkOptions() {
-    pathFileCreated.getFileAttributeView(BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
+    pathTestFileCreated.getFileAttributeView(BasicFileAttributeView.class,
+        LinkOption.NOFOLLOW_LINKS);
   }
 
   @Test
@@ -527,16 +573,16 @@ public abstract class RealPathTest extends AbstractPathTest {
 
   @Test
   public void testCompareTo() {
-    assertEquals(pathFileCreated.toString().compareTo(pathFileOther.toString()), pathFileCreated
-        .compareTo(pathFileOther));
+    assertEquals(pathTestFileCreated.toString().compareTo(pathTestFileOther.toString()),
+        pathTestFileCreated.compareTo(pathTestFileOther));
   }
 
   @Test
   public void testCopyTo() {
 
     try {
-      pathFileCreated.copyTo(pathFileOther);
-      assertTrue(pathFileOther.exists());
+      pathTestFileCreated.copyTo(pathTestFileOther);
+      assertTrue(pathTestFileOther.exists());
     }
     catch (IOException e) {
       fail(e.getMessage());
@@ -566,7 +612,7 @@ public abstract class RealPathTest extends AbstractPathTest {
     }
 
     try {
-      pathFileOther.deleteIfExists();
+      pathTestFileOther.deleteIfExists();
     }
     catch (IOException e) {
       fail(e.getMessage());
@@ -576,27 +622,27 @@ public abstract class RealPathTest extends AbstractPathTest {
 
   @Test(expected = UnsupportedOperationException.class)
   public void testCreateLink() throws IOException {
-    pathFileOther.createLink(pathFileCreated);
+    pathTestFileOther.createLink(pathTestFileCreated);
   }
 
   @Test(expected = UnsupportedOperationException.class)
   public void testCreateSymbolicLink() throws IOException {
-    pathFileOther.createSymbolicLink(pathFileCreated);
+    pathTestFileOther.createSymbolicLink(pathTestFileCreated);
   }
 
   @Test(expected = UnsupportedOperationException.class)
   public void testReadSymbolicLink() throws IOException {
-    pathFileOther.readSymbolicLink();
+    pathTestFileOther.readSymbolicLink();
   }
 
   @Test(expected = UnsupportedOperationException.class)
   public void testRegisterWatchServiceKindOfQArray() throws IOException {
-    pathFileOther.register(null);
+    pathTestFileOther.register(null);
   }
 
   @Test(expected = UnsupportedOperationException.class)
   public void testRegisterWatchServiceKindOfQArrayModifierArray() throws IOException {
-    pathFileOther.register(null, null);
+    pathTestFileOther.register(null, null);
   }
 
   @Test

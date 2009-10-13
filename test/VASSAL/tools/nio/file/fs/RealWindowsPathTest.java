@@ -17,16 +17,22 @@ public class RealWindowsPathTest extends RealPathTest {
   }
   
   @Test
-  public void testFindRootSep() {
-  //  assumeTrue(Info.isWindows());
-    assertEquals(1, pathTestingDirectory.findRootSep("\\\\TestServer\\testDir"));
+  public void testFindRootSepWindowsDriveRoot() {
     assertEquals(2, pathTestingDirectory.findRootSep("D:\\TestDir\\TestDir2"));
+  }
+
+  @Test
+  public void testFindRootSepWindowsUncRoot() {
+    assertEquals(1, pathTestingDirectory.findRootSep("\\\\TestServer\\testDir"));
+  }
+
+  @Test
+  public void testFindRootSepNonRoot() {
     assertEquals(-1, pathTestingDirectory.findRootSep("somethingelse"));
   }
 
   @Test
   public void testRealWindowsPathStringRealFileSystem() {
- //   assumeTrue(Info.isWindows());
     RealPath p1 = new RealWindowsPath(testFileCreated.getPath(), fs);
     assertEquals(p1.toString(), testFileCreated.toString());
   }

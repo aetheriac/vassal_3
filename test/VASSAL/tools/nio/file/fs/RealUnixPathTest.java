@@ -1,28 +1,12 @@
 package VASSAL.tools.nio.file.fs;
 
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Scanner;
-
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import VASSAL.Info;
-import VASSAL.tools.nio.file.AccessMode;
-import VASSAL.tools.nio.file.LinkOption;
-import VASSAL.tools.nio.file.NoSuchFileException;
-import VASSAL.tools.nio.file.Path;
-import VASSAL.tools.nio.file.Paths;
-import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
-import VASSAL.tools.nio.file.attribute.FileAttributeView;
 
 public class RealUnixPathTest extends RealPathTest {
 
@@ -35,8 +19,11 @@ public class RealUnixPathTest extends RealPathTest {
 
 
   @Test
-  public void testFindRootSep() {
+  public void testFindRootSepUnixRoot() {
     assertEquals(0, pathTestingDirectory.findRootSep("/TestServer/testDir"));
+  }
+  
+  public void testFindRootSepNonRoot() {
     assertEquals(-1, pathTestingDirectory.findRootSep("somethingelse"));
   }
 

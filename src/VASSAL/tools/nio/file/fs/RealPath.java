@@ -1,24 +1,25 @@
 package VASSAL.tools.nio.file.fs;
 
+import static VASSAL.tools.nio.file.StandardCopyOption.ATOMIC_MOVE;
+import static VASSAL.tools.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static VASSAL.tools.nio.file.StandardOpenOption.APPEND;
+import static VASSAL.tools.nio.file.StandardOpenOption.CREATE_NEW;
+import static VASSAL.tools.nio.file.StandardOpenOption.READ;
+import static VASSAL.tools.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.net.URI;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import VASSAL.tools.StringUtils;
-import VASSAL.tools.io.IOUtils;
 import VASSAL.tools.nio.channels.FileChannelAdapter;
 import VASSAL.tools.nio.file.AccessDeniedException;
 import VASSAL.tools.nio.file.AccessMode;
@@ -31,19 +32,15 @@ import VASSAL.tools.nio.file.FileStore;
 import VASSAL.tools.nio.file.FileSystem;
 import VASSAL.tools.nio.file.FileSystemException;
 import VASSAL.tools.nio.file.LinkOption;
-import VASSAL.tools.nio.file.NotDirectoryException;
 import VASSAL.tools.nio.file.NoSuchFileException;
+import VASSAL.tools.nio.file.NotDirectoryException;
 import VASSAL.tools.nio.file.OpenOption;
 import VASSAL.tools.nio.file.Path;
-import VASSAL.tools.nio.file.StandardCopyOption;
 import VASSAL.tools.nio.file.StandardOpenOption;
 import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
 import VASSAL.tools.nio.file.attribute.FileAttribute;
 import VASSAL.tools.nio.file.attribute.FileAttributeView;
 import VASSAL.tools.nio.file.attribute.FileTime;
-
-import static VASSAL.tools.nio.file.StandardCopyOption.*;
-import static VASSAL.tools.nio.file.StandardOpenOption.*;
 
 public abstract class RealPath extends AbstractPath {
   protected final File file;
