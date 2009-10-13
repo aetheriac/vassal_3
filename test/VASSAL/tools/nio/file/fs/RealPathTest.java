@@ -1,28 +1,39 @@
 package VASSAL.tools.nio.file.fs;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Scanner;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import VASSAL.tools.io.IOUtils;
+import VASSAL.tools.nio.channels.FileChannelAdapter;
 import VASSAL.tools.nio.file.AccessMode;
 import VASSAL.tools.nio.file.FileSystems;
 import VASSAL.tools.nio.file.LinkOption;
 import VASSAL.tools.nio.file.NoSuchFileException;
-import VASSAL.tools.nio.file.StandardOpenOption;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.Paths;
+import VASSAL.tools.nio.file.StandardOpenOption;
 import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
 import VASSAL.tools.nio.file.attribute.FileAttributeView;
+import VASSAL.tools.nio.file.attribute.FileTime;
 
 /*
  * This test is to be called through its subclasses: RealWindowsPathTest and RealUnixPathTest.
@@ -224,10 +235,14 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  @Ignore
-  //Will implement it later;
   public void testGetFileStore() {
-    fail("Not yet implemented");
+    try {
+      assertEquals(pathTestingDirectory.getFileSystem().getFileStores().iterator().next(),
+          pathTestingDirectory.getFileStore());
+    }
+    catch (IOException e) {
+      fail(e.getMessage());
+    }
   }
 
   @Test
@@ -360,8 +375,6 @@ public abstract class RealPathTest extends AbstractPathTest {
   @Test
   public void testNewDirectoryStreamFilterOfQsuperPath() {
 
-    RealDirectoryStream rds = new RealDirectoryStream(pathTestingDirectory);
-
     try {
       assertTrue(pathTestingDirectory.newDirectoryStream().iterator().hasNext());
     }
@@ -380,8 +393,8 @@ public abstract class RealPathTest extends AbstractPathTest {
   public void testNormalizeCurDir() {
 
     // in Windows: "C:\thisDir\\.\\.\\dir2\\.\\."
-    String redundantPathString = pathRootName + "thisDir" + separator + curDir + curDir + "dir2" + separator + 
-        curDir + curDir;
+    String redundantPathString = pathRootName + "thisDir" + separator + curDir + curDir + "dir2"
+        + separator + curDir + curDir;
     String normalizedPathString = pathRootName + "thisDir" + separator + "dir2";
 
     assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize());
@@ -560,9 +573,10 @@ public abstract class RealPathTest extends AbstractPathTest {
     }
   }
 
-  @Test
-  public void testNewByteChannelOpenOptionArray() {
-    fail("Not yet implemented");
+  @Test(expected = UnsupportedOperationException.class)
+  public void testNewByteChannelOpenOptionArray() throws Exception {
+    StandardOpenOption opt = StandardOpenOption.READ;
+    FileChannelAdapter fca = pathTestFileCreated.newByteChannel(opt);
   }
 
   @Test
@@ -574,29 +588,85 @@ public abstract class RealPathTest extends AbstractPathTest {
 
   }
 
-  @Test
-  public void testNewByteChannelSetOfQextendsOpenOptionFileAttributeOfQArray() {
-    fail("Not yet implemented");
+  @Test(expected = UnsupportedOperationException.class)
+  public void testNewByteChannelSetOfQextendsOpenOptionFileAttributeOfQArray() throws Exception {
+    StandardOpenOption[] opts = new StandardOpenOption[] { StandardOpenOption.READ };
+    final Set<StandardOpenOption> opt = pathTestFileCreated.standardOpenOptionSet(opts);
+    FileChannelAdapter fca = pathTestFileCreated.newByteChannel(opt);
   }
 
   @Test
   public void testNewInputStream() {
-    fail("Not yet implemented");
+
+    FileInputStream in = null;
+    try {
+      in = pathTestFileCreated.newInputStream();
+      assertTrue(in != null);
+    }
+    catch (IOException e) {
+      fail(e.getMessage());
+    } finally {
+      IOUtils.closeQuietly(in);
+    }
   }
 
   @Test
   public void testNewOutputStreamOpenOptionArray() {
-    fail("Not yet implemented");
+
+    FileOutputStream out = null;
+    try {
+      out = pathTestFileOther.newOutputStream(StandardOpenOption.CREATE_NEW);
+      assertTrue(out != null);
+    }
+    catch (IOException e) {
+      fail(e.getMessage());
+    } finally {
+      IOUtils.closeQuietly(out);
+      testFileOther.delete();
+    }
   }
 
   @Test
   public void testReadAttributes() {
-    fail("Not yet implemented");
+    try {
+      
+      assertEquals(testingDirectory.isDirectory(), pathTestingDirectory.readAttributes(
+          "basic:isDirectory").values().toArray()[0]);
+      
+    }
+    catch (IOException e) {
+      fail(e.getMessage());
+    }
   }
 
+  @Test(expected = UnsupportedOperationException.class)
+  public void testReadAttributesFailOptions() throws IOException {
+    pathTestingDirectory.readAttributes("basic:isDirectory", LinkOption.NOFOLLOW_LINKS);
+  }
+
+  @Test (expected = UnsupportedOperationException.class)
+  public void testSetAttributeUnsupportedOption() throws IOException {
+    pathTestFileCreated.setAttribute("whateverName", "whateverValue", LinkOption.NOFOLLOW_LINKS);
+  }
+  
+  @Test (expected = UnsupportedOperationException.class)
+  public void testSetAttributeUnsupportedView() throws IOException {
+    pathTestFileCreated.setAttribute("nonBasic:Name", "whateverValue");
+  }
+  
+  @Test (expected = UnsupportedOperationException.class)
+  public void testSetAttributeUnsupportedName() throws IOException {
+    pathTestFileCreated.setAttribute("basic:creationTime", "whateverValue");
+  }
+  
   @Test
-  public void testSetAttribute() {
-    fail("Not yet implemented");
+  public void testSetAttributeModifTime() {
+    try {
+      pathTestFileCreated.setAttribute("basic:lastModifiedTime", FileTime.fromMillis(System.currentTimeMillis()));
+    }
+    catch (IOException e) {
+      fail(e.getMessage());
+    }
   }
 
   @Test
@@ -671,21 +741,6 @@ public abstract class RealPathTest extends AbstractPathTest {
   @Test(expected = UnsupportedOperationException.class)
   public void testRegisterWatchServiceKindOfQArrayModifierArray() throws IOException {
     pathTestFileOther.register(null, null);
-  }
-
-  @Test
-  public void testNewByteChannelOpenOptionArray1() {
-    fail("Not yet implemented");
-  }
-
-  @Test
-  public void testNewByteChannelSetOfQextendsOpenOptionFileAttributeOfQArray1() {
-    fail("Not yet implemented");
-  }
-
-  @Test
-  public void testNewOutputStreamOpenOptionArray1() {
-    fail("Not yet implemented");
   }
 
   @Test
