@@ -1,5 +1,7 @@
 package VASSAL.tools.nio.file.fs;
 
+import java.io.IOException;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -31,18 +33,20 @@ public abstract class AbstractPathTest {
   public abstract void testCopyTo();
 
   @Test
-  public abstract void testCreateLink() throws Exception;
+  public abstract void testCreateLink() throws IOException;
 
   @Test
-  public abstract void testCreateSymbolicLink() throws Exception;
+  public abstract void testCreateSymbolicLink() throws IOException;
 
   @Test
-  public abstract void testReadSymbolicLink() throws Exception;
+  public abstract void testReadSymbolicLink() throws IOException;
 
   @Test
-  public abstract void testRegisterWatchServiceKindOfQArray();
+  public abstract void testRegisterWatchServiceKindOfQArray()
+                                                            throws IOException;
 
   @Test
-  public abstract void testRegisterWatchServiceKindOfQArrayModifierArray();
+  public abstract void testRegisterWatchServiceKindOfQArrayModifierArray()
+                                                            throws IOException;
 
 }

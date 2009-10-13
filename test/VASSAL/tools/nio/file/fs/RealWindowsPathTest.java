@@ -15,18 +15,18 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import sun.security.krb5.internal.ccache.FileCredentialsCache;
-
 import VASSAL.Info;
 import VASSAL.tools.nio.file.AccessMode;
+import VASSAL.tools.nio.file.LinkOption;
 import VASSAL.tools.nio.file.NoSuchFileException;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.Paths;
 import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
+import VASSAL.tools.nio.file.attribute.FileAttributeView;
 
 public class RealWindowsPathTest extends AbstractPathTest {
 
-  final String separator = File.separator;
+  final String separator = "\\"; 
   final String stringPathToWinFsTest = "test" + separator + "VASSAL" + separator + "tools"
       + separator + "nio" + separator + "file" + separator + "fs";
 
@@ -68,21 +68,21 @@ public class RealWindowsPathTest extends AbstractPathTest {
 
     testingDirectoryName = "testingDirectory";
     testingDirectory = new File(pwd.getAbsolutePath() + separator + testingDirectoryName);
-    pathTestingDirectory = new RealWindowsPath(testingDirectory, fs);
+    pathTestingDirectory = new RealWindowsPath(testingDirectory.getPath().replace(File.separator, separator), fs);
     //   testingDirectory.mkdir();
 
     testFileCreatedName = "testFile1";
     testFileCreated = new File(testingDirectory.getAbsolutePath() + separator + testFileCreatedName);
-    pathFileCreated = new RealWindowsPath(testFileCreated, fs);
+    pathFileCreated = new RealWindowsPath(testFileCreated.getPath(), fs);
     //   testFileCreated.createNewFile();
 
     testFileOtherName = "testFile2";
     testFileOther = new File(testingDirectory.getAbsolutePath() + separator + testFileOtherName);
-    pathFileOther = new RealWindowsPath(testFileOther, fs);
+    pathFileOther = new RealWindowsPath(testFileOther.getPath(), fs);
 
     testDirOtherName = "testDirOther";
     testDirOther = new File(testingDirectory.getAbsolutePath() + separator + testDirOtherName);
-    pathTestDirOther = new RealWindowsPath(testDirOther, fs);
+    pathTestDirOther = new RealWindowsPath(testDirOther.getPath(), fs);
   }
 
   @After
@@ -110,7 +110,7 @@ public class RealWindowsPathTest extends AbstractPathTest {
   @Test
   public void testWindowsPathFileWindowsFileSystem() {
     assumeTrue(Info.isWindows());
-    RealPath p1 = new RealWindowsPath(testFileCreated, fs);
+    RealPath p1 = new RealWindowsPath(testFileCreated.getPath(), fs);
     assertEquals(p1.toString(), testFileCreated.toString());
   }
 
@@ -465,9 +465,20 @@ public class RealWindowsPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testGetFileAttributeView() {
-    RealFileAttributeView view = new RealFileAttributeView(pathFileCreated);
-    assertEquals(view, pathFileCreated.getFileAttributeView(RealFileAttributeView.class));
+  public void testGetFileAttributeViewBasicFileAttributeView() {
+    assertNotNull(
+      pathFileCreated.getFileAttributeView(BasicFileAttributeView.class));
+  }
+
+  @Test
+  public void testGetFileAttributeViewFileAttributeView() {
+    assertNull(pathFileCreated.getFileAttributeView(FileAttributeView.class));
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void testGetFileAttributeViewLinkOptions() {
+    pathFileCreated.getFileAttributeView(
+      BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
   }
 
   @Test
@@ -560,28 +571,29 @@ public class RealWindowsPathTest extends AbstractPathTest {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void testCreateLink() throws Exception {
+  public void testCreateLink() throws IOException {
     pathFileOther.createLink(pathFileCreated);
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void testCreateSymbolicLink() throws Exception {
+  public void testCreateSymbolicLink() throws IOException {
     pathFileOther.createSymbolicLink(pathFileCreated);
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void testReadSymbolicLink() throws Exception {
+  public void testReadSymbolicLink() throws IOException {
     pathFileOther.readSymbolicLink();
   }
 
-  @Test
-  public void testRegisterWatchServiceKindOfQArray() {
-    fail("No implemented class");
+  @Test(expected = UnsupportedOperationException.class)
+  public void testRegisterWatchServiceKindOfQArray() throws IOException {
+    pathFileOther.register(null); 
   }
 
-  @Test
-  public void testRegisterWatchServiceKindOfQArrayModifierArray() {
-    fail("No implemented class");
+  @Test(expected = UnsupportedOperationException.class)
+  public void testRegisterWatchServiceKindOfQArrayModifierArray()
+                                                           throws IOException {
+    pathFileOther.register(null, null);
   }
 
   @Test

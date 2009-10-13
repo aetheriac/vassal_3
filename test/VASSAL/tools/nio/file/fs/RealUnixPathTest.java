@@ -17,10 +17,12 @@ import org.junit.Test;
 
 import VASSAL.Info;
 import VASSAL.tools.nio.file.AccessMode;
+import VASSAL.tools.nio.file.LinkOption;
 import VASSAL.tools.nio.file.NoSuchFileException;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.Paths;
 import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
+import VASSAL.tools.nio.file.attribute.FileAttributeView;
 
 public class RealUnixPathTest extends AbstractPathTest {
 
@@ -66,21 +68,21 @@ public class RealUnixPathTest extends AbstractPathTest {
 
     testingDirectoryName = "testingDirectory";
     testingDirectory = new File(pwd.getAbsolutePath() + separator + testingDirectoryName);
-    pathTestingDirectory = new RealUnixPath(testingDirectory, fs);
+    pathTestingDirectory = new RealUnixPath(testingDirectory.getPath(), fs);
     //   testingDirectory.mkdir();
 
     testFileCreatedName = "testFile1";
     testFileCreated = new File(testingDirectory.getAbsolutePath() + separator + testFileCreatedName);
-    pathFileCreated = new RealUnixPath(testFileCreated, fs);
+    pathFileCreated = new RealUnixPath(testFileCreated.getPath(), fs);
     //   testFileCreated.createNewFile();
 
     testFileOtherName = "testFile2";
     testFileOther = new File(testingDirectory.getAbsolutePath() + separator + testFileOtherName);
-    pathFileOther = new RealUnixPath(testFileOther, fs);
+    pathFileOther = new RealUnixPath(testFileOther.getPath(), fs);
 
     testDirOtherName = "testDirOther";
     testDirOther = new File(testingDirectory.getAbsolutePath() + separator + testDirOtherName);
-    pathTestDirOther = new RealUnixPath(testDirOther, fs);
+    pathTestDirOther = new RealUnixPath(testDirOther.getPath(), fs);
   }
 
   @After
@@ -107,7 +109,7 @@ public class RealUnixPathTest extends AbstractPathTest {
   @Test
   public void testUnixPathFileUnixFileSystem() {
     assumeTrue(!Info.isWindows());
-    RealPath p1 = new RealUnixPath(testFileCreated, fs);
+    RealPath p1 = new RealUnixPath(testFileCreated.getPath(), fs);
     assertEquals(p1.toString(), testFileCreated.toString());
   }
 
@@ -458,9 +460,20 @@ public class RealUnixPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testGetFileAttributeView() {
-    RealFileAttributeView view = new RealFileAttributeView(pathFileCreated);
-    assertEquals(view, pathFileCreated.getFileAttributeView(RealFileAttributeView.class));
+  public void testGetFileAttributeViewBasicFileAttributeView() {
+    assertNotNull(
+      pathFileCreated.getFileAttributeView(BasicFileAttributeView.class));
+  }
+
+  @Test
+  public void testGetFileAttributeViewFileAttributeView() {
+    assertNull(pathFileCreated.getFileAttributeView(FileAttributeView.class));
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void testGetFileAttributeViewLinkOptions() {
+    pathFileCreated.getFileAttributeView(
+      BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
   }
 
   @Test
@@ -553,28 +566,29 @@ public class RealUnixPathTest extends AbstractPathTest {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void testCreateLink() throws Exception {
+  public void testCreateLink() throws IOException {
     pathFileOther.createLink(pathFileCreated);
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void testCreateSymbolicLink() throws Exception {
+  public void testCreateSymbolicLink() throws IOException {
     pathFileOther.createSymbolicLink(pathFileCreated);
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void testReadSymbolicLink() throws Exception {
+  public void testReadSymbolicLink() throws IOException {
     pathFileOther.readSymbolicLink();
   }
 
-  @Test
-  public void testRegisterWatchServiceKindOfQArray() {
-    fail("No implemented class");
+  @Test(expected = UnsupportedOperationException.class)
+  public void testRegisterWatchServiceKindOfQArray() throws IOException {
+    pathFileOther.register(null); 
   }
 
-  @Test
-  public void testRegisterWatchServiceKindOfQArrayModifierArray() {
-    fail("No implemented class");
+  @Test(expected = UnsupportedOperationException.class)
+  public void testRegisterWatchServiceKindOfQArrayModifierArray()
+                                                           throws IOException {
+    pathFileOther.register(null, null);
   }
 
   @Test

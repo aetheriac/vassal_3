@@ -53,14 +53,10 @@ public abstract class RealPath extends AbstractPath {
   protected final int[] parts;
 
   public RealPath(String path, RealFileSystem fs) {
-    this(new File(path), fs);
-  }
-
-  public RealPath(File file, RealFileSystem fs) {
-    this.file = file;
+    this.file = new File(path);
     this.fs = fs;
 
-    path = file.toString();
+    this.path = file.toString();
     parts = splitPath(path);
   }
 
