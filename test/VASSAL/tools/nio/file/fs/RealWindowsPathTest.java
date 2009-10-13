@@ -27,10 +27,10 @@ import VASSAL.tools.nio.file.attribute.FileAttributeView;
 public class RealWindowsPathTest extends AbstractPathTest {
 
   final String separator = "\\"; 
-  final String stringPathToWinFsTest = "test" + separator + "VASSAL" + separator + "tools"
+  final String stringPathToFileFsTest = "test" + separator + "VASSAL" + separator + "tools"
       + separator + "nio" + separator + "file" + separator + "fs";
 
-  final File pwd = new File(stringPathToWinFsTest);
+  final File pwd = new File(stringPathToFileFsTest);
 
   File testFileCreated;
   String testFileCreatedName;
@@ -44,7 +44,10 @@ public class RealWindowsPathTest extends AbstractPathTest {
 
   File testDirOther;
   String testDirOtherName;
-
+  
+  String pathRootName;
+  RealPath pathRoot;
+  
   RealPath pathFileCreated;
   RealPath pathFileOther;
   RealPath pathTestDirOther;
@@ -70,6 +73,8 @@ public class RealWindowsPathTest extends AbstractPathTest {
     testingDirectory = new File(pwd.getAbsolutePath() + separator + testingDirectoryName);
     pathTestingDirectory = new RealWindowsPath(testingDirectory.getPath().replace(File.separator, separator), fs);
     //   testingDirectory.mkdir();
+    pathRoot = (RealPath) pathTestingDirectory.getRoot();
+    pathRootName = pathRoot.toString();
 
     testFileCreatedName = "testFile1";
     testFileCreated = new File(testingDirectory.getAbsolutePath() + separator + testFileCreatedName);
@@ -376,13 +381,32 @@ public class RealWindowsPathTest extends AbstractPathTest {
 
   @Test
   public void testNormalize() {
-    // in Windows: "thisDir\\.\\ignoredDir1\\ignoredDir2\\..\\.."
-    String redundantPathString = "thisDir" + separator + "." + separator + "ignoredDir1"
-        + separator + "ignoredDir2" + separator + ".." + separator + "..";
+    
+    String curDir = "." + separator;
+    String prevDir = ".." + separator;
 
-    String normalizedPathString = "thisDir";
+    // in Windows: "C:\thisDir\\.\\ignoredDir1\\ignoredDir2\\..\\.."
+    String redundantPathString1 = pathRootName + "thisDir" + separator + curDir + "ignoredDir1"
+        + separator + "ignoredDir2" + separator + prevDir + prevDir;
+    String normalizedPathString1 = pathRootName + "thisDir";
 
-    assertEquals(Paths.get(normalizedPathString), Paths.get(redundantPathString).normalize());
+    assertEquals(normalizedPathString1, Paths.get(redundantPathString1).normalize());
+
+    // in Windows: "dir1\\dir2\\dir3\\..\\dir4\\dir5\\..\\..\\.."
+    String redundantPathString2 = "dir1" + separator + "dir2" + separator + "dir3" + separator
+        + prevDir + "dir4" + separator + "dir5" + separator + prevDir + prevDir + prevDir;
+    // Sanitised to "dir1"
+    String normalizedPathString2 = "dir1";
+
+    assertEquals(normalizedPathString2, Paths.get(redundantPathString2).normalize());
+
+    // in Windows: "dir1\\dir2\\dir3\\..\\..\\..\\..\\.."
+    String redundantPathString3 = "dir1" + separator + "dir2" + separator + "dir3" + separator
+        + prevDir + prevDir + prevDir + prevDir + prevDir;
+    // becomes "..\\.."
+    String normalizedPathString3 = prevDir + "..";
+    
+    assertEquals(normalizedPathString3, Paths.get(redundantPathString3).normalize());
 
   }
 

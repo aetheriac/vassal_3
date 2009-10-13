@@ -1,5 +1,8 @@
 package VASSAL.tools.nio.file.fs;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class RealWindowsPath extends RealPath {
   public RealWindowsPath(String path, RealFileSystem fs) {
     super(path, fs);
@@ -7,10 +10,16 @@ public class RealWindowsPath extends RealPath {
 
   /** {@inheritDoc} */
   protected int findRootSep(String s) {
-// FIXME: check that "C:" works
-    // C:\ is the root for a drive; \\ is the root for a network share.
-    if (s.matches("^[a-zA-Z]:\\\\")) return 2;
-    else if (s.matches("^\\\\\\\\")) return 1;
-    else return -1;
+    Matcher matcherCColonBslash = Pattern.compile("^[a-zA-Z]:\\\\").matcher(s);
+    Matcher matcherBslashBslash = Pattern.compile("^\\\\\\\\").matcher(s);
+
+    if (matcherCColonBslash.find()) {
+      return matcherCColonBslash.end() -1;  // Should return 2
+    }
+    if (matcherBslashBslash.find()) {
+      return matcherBslashBslash.end() -1;  // Should return 1
+    } else {
+      return -1;
+    }
   }
 }
