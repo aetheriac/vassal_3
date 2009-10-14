@@ -34,12 +34,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.channels.SeekableByteChannel;
-import java.nio.file.*;
-import java.nio.file.DirectoryStream.Filter;
-import java.nio.file.spi.*;
+//import java.nio.channels.SeekableByteChannel;
+//import java.nio.file.*;
+//import java.nio.file.DirectoryStream.Filter;
+//import java.nio.file.spi.*;
 import java.util.*;
-import java.nio.file.attribute.*;
+//import java.nio.file.attribute.*;
 import java.net.URI;
 import java.nio.channels.FileChannel;
 import java.nio.file.attribute.Attributes;
@@ -49,6 +49,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import VASSAL.tools.nio.channels.SeekableByteChannel;
+import VASSAL.tools.nio.file.*;
+import VASSAL.tools.nio.file.DirectoryStream.Filter;
+import VASSAL.tools.nio.file.attribute.*;
+import VASSAL.tools.nio.file.spi.*;
 
 /**
  * Jar/Zip path implementation of Path

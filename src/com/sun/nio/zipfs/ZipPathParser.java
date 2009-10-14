@@ -31,7 +31,8 @@
 
 package com.sun.nio.zipfs;
 
-import java.nio.file.*;
+import VASSAL.tools.nio.file.*;
+//import java.nio.file.*;
 import java.util.LinkedList;
 import java.util.Stack;
 import java.util.regex.*;

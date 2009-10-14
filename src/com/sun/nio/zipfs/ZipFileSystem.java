@@ -30,10 +30,14 @@
  */
 package com.sun.nio.zipfs;
 
+import VASSAL.tools.nio.file.*;
+import VASSAL.tools.nio.file.attribute.*;
+import VASSAL.tools.nio.file.spi.*;
+
 import java.io.Closeable;
-import java.nio.file.*;
-import java.nio.file.attribute.*;
-import java.nio.file.spi.*;
+//import java.nio.file.*;
+//import java.nio.file.attribute.*;
+//import java.nio.file.spi.*;
 import java.io.IOException;
 import java.net.URI;
 import java.util.*;

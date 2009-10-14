@@ -31,6 +31,7 @@
 package com.sun.nio.zipfs;
 
 import java.io.IOException;
+/*
 import java.nio.file.FileStore;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -40,6 +41,16 @@ import java.nio.file.attribute.FileStoreSpaceAttributeView;
 import java.nio.file.attribute.FileStoreSpaceAttributes;
 import java.nio.file.attribute.Attributes;
 import java.nio.file.attribute.BasicFileAttributeView;
+*/
+import VASSAL.tools.nio.file.FileStore;
+import VASSAL.tools.nio.file.FileSystems;
+import VASSAL.tools.nio.file.Path;
+import VASSAL.tools.nio.file.attribute.FileAttributeView;
+import VASSAL.tools.nio.file.attribute.FileStoreAttributeView;
+import VASSAL.tools.nio.file.attribute.FileStoreSpaceAttributeView;
+import VASSAL.tools.nio.file.attribute.FileStoreSpaceAttributes;
+import VASSAL.tools.nio.file.attribute.Attributes;
+import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
 
 public class ZipFileStore extends FileStore {
 

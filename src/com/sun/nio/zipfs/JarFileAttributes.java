@@ -31,7 +31,9 @@
 
 package com.sun.nio.zipfs;
 
-import java.nio.file.*;
+import VASSAL.tools.nio.file.*;
+
+//import java.nio.file.*;
 import java.io.*;
 import java.util.Map;
 import java.util.Set;

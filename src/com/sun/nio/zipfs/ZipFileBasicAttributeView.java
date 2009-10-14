@@ -30,8 +30,10 @@
  */
 package com.sun.nio.zipfs;
 
-import java.nio.file.attribute.*;
-import java.nio.file.*;
+import VASSAL.tools.nio.file.attribute.*;
+import VASSAL.tools.nio.file.*;
+//import java.nio.file.attribute.*;
+//import java.nio.file.*;
 import java.io.IOException;
 
 

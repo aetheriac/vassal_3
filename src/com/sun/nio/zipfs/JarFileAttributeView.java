@@ -30,7 +30,9 @@
  */
 package com.sun.nio.zipfs;
 
-import java.nio.file.*;
+import VASSAL.tools.nio.file.*;
+
+//import java.nio.file.*;
 import java.io.IOException;
 
 public class JarFileAttributeView extends ZipFileAttributeView {

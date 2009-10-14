@@ -30,17 +30,24 @@
  */
 package com.sun.nio.zipfs;
 
-import java.nio.file.*;
-import java.nio.channels.SeekableByteChannel;
+import VASSAL.tools.nio.file.*;
+import VASSAL.tools.nio.channels.SeekableByteChannel;
+import VASSAL.tools.nio.channels.FileChannel;
+import VASSAL.tools.nio.file.FileSystem;
+import VASSAL.tools.nio.file.FileSystems;
+import VASSAL.tools.nio.file.Path;
+
+//import java.nio.file.*;
+//import java.nio.channels.SeekableByteChannel;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import static com.sun.nio.zipfs.ZipHeaderConstants.*;
 import java.io.*;
 import java.net.URI;
-import java.nio.channels.FileChannel;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
+//import java.nio.channels.FileChannel;
+//import java.nio.file.FileSystem;
+//import java.nio.file.FileSystems;
+//import java.nio.file.Path;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;

@@ -30,7 +30,9 @@
  */
 package com.sun.nio.zipfs;
 
-import java.nio.file.*;
+import VASSAL.tools.nio.file.*;
+
+//import java.nio.file.*;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -156,7 +158,7 @@ public class ZipFileStream implements DirectoryStream<Path> {
 
     /** Creates a new instance of ZipFileStream */
     public ZipFileStream(ZipFilePath zipPath,
-            DirectoryStream.Filter<? super java.nio.file.Path> filter)
+            DirectoryStream.Filter<? super Path> filter)
             throws IOException {
 
         if (zipPath.getNameCount() != 0) { // if path is '/' no need for check existence
