@@ -258,8 +258,8 @@ public abstract class RealPathTest extends AbstractPathTest {
   @Test
   public void testGetNameCount() {
     final String p = "first" + separator + "second" + separator + "third" + separator + "fourth";
-    Path path3 = Paths.get(p);
-    assertEquals(path3.getNameCount(), 4);
+    Path path4 = Paths.get(p);
+    assertEquals(4, path4.getNameCount());
   }
 
   @Test
@@ -393,11 +393,10 @@ public abstract class RealPathTest extends AbstractPathTest {
   public void testNormalizeCurDir() {
 
     // in Windows: "C:\thisDir\\.\\.\\dir2\\.\\."
-    String redundantPathString = pathRootName + "thisDir" + separator + curDir + curDir + "dir2"
-        + separator + curDir + curDir;
+    String redundantPathString = pathRootName + "thisDir" + separator + curDir + curDir + "dir2" + separator + curDir + ".";
     String normalizedPathString = pathRootName + "thisDir" + separator + "dir2";
 
-    assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize());
+    assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize().toString());
 
   }
 
@@ -405,31 +404,28 @@ public abstract class RealPathTest extends AbstractPathTest {
   public void testNormalizePrevDirNonSaturated() {
 
     // in Windows: "dir1\\dir2\\dir3\\..\\dir4\\dir5\\..\\..\\.."
-    String redundantPathString = "dir1" + separator + "dir2" + separator + "dir3" + separator
-        + prevDir + "dir4" + separator + "dir5" + separator + prevDir + prevDir + prevDir;
+    String redundantPathString = "dir1" + separator + "dir2" + separator + "dir3" + separator + prevDir + "dir4" + separator + "dir5" + separator + prevDir + prevDir + "..";
     // Sanitised to "dir1"
     String normalizedPathString = "dir1";
 
-    assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize());
+    assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize().toString());
   }
 
   @Test
   public void testNormalizePrevDirSaturatedRelative() {
     // in Windows: "dir1\\dir2\\dir3\\..\\..\\..\\..\\.."
-    String redundantPathString = "dir1" + separator + "dir2" + separator + "dir3" + separator
-        + prevDir + prevDir + prevDir + prevDir + prevDir;
+    String redundantPathString = "dir1" + separator + "dir2" + separator + "dir3" + separator + prevDir + prevDir + prevDir + prevDir + "..";
     // becomes "..\\.."
     String normalizedPathString = prevDir + "..";
 
-    assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize());
+    assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize().toString());
 
   }
 
   @Test
   public void testNormalizePrevDirSaturatedAbsolute() {
     // in Windows: "dir1\\dir2\\dir3\\..\\..\\..\\..\\.."
-    String redundantPathString = pathRootName + "dir1" + separator + "dir2" + separator + "dir3"
-        + separator + prevDir + prevDir + prevDir + prevDir + prevDir;
+    String redundantPathString = pathRootName + "dir1" + separator + "dir2" + separator + "dir3" + separator + prevDir + prevDir + prevDir + prevDir + "..";
     // becomes "..\\.."
     String normalizedPathString = pathRootName + prevDir + "..";
 

@@ -47,45 +47,45 @@ public abstract class RealPath extends AbstractPath {
   protected final RealFileSystem fs;
  
   protected final String path; 
-  protected final int[] parts;
+  protected final int[] seps;
 
   public RealPath(String path, RealFileSystem fs) {
     this.file = new File(path);
     this.fs = fs;
 
     this.path = file.toString();
-    parts = splitPath(path);
+    seps = splitPath(path);
   }
 
   protected int[] splitPath(String path) {
-    // File ctor removes duplicate and trailing separators. Hence, each
+    // File ctor removes duplicate separators. Hence, each
     // instance of separator splits two names.
 
-    final ArrayList<Integer> pl = new ArrayList<Integer>();
+    final ArrayList<Integer> sl = new ArrayList<Integer>();
     int i = 0;
 
     // find end of root, if present
     i = findRootSep(path);
-    pl.add(++i);
+    sl.add(i++);
 
     // if at end, then we are just a root
     if (i >= path.length()) return new int[0];
 
     // record positions of all separators
-    while ((i = path.indexOf(File.separator, i)) >= 0) pl.add(++i);
-   
-    // record end of path + 1
-    pl.add(path.length()+1);
+    while ((i = path.indexOf(File.separator, i)) >= 0) sl.add(i++);
+
+    // record end of path
+    sl.add(path.length());
 
 // FIXME: replace with a method in ArrayUtils or something from Apache Commons
     // convert from List<Integer> to int[]
-    final int[] parts = new int[pl.size()];
-    for (i = 0; i < parts.length; ++i) parts[i] = pl.get(i);
+    final int[] seps = new int[sl.size()];
+    for (i = 0; i < seps.length; ++i) seps[i] = sl.get(i);
 // END FIXME
 
     // The result is a list of offsets for the starts of the names, plus
     // a final element for the position of end of the path.
-    return parts;
+    return seps;
   }
 
   /**
@@ -228,22 +228,22 @@ public abstract class RealPath extends AbstractPath {
   }
 
   public Path getName() {
-    return parts.length == 0 ? null : subpath(parts.length-2, parts.length-1);
+    return seps.length == 0 ? null : subpath(seps.length-2, seps.length-1);
   }
 
   public int getNameCount() {
-    return parts.length > 0 ? parts.length-1 : 0;
+    return seps.length > 0 ? seps.length-1 : 0;
   }
 
   public Path getParent() {
-    if (parts.length == 0) return null;  // a root has no parent
-    return fs.getPath(path.substring(0, parts[parts.length-2]-1));
+    if (seps.length == 0) return null;  // a root has no parent
+    return fs.getPath(path.substring(0, seps[seps.length-2]));
   }
 
   public Path getRoot() {
-    if (parts.length == 0) return this;  // we are a root
-    if (parts[0] == 0) return null;      // we are relative
-    return fs.getPath(path.substring(0, parts[0]));
+    if (seps.length == 0) return this;  // we are a root
+    if (seps[0] == -1) return null;     // we are relative
+    return fs.getPath(path.substring(0, seps[0]+1));
   }
 
   @Override
@@ -252,7 +252,7 @@ public abstract class RealPath extends AbstractPath {
   }
 
   public boolean isAbsolute() {
-    return parts.length == 0 || parts[0] != 0;
+    return seps.length == 0 || seps[0] != -1;
   }
 
   public boolean isHidden() throws IOException {
@@ -268,12 +268,11 @@ public abstract class RealPath extends AbstractPath {
       private int i = 0;
 
       public boolean hasNext() {
-        return i < parts.length-1;
+        return i < seps.length-1;
       }
 
       public Path next() {
-        i++;
-        return fs.getPath(path.substring(parts[i-1], parts[i]-1));
+        return fs.getPath(path.substring(seps[i]+1, seps[++i]));
       }
 
       public void remove() {
@@ -400,32 +399,38 @@ public abstract class RealPath extends AbstractPath {
   }
 
   public Path normalize() {
-    if (parts.length == 0) return this;   // root is already normalized
+    if (seps.length == 0) return this;   // root is already normalized
 
-    final ArrayList<String> pl = new ArrayList<String>(parts.length);
+    final ArrayList<String> sl = new ArrayList<String>(seps.length);
+
+System.out.println(path.length());
+for (int j : seps) System.out.print(j + " ");
+System.out.println("");
 
     // Remove redundant parts.
-    for (int i = 0; i < parts.length-1; ++i) {
-      final String n = path.substring(parts[i], parts[i+1]-1);
+    for (int i = 0; i < seps.length-1; ++i) {
+System.out.println((seps[i]+1) + "," + seps[i+1]);
+
+      final String n = path.substring(seps[i]+1, seps[i+1]);
 
       // ".": Skip.
       if (n.equals(".")) continue;
 
       // "..": Scratch this and the previous name, if any.
       if (n.equals("..")) {
-        final int s = pl.size();
-        if (s > 0) pl.remove(s-1);
+        final int s = sl.size();
+        if (s > 0) sl.remove(s-1);
         continue;
       }
 
       // Otherwise add this name to the list.
-      pl.add(n);
+      sl.add(n);
     }
 
     // Rebuild the normalized path.
     return fs.getPath(
-      (parts[0] == 0 ? "" : path.substring(0, parts[0]-1)) +
-      StringUtils.join(File.separator, pl)
+      (seps[0] == -1 ? "" : path.substring(0, seps[0]+1)) +
+      StringUtils.join(File.separator, sl)
     );
   }
 
@@ -503,11 +508,11 @@ public abstract class RealPath extends AbstractPath {
 
   public Path subpath(int start, int end) {
     if (start < 0) throw new IllegalArgumentException();
-    if (start >= parts.length) throw new IllegalArgumentException();
+    if (start >= seps.length-1) throw new IllegalArgumentException();
     if (end <= start) throw new IllegalArgumentException();
-    if (end > parts.length) throw new IllegalArgumentException();
+    if (end > seps.length-1) throw new IllegalArgumentException();
 
-    return fs.getPath(path.substring(parts[start], parts[end]-1));
+    return fs.getPath(path.substring(seps[start]+1, seps[end]));
   }
 
   public Path toAbsolutePath() {
