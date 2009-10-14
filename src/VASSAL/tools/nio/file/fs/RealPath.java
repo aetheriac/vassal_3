@@ -54,7 +54,7 @@ public abstract class RealPath extends AbstractPath {
     this.fs = fs;
 
     this.path = file.toString();
-    seps = splitPath(path);
+    seps = splitPath(this.path);
   }
 
   protected int[] splitPath(String path) {
