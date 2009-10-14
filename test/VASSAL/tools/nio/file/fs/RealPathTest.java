@@ -427,6 +427,14 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
+  public void testNormalizePrevDirRoot() {
+    String redundantPathString = pathRootName + "../../../../..".replace("/", separator);
+    String normalizedPathString = pathRootName;
+
+    assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize().toString());
+  }
+
+  @Test
   public void testNotExistsTrue() {
     assertTrue(pathTestFileOther.notExists());
   }
