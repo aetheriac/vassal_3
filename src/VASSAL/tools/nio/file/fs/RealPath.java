@@ -400,31 +400,38 @@ public abstract class RealPath extends AbstractPath {
 
   public Path normalize() {
     if (seps.length == 0) return this;   // root is already normalized
+    
+    int previousDirsAtBeginning = 0;
 
-    final ArrayList<String> sl = new ArrayList<String>(seps.length);
+    final ArrayList<String> outputParts = new ArrayList<String>(seps.length);
 
     // Remove redundant parts.
     for (int i = 0; i < seps.length-1; ++i) {
-      final String n = path.substring(seps[i]+1, seps[i+1]);
+      final String currentInputPart = path.substring(seps[i]+1, seps[i+1]);
 
       // ".": Skip.
-      if (n.equals(".")) continue;
+      if (currentInputPart.equals(".")) continue;
 
       // "..": Scratch this and the previous name, if any.
-      if (n.equals("..")) {
-        final int s = sl.size();
-        if (s > 0) sl.remove(s-1);
+      if (currentInputPart.equals("..")) {
+        final int s = outputParts.size();
+        if (s > previousDirsAtBeginning) {
+          outputParts.remove(s-1);
+        } else if (!this.isAbsolute()){
+          outputParts.add(currentInputPart);
+          previousDirsAtBeginning++;
+        }
         continue;
       }
 
       // Otherwise add this name to the list.
-      sl.add(n);
+      outputParts.add(currentInputPart);
     }
 
     // Rebuild the normalized path.
     return fs.getPath(
       (seps[0] == -1 ? "" : path.substring(0, seps[0]+1)) +
-      StringUtils.join(File.separator, sl)
+      StringUtils.join(File.separator, outputParts)
     );
   }
 
