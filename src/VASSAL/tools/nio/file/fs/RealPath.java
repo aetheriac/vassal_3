@@ -403,14 +403,8 @@ public abstract class RealPath extends AbstractPath {
 
     final ArrayList<String> sl = new ArrayList<String>(seps.length);
 
-System.out.println(path.length());
-for (int j : seps) System.out.print(j + " ");
-System.out.println("");
-
     // Remove redundant parts.
     for (int i = 0; i < seps.length-1; ++i) {
-System.out.println((seps[i]+1) + "," + seps[i+1]);
-
       final String n = path.substring(seps[i]+1, seps[i+1]);
 
       // ".": Skip.
