@@ -256,7 +256,8 @@ public class ZipFileSystem extends FileSystem {
         }
     }
     private static final Set<String> supportedFileAttributeViews =
-            Collections.unmodifiableSet(new HashSet(Arrays.asList("basic", "zip", "jar")));
+      Collections.unmodifiableSet(
+        new HashSet<String>(Arrays.asList("basic", "zip", "jar")));
 
     @Override
     public Set<String> supportedFileAttributeViews() {

@@ -42,7 +42,7 @@ import java.util.*;
 //import java.nio.file.attribute.*;
 import java.net.URI;
 import java.nio.channels.FileChannel;
-import java.nio.file.attribute.Attributes;
+//import java.nio.file.attribute.Attributes;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.regex.Matcher;

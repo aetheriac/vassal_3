@@ -362,7 +362,7 @@ public class ZipUtils {
             if (zfp.getNameCount() == 0) { //zfp.equals(zfp.getRoot())
                 Path p = Paths.get(zfp.getFileSystem().getZipFileSystemFile());
                 try {
-                    long time = java.nio.file.attribute.Attributes
+                    long time = VASSAL.tools.nio.file.attribute.Attributes
                         .readBasicFileAttributes(p).lastModifiedTime().toMillis();
                     zei.lastModifiedTime = javaTimeToDosTime(time);
                 } catch (IOException e) {
