@@ -231,6 +231,10 @@ public abstract class RealPath extends AbstractPath {
     return seps.length == 0 ? null : subpath(seps.length-2, seps.length-1);
   }
 
+  public Path getName(int index) {
+    return subpath(index, index+1);
+  }
+
   public int getNameCount() {
     return seps.length > 0 ? seps.length-1 : 0;
   }

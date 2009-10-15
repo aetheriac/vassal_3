@@ -49,6 +49,8 @@ public abstract class Path implements FileRef,
 
   public abstract Path getName();
 
+  public abstract Path getName(int index);
+
   public abstract int getNameCount();
 
   public abstract Path getParent();

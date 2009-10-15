@@ -30,6 +30,7 @@ import VASSAL.tools.nio.file.LinkOption;
 import VASSAL.tools.nio.file.NoSuchFileException;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.Paths;
+import VASSAL.tools.nio.file.WatchEvent;
 import VASSAL.tools.nio.file.StandardOpenOption;
 import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
 import VASSAL.tools.nio.file.attribute.FileAttributeView;
@@ -253,6 +254,15 @@ public abstract class RealPathTest extends AbstractPathTest {
   @Test
   public void testGetName() {
     assertEquals(testFileCreated.getName(), pathTestFileCreated.getName().toString());
+  }
+
+  @Test
+  public void testGetNameInt() {
+    File f = testFileCreated;
+    for (int i = pathTestFileCreated.getNameCount()-1; i >= 0; --i) {
+      assertEquals(f.getName(), pathTestFileCreated.getName(i).toString());
+      f = f.getParentFile();
+    }
   }
 
   @Test
@@ -737,7 +747,7 @@ public abstract class RealPathTest extends AbstractPathTest {
 
   @Test(expected = UnsupportedOperationException.class)
   public void testRegisterWatchServiceKindOfQArrayModifierArray() throws IOException {
-    pathTestFileOther.register(null, null);
+    pathTestFileOther.register(null, (WatchEvent.Kind<?>[]) null);
   }
 
   @Test
