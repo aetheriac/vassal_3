@@ -27,5 +27,8 @@ public class RealFileAttributeView implements BasicFileAttributeView {
     if (mtime != null && !path.file.setLastModified(mtime.toMillis())) {
       throw new FileSystemException(path.toString());
     }
+
+    if (atime != null) throw new UnsupportedOperationException();
+    if (ctime != null) throw new UnsupportedOperationException();
   }
 }
