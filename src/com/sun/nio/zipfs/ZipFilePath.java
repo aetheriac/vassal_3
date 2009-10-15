@@ -50,6 +50,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import VASSAL.tools.nio.channels.FileChannelAdapter;
 import VASSAL.tools.nio.channels.SeekableByteChannel;
 import VASSAL.tools.nio.file.*;
 import VASSAL.tools.nio.file.DirectoryStream.Filter;
@@ -1015,7 +1016,10 @@ public class ZipFilePath extends Path {
                 InputStream in = zfile.getInputStream(entry);
                 Path pathtoZip = Paths.get(ZipUtils.readFileInZip(in));
                 zfile.close();
-                SeekableByteChannel sbc = FileChannel.open(pathtoZip, options);
+
+                SeekableByteChannel sbc = new FileChannelAdapter(
+                  fileSystem.provider().newFileChannel(pathToZip, options));
+
                 fileSystem.addCloseableObjects(sbc);
                 return sbc;
             }

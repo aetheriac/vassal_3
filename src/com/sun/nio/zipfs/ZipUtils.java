@@ -32,7 +32,7 @@ package com.sun.nio.zipfs;
 
 import VASSAL.tools.nio.file.*;
 import VASSAL.tools.nio.channels.SeekableByteChannel;
-import VASSAL.tools.nio.channels.FileChannel;
+import VASSAL.tools.nio.channels.FileChannelAdapter;
 import VASSAL.tools.nio.file.FileSystem;
 import VASSAL.tools.nio.file.FileSystems;
 import VASSAL.tools.nio.file.Path;
@@ -79,7 +79,10 @@ public class ZipUtils {
     static SeekableByteChannel open(FileRef fr) throws IOException {
         Set<StandardOpenOption> options = new HashSet<StandardOpenOption>();
         options.add(StandardOpenOption.READ);
-        return FileChannel.open((Path) fr, options);
+
+        final Path p = (Path) fr;
+        return new FileChannelAdapter(
+          p.getFileSystem().provider().newFileChannel(p, options));
     }
 
     private static ByteBuffer getHeaderField(
