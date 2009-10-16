@@ -34,6 +34,5 @@ package com.sun.nio.zipfs;
 import java.io.IOException;
 
 public interface ReadableAttributeViewByName {
-
-    Object getAttribute(String attribute) throws IOException;
+  Object getAttribute(String attribute) throws IOException;
 }

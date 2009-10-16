@@ -37,31 +37,30 @@ import java.io.IOException;
 
 public class JarFileAttributeView extends ZipFileAttributeView {
 
-    /** Creates a new instance of JarFileAttributeView */
-    public JarFileAttributeView(FileRef file) {
-        super(file);
-    }
+  /** Creates a new instance of JarFileAttributeView */
+  public JarFileAttributeView(FileRef file) {
+    super(file);
+  }
 
-    @Override
-    public String name() {
-        return "jar";
-    }
+  @Override
+  public String name() {
+    return "jar";
+  }
 
-    @Override
-    public JarFileAttributes readAttributes()
-            throws IOException {
-        return new JarFileAttributes(file);
-    }
+  @Override
+  public JarFileAttributes readAttributes() throws IOException {
+    return new JarFileAttributes(file);
+  }
 
-    @Override
-    public Object getAttribute (String attribute) throws IOException {
-       JarFileAttributes jfa = readAttributes();
-        if (attribute.equals("manifestAttributes")) {
-            return jfa.getManifestAttributes();
-        }
-        if (attribute.equals("entryAttributes")) {
-            return jfa.getEntryAttributes();
-        }
-        return super.getAttribute(attribute);
+  @Override
+  public Object getAttribute (String attribute) throws IOException {
+     JarFileAttributes jfa = readAttributes();
+    if (attribute.equals("manifestAttributes")) {
+      return jfa.getManifestAttributes();
     }
+    if (attribute.equals("entryAttributes")) {
+      return jfa.getEntryAttributes();
+    }
+    return super.getAttribute(attribute);
+  }
 }

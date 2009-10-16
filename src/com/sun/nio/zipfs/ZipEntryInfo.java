@@ -33,44 +33,46 @@ package com.sun.nio.zipfs;
 
 public class ZipEntryInfo {
 
-    byte[] filename;
-    int compSize;
-    int size;
-    byte[] comment;
-    long crc;
-    byte[] extraField;
-    int method;
-    int extAttrs;
-    long createTime = -1;
-    boolean isDirectory;
-    boolean isOtherFile;
-    boolean isRegularFile;
-    boolean isArchiveFile;
-    long lastAccessTime = -1;
-    long lastModifiedTime;
-    long streamOffset;
-    int versionMadeBy;
-    ZipEntryInfo(ZipEntryInfo entry){
-        this.filename = entry.filename;
-        this.compSize = entry.compSize;
-        this.size = entry.size;
-        this.comment = entry.comment;
-        this.crc = entry.crc;
-        this.extraField = entry.extraField;
-        this.method = entry.method;
-        this.extAttrs = entry.extAttrs;
-        this.createTime = entry.createTime;
-        this.isDirectory = entry.isDirectory;
-        this.isOtherFile = entry.isOtherFile;
-        this.isRegularFile = entry.isRegularFile;
-        this.isArchiveFile = entry.isArchiveFile;
-        this.lastAccessTime = entry.lastAccessTime;
-        this.lastModifiedTime = entry.lastModifiedTime;
-        this.streamOffset = entry.streamOffset;
-        this.versionMadeBy = entry.versionMadeBy;
+  byte[] filename;
+  int compSize;
+  int size;
+  byte[] comment;
+  long crc;
+  byte[] extraField;
+  int method;
+  int extAttrs;
+  long createTime = -1;
+  boolean isDirectory;
+  boolean isOtherFile;
+  boolean isRegularFile;
+  boolean isArchiveFile;
+  long lastAccessTime = -1;
+  long lastModifiedTime;
+  long streamOffset;
+  int versionMadeBy;
 
-    }
-    ZipEntryInfo(){
-        super();
-    }
+  ZipEntryInfo(ZipEntryInfo entry){
+    this.filename = entry.filename;
+    this.compSize = entry.compSize;
+    this.size = entry.size;
+    this.comment = entry.comment;
+    this.crc = entry.crc;
+    this.extraField = entry.extraField;
+    this.method = entry.method;
+    this.extAttrs = entry.extAttrs;
+    this.createTime = entry.createTime;
+    this.isDirectory = entry.isDirectory;
+    this.isOtherFile = entry.isOtherFile;
+    this.isRegularFile = entry.isRegularFile;
+    this.isArchiveFile = entry.isArchiveFile;
+    this.lastAccessTime = entry.lastAccessTime;
+    this.lastModifiedTime = entry.lastModifiedTime;
+    this.streamOffset = entry.streamOffset;
+    this.versionMadeBy = entry.versionMadeBy;
+
+  }
+
+  ZipEntryInfo(){
+    super();
+  }
 }

@@ -54,111 +54,107 @@ import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
 
 public class ZipFileStore extends FileStore {
 
-    private final ZipFilePath root;
-    private final String zipFileName;
-    private final String type = "zipfs";
+  private final ZipFilePath root;
+  private final String zipFileName;
+  private final String type = "zipfs";
 
-    ZipFileStore(ZipFilePath path) {
-        this.root = path;
-        zipFileName = path.getFileSystem().getZipFileSystemFile();
+  ZipFileStore(ZipFilePath path) {
+    this.root = path;
+    zipFileName = path.getFileSystem().getZipFileSystemFile();
+  }
+
+  static FileStore create(ZipFilePath root) throws IOException {
+    return new ZipFileStore(root);
+  }
+
+  @Override
+  public String name() {
+    return zipFileName;
+  }
+
+  @Override
+  public String type() {
+    return type;
+  }
+
+  @Override
+  public boolean isReadOnly() {
+    return root.getFileSystem().isReadOnly();
+  }
+
+  @Override
+  public boolean supportsFileAttributeView(Class<? extends FileAttributeView> type) {
+    if (type == BasicFileAttributeView.class)
+      return true;
+    if (type == ZipFileAttributeView.class)
+      return true;
+    if (type == JarFileAttributeView.class)
+      return true;
+    return false;
+  }
+
+  @Override
+  public boolean supportsFileAttributeView(String name) {
+    if (name.equals("basic") || name.equals("zip") || name.equals("jar")) {
+      return true;
+    }
+    return false;
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public <V extends FileStoreAttributeView> V getFileStoreAttributeView(Class<V> viewType) {
+    if (viewType == FileStoreSpaceAttributeView.class) {
+      return (V) new ZipFileStoreAttributeView(this);
+    }
+    return null;
+  }
+
+  @Override
+  public Object getAttribute(String attribute) throws IOException {
+     if (attribute.equals("space:totalSpace" )){
+         return new ZipFileStoreAttributeView(this).readAttributes().totalSpace();
+     }
+     if (attribute.equals("space:usableSpace")   ){
+         return new ZipFileStoreAttributeView(this).readAttributes().usableSpace();
+     }
+     if (attribute.equals("space:unallocatedSpace")){
+         return new ZipFileStoreAttributeView(this).readAttributes().unallocatedSpace();
+     }
+     throw new UnsupportedOperationException("does not support the given attribute");
+  }
+
+  private static class ZipFileStoreAttributeView implements FileStoreSpaceAttributeView {
+
+    private final ZipFileStore fileStore;
+
+    public ZipFileStoreAttributeView(ZipFileStore fileStore) {
+      this.fileStore = fileStore;
     }
 
-    static FileStore create(ZipFilePath root) throws IOException {
-        return new ZipFileStore(root);
-    }
-
-    @Override
     public String name() {
-        return zipFileName;
+      return "space";
     }
 
-    @Override
-    public String type() {
-        return type;
-    }
+    public FileStoreSpaceAttributes readAttributes() throws IOException {
+      // get the size of the zip file
+      String file = fileStore.name();
+      Path path = FileSystems.getDefault().getPath(file);
+      final long size = Attributes.readBasicFileAttributes(path).size();
+      return new FileStoreSpaceAttributes() {
 
-    @Override
-    public boolean isReadOnly() {
-        return root.getFileSystem().isReadOnly();
-    }
-
-    @Override
-    public boolean supportsFileAttributeView(Class<? extends FileAttributeView> type) {
-        if (type == BasicFileAttributeView.class)
-            return true;
-        if (type == ZipFileAttributeView.class)
-            return true;
-        if (type == JarFileAttributeView.class)
-            return true;
-        return false;
-    }
-
-    @Override
-    public boolean supportsFileAttributeView(String name) {
-        if (name.equals("basic") || name.equals("zip") || name.equals("jar")) {
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <V extends FileStoreAttributeView> V getFileStoreAttributeView(Class<V> viewType) {
-        if (viewType == FileStoreSpaceAttributeView.class) {
-            return (V) new ZipFileStoreAttributeView(this);
-        }
-        return null;
-    }
-
-    @Override
-    public Object getAttribute(String attribute) throws IOException {
-         if (attribute.equals("space:totalSpace" )){
-               return new ZipFileStoreAttributeView(this).readAttributes().totalSpace();
-         }
-         if (attribute.equals("space:usableSpace")   ){
-               return new ZipFileStoreAttributeView(this).readAttributes().usableSpace();
-         }
-         if (attribute.equals("space:unallocatedSpace")){
-               return new ZipFileStoreAttributeView(this).readAttributes().unallocatedSpace();
-         }
-         throw new UnsupportedOperationException("does not support the given attribute");
-    }
-
-    private static class ZipFileStoreAttributeView implements FileStoreSpaceAttributeView {
-
-        private final ZipFileStore fileStore;
-
-        public ZipFileStoreAttributeView(ZipFileStore fileStore) {
-            this.fileStore = fileStore;
+        public long totalSpace() {
+          return size; // size of the zip/jar file
         }
 
-        public String name() {
-            return "space";
+        public long usableSpace() {
+          return 0; // no usable space in zip/jar file
         }
 
-        public FileStoreSpaceAttributes readAttributes() throws IOException {
-            // get the size of the zip file
-            String file = fileStore.name();
-            Path path = FileSystems.getDefault().getPath(file);
-            final long size = Attributes.readBasicFileAttributes(path).size();
-            return new FileStoreSpaceAttributes() {
-
-                public long totalSpace() {
-                    return size; // size of the zip/jar file
-
-                }
-
-                public long usableSpace() {
-                    return 0; // no usable space in zip/jar file
-
-                }
-
-                public long unallocatedSpace() {
-                    return 0; // no unallocated space in zip/jar file.
-
-                }
-            };
-
+        public long unallocatedSpace() {
+          return 0; // no unallocated space in zip/jar file.
         }
+      };
     }
+  }
 }

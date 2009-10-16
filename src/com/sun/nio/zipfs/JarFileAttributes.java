@@ -40,18 +40,17 @@ import java.util.Set;
 
 public class JarFileAttributes extends ZipFileAttributes {
 
-    /** Creates a new instance of JarFileAttributes */
-    public JarFileAttributes(FileRef file)
-            throws IOException {
-        super(file);
+  /** Creates a new instance of JarFileAttributes */
+  public JarFileAttributes(FileRef file) throws IOException {
+    super(file);
 
-    }
+  }
 
-    public Set<Map.Entry<Object, Object>> getManifestAttributes() {
-        return ((JarEntryInfo) ze).manifestMainAttrs;
-    }
+  public Set<Map.Entry<Object, Object>> getManifestAttributes() {
+    return ((JarEntryInfo) ze).manifestMainAttrs;
+  }
 
-    public Set<Map.Entry<Object, Object>> getEntryAttributes() {
-        return ((JarEntryInfo) ze).entryAttributes;
-    }
+  public Set<Map.Entry<Object, Object>> getEntryAttributes() {
+    return ((JarEntryInfo) ze).entryAttributes;
+  }
 }

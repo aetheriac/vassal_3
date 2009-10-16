@@ -39,60 +39,60 @@ import java.io.IOException;
 
 
 public class ZipFileBasicAttributeView implements BasicFileAttributeView, ReadableAttributeViewByName {
-    // encapsulates the object that we are bound too
+  // encapsulates the object that we are bound too
 
-    protected final FileRef file;
+  protected final FileRef file;
 
-    /** Creates a new instance of ZipFileAttributeView */
-    public ZipFileBasicAttributeView(FileRef file) {
-        this.file = file;
+  /** Creates a new instance of ZipFileAttributeView */
+  public ZipFileBasicAttributeView(FileRef file) {
+    this.file = file;
+  }
+
+  public String name() {
+    return "basic";
+  }
+
+  public BasicFileAttributes readAttributes()
+      throws IOException {
+    return new ZipFileBasicAttributes(file);
+  }
+
+  public void setTimes(FileTime lastModifiedTime,
+             FileTime lastAccessTime,
+             FileTime createTimethrows)
+  {
+    throw new ReadOnlyFileSystemException();
+  }
+
+  public Object getAttribute(String attribute) throws IOException {
+    BasicFileAttributes bfa = readAttributes();
+    if (attribute.equals("lastModifiedTime")) {
+      return bfa.lastModifiedTime();
     }
-
-    public String name() {
-        return "basic";
+    if (attribute.equals("lastAccessTime")) {
+      return bfa.lastAccessTime();
     }
-
-    public BasicFileAttributes readAttributes()
-            throws IOException {
-        return new ZipFileBasicAttributes(file);
+    if (attribute.equals("creationTime")) {
+      return bfa.creationTime();
     }
-
-    public void setTimes(FileTime lastModifiedTime,
-                         FileTime lastAccessTime,
-                         FileTime createTimethrows)
-    {
-        throw new ReadOnlyFileSystemException();
+    if (attribute.equals("size")) {
+      return bfa.size();
     }
-
-    public Object getAttribute(String attribute) throws IOException {
-        BasicFileAttributes bfa = readAttributes();
-        if (attribute.equals("lastModifiedTime")) {
-            return bfa.lastModifiedTime();
-        }
-        if (attribute.equals("lastAccessTime")) {
-            return bfa.lastAccessTime();
-        }
-        if (attribute.equals("creationTime")) {
-            return bfa.creationTime();
-        }
-        if (attribute.equals("size")) {
-            return bfa.size();
-        }
-        if (attribute.equals("isRegularFile")) {
-            return bfa.isRegularFile();
-        }
-        if (attribute.equals("isDirectory")) {
-            return bfa.isDirectory();
-        }
-        if (attribute.equals("isSymbolicLink")) {
-            return bfa.isSymbolicLink();
-        }
-        if (attribute.equals("isOther")) {
-            return bfa.isOther();
-        }
-        if (attribute.equals("fileKey")) {
-            return bfa.fileKey();
-        }
-        return null;
+    if (attribute.equals("isRegularFile")) {
+      return bfa.isRegularFile();
     }
+    if (attribute.equals("isDirectory")) {
+      return bfa.isDirectory();
+    }
+    if (attribute.equals("isSymbolicLink")) {
+      return bfa.isSymbolicLink();
+    }
+    if (attribute.equals("isOther")) {
+      return bfa.isOther();
+    }
+    if (attribute.equals("fileKey")) {
+      return bfa.fileKey();
+    }
+    return null;
+  }
 }

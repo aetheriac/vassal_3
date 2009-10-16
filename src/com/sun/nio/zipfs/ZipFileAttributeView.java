@@ -37,19 +37,18 @@ import java.io.IOException;
 
 public class ZipFileAttributeView extends ZipFileBasicAttributeView {
 
-    /** Creates a new instance of ZipFileAttributeView */
-    public ZipFileAttributeView(FileRef file) {
-        super(file);
-    }
+  /** Creates a new instance of ZipFileAttributeView */
+  public ZipFileAttributeView(FileRef file) {
+    super(file);
+  }
 
-    @Override
-    public String name() {
-        return "zip";
-    }
+  @Override
+  public String name() {
+    return "zip";
+  }
 
-    @Override
-    public ZipFileAttributes readAttributes()
-            throws IOException {
-        return new ZipFileAttributes(file);
-    }
+  @Override
+  public ZipFileAttributes readAttributes() throws IOException {
+    return new ZipFileAttributes(file);
+  }
 }

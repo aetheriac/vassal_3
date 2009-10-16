@@ -43,129 +43,131 @@ import java.util.ConcurrentModificationException;
 
 public class ZipFileStream implements DirectoryStream<Path> {
 
-    private final ZipFilePath zipPath;
-    private final DirectoryStream.Filter<? super Path> filter;
-    private volatile boolean isOpen;
-    private final Object closeLock;
-    private Iterator<Path> iterator;
+  private final ZipFilePath zipPath;
+  private final DirectoryStream.Filter<? super Path> filter;
+  private volatile boolean isOpen;
+  private final Object closeLock;
+  private Iterator<Path> iterator;
 
-    private class ZipFilePathIterator implements
-            Iterator<Path> {
+  private class ZipFilePathIterator implements
+      Iterator<Path> {
 
-        private boolean atEof;
-        private Path nextEntry;
-        private Path prevEntry;
-        private Iterator<Path> entryIterator;
+    private boolean atEof;
+    private Path nextEntry;
+    private Path prevEntry;
+    private Iterator<Path> entryIterator;
 
-        ZipFilePathIterator() throws IOException {
-            atEof = false;
-            Map<ZipFilePath, ZipEntryInfo> entries = null;
-            int nameCount = zipPath.getNameCount();
-            entries = ZipUtils.getEntries(zipPath);
-            Set<ZipFilePath> s = entries.keySet();
-            Set<Path> s1 = new HashSet<Path>();
-            for (ZipFilePath f : s) {
+    ZipFilePathIterator() throws IOException {
+      atEof = false;
+      Map<ZipFilePath, ZipEntryInfo> entries = null;
+      int nameCount = zipPath.getNameCount();
+      entries = ZipUtils.getEntries(zipPath);
+      Set<ZipFilePath> s = entries.keySet();
+      Set<Path> s1 = new HashSet<Path>();
+      for (ZipFilePath f : s) {
 
-                boolean b = f.startsWith(zipPath);
-                if ((nameCount + 1) > f.getNameCount() || !b) {
-                    continue;
-                }
-                ZipFilePath entry = zipPath.resolve(f.getName(nameCount));
-                if (filter == null || filter.accept(entry)) {
-                    s1.add(entry);
-                }
-            }
-            if (s1.isEmpty()) {
-            // if there is no file keep quiet
-            }
-            entryIterator = s1.iterator();
+        boolean b = f.startsWith(zipPath);
+        if ((nameCount + 1) > f.getNameCount() || !b) {
+          continue;
         }
-
-        @SuppressWarnings("unchecked")
-        private boolean accept(Path entry) {
-            try {
-                return filter.accept(entry);
-            } catch (IOException ioe) {
-                ConcurrentModificationException cme =
-                    new ConcurrentModificationException();
-                cme.initCause(ioe);
-                throw cme;
-            }
+        ZipFilePath entry = zipPath.resolve(f.getName(nameCount));
+        if (filter == null || filter.accept(entry)) {
+          s1.add(entry);
         }
-
-        private Path readNextEntry() {
-            Path entry = entryIterator.next();
-            if ((filter == null) || accept(entry)) {
-                return entry;
-            }
-            return null;
-        }
-
-        public synchronized boolean hasNext() {
-            boolean isThereNext = entryIterator.hasNext();
-            if (!isThereNext) {
-                atEof = true;
-            }
-            return isThereNext;
-        }
-
-        public synchronized Path next() {
-            if (nextEntry == null) {
-                if (!atEof) {
-                    nextEntry = readNextEntry();
-                }
-                if (nextEntry == null) {
-                    atEof = true;
-                    throw new NoSuchElementException();
-                }
-            }
-            prevEntry = nextEntry;
-            nextEntry = null;
-            return prevEntry;
-        }
-
-        public void remove() {
-            UnsupportedOperationException e = new UnsupportedOperationException();
-            e.initCause(new ReadOnlyFileSystemException());
-            throw e;
-        }
+      }
+      if (s1.isEmpty()) {
+      // if there is no file keep quiet
+      }
+      entryIterator = s1.iterator();
     }
 
-    public Iterator<Path> iterator() {
-        synchronized (this) {
-            if (iterator != null) {
-                throw new IllegalStateException();
-            }
-            try {
-                iterator = new ZipFilePathIterator();
-            } catch (IOException e) {
-                IllegalStateException ie = new IllegalStateException();
-                ie.initCause(e);
-                throw ie;
-            }
-            return iterator;
-        }
+    @SuppressWarnings("unchecked")
+    private boolean accept(Path entry) {
+      try {
+        return filter.accept(entry);
+      }
+      catch (IOException ioe) {
+        ConcurrentModificationException cme =
+          new ConcurrentModificationException();
+        cme.initCause(ioe);
+        throw cme;
+      }
     }
 
-    public void close() throws IOException {
-    // no impl
+    private Path readNextEntry() {
+      Path entry = entryIterator.next();
+      if ((filter == null) || accept(entry)) {
+        return entry;
+      }
+      return null;
     }
 
-    /** Creates a new instance of ZipFileStream */
-    public ZipFileStream(ZipFilePath zipPath,
-            DirectoryStream.Filter<? super Path> filter)
-            throws IOException {
-
-        if (zipPath.getNameCount() != 0) { // if path is '/' no need for check existence
-            zipPath.checkAccess();
-        }
-
-        if (!zipPath.isArchiveFile() && !zipPath.isDirectory()) {
-            throw new NotDirectoryException("Not a Directory " + zipPath.toString());
-        }
-        this.zipPath = zipPath;
-        this.filter = filter;
-        this.isOpen = true;
-        this.closeLock = new Object();
+    public synchronized boolean hasNext() {
+      boolean isThereNext = entryIterator.hasNext();
+      if (!isThereNext) {
+        atEof = true;
+      }
+      return isThereNext;
     }
+
+    public synchronized Path next() {
+      if (nextEntry == null) {
+        if (!atEof) {
+          nextEntry = readNextEntry();
+        }
+        if (nextEntry == null) {
+          atEof = true;
+          throw new NoSuchElementException();
+        }
+      }
+      prevEntry = nextEntry;
+      nextEntry = null;
+      return prevEntry;
+    }
+
+    public void remove() {
+      UnsupportedOperationException e = new UnsupportedOperationException();
+      e.initCause(new ReadOnlyFileSystemException());
+      throw e;
+    }
+  }
+
+  public Iterator<Path> iterator() {
+    synchronized (this) {
+      if (iterator != null) {
+        throw new IllegalStateException();
+      }
+      try {
+        iterator = new ZipFilePathIterator();
+      }
+      catch (IOException e) {
+        IllegalStateException ie = new IllegalStateException();
+        ie.initCause(e);
+        throw ie;
+      }
+      return iterator;
+    }
+  }
+
+  public void close() throws IOException {
+  // no impl
+  }
+
+  /** Creates a new instance of ZipFileStream */
+  public ZipFileStream(ZipFilePath zipPath,
+      DirectoryStream.Filter<? super Path> filter)
+      throws IOException {
+
+    if (zipPath.getNameCount() != 0) { // if path is '/' no need for check existence
+      zipPath.checkAccess();
+    }
+
+    if (!zipPath.isArchiveFile() && !zipPath.isDirectory()) {
+      throw new NotDirectoryException("Not a Directory " + zipPath.toString());
+    }
+    this.zipPath = zipPath;
+    this.filter = filter;
+    this.isOpen = true;
+    this.closeLock = new Object();
+  }
 }

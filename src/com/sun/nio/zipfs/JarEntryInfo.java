@@ -35,10 +35,10 @@ import java.util.Map;
 import java.util.Set;
 
 public class JarEntryInfo extends ZipEntryInfo {
-    JarEntryInfo(ZipEntryInfo entry){
-        super(entry);
-    }
+  JarEntryInfo(ZipEntryInfo entry){
+    super(entry);
+  }
 
-    Set<Map.Entry<Object, Object>> entryAttributes;
-    Set<Map.Entry<Object, Object>> manifestMainAttrs;
+  Set<Map.Entry<Object, Object>> entryAttributes;
+  Set<Map.Entry<Object, Object>> manifestMainAttrs;
 }

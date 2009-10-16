@@ -38,56 +38,72 @@ import java.io.*;
 
 public class ZipFileAttributes extends ZipFileBasicAttributes {
 
-    /** Creates a new instance of ZipFileAttributes */
-    private String[] version = {"FAT file system (DOS, OS/2, NT)", "Amiga", "VMS (VAX or Alpha AXP)", "Unix", "VM/CMS", "Atari", "HPFS file system (OS/2, NT 3.x)",
-        "Macintosh", "Z-System", "CP/M", "TOPS-20", "NTFS file system (NT)", "SMS/QDOS", "Acorn RISC OS", "VFAT file system (Win95, NT)",
-        "MVS", "BeOS (BeBox or PowerMac)", "Tandem"
-    };
+  /** Creates a new instance of ZipFileAttributes */
+  private String[] version = {
+    "FAT file system (DOS, OS/2, NT)",
+    "Amiga",
+    "VMS (VAX or Alpha AXP)",
+    "Unix",
+    "VM/CMS",
+    "Atari",
+    "HPFS file system (OS/2, NT 3.x)",
+    "Macintosh",
+    "Z-System",
+    "CP/M",
+    "TOPS-20",
+    "NTFS file system (NT)",
+    "SMS/QDOS",
+    "Acorn RISC OS",
+    "VFAT file system (Win95, NT)",
+    "MVS",
+    "BeOS (BeBox or PowerMac)",
+    "Tandem"
+  };
 
-    public ZipFileAttributes(FileRef file)
-            throws IOException {
-        super(file);
+  public ZipFileAttributes(FileRef file) throws IOException {
+    super(file);
+  }
+
+
+  public byte[] comment() {
+    return ze.comment;
+  }
+
+  public int compressedSize() {
+    return ze.compSize;
+  }
+
+  public long crc() {
+    return ze.crc;
+  }
+
+  public byte[] extra() {
+    return ze.extraField;
+  }
+
+  public int method() {
+    return ze.method;
+  }
+
+  public byte[] name() {
+    return ze.filename;
+  }
+
+  public boolean isArchiveFile() {
+    return ze.isArchiveFile;
+  }
+
+  public String versionMadeBy() {
+    int ver = (ze.versionMadeBy >> 8);
+    if (ver >= 0 && ver < 17) {
+      return version[ver];
     }
-
-
-    public byte[] comment() {
-        return ze.comment;
+    else {
+      return "unused";
     }
+  }
 
-    public int compressedSize() {
-        return ze.compSize;
-    }
-
-    public long crc() {
-        return ze.crc;
-    }
-
-    public byte[] extra() {
-        return ze.extraField;
-    }
-
-    public int method() {
-        return ze.method;
-    }
-
-    public byte[] name() {
-        return ze.filename;
-    }
-
-    public boolean isArchiveFile() {
-        return ze.isArchiveFile;
-    }
-
-    public String versionMadeBy() {
-        int ver = (ze.versionMadeBy >> 8);
-        if (ver >= 0 && ver < 17) {
-            return version[ver];
-        } else {
-            return "unused";
-        }
-    }
-
-    public int getExternalAttrs() {
-        return ze.extAttrs;
-    }
+  public int getExternalAttrs() {
+    return ze.extAttrs;
+  }
 }

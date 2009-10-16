@@ -39,67 +39,66 @@ import java.io.IOException;
 import java.util.Calendar;
 
 public class ZipFileBasicAttributes implements
-        BasicFileAttributes {
+    BasicFileAttributes {
 
-    ZipEntryInfo ze;
+  ZipEntryInfo ze;
 
-    /** Creates a new instance of ZipFileAttributes */
-    public ZipFileBasicAttributes(FileRef file)
-            throws IOException {
-        if (file instanceof ZipFilePath && !((ZipFilePath) file).getFileSystem().isOpen()) {
-            throw new ClosedFileSystemException();
-        }
-        ze = ZipUtils.getEntry(file);
+  /** Creates a new instance of ZipFileAttributes */
+  public ZipFileBasicAttributes(FileRef file) throws IOException {
+    if (file instanceof ZipFilePath && !((ZipFilePath) file).getFileSystem().isOpen()) {
+      throw new ClosedFileSystemException();
     }
+    ze = ZipUtils.getEntry(file);
+  }
 
-    public FileTime creationTime() {
-        // is createTime in DOS or java time???
-        return FileTime.fromMillis(ze.createTime);
-    }
+  public FileTime creationTime() {
+    // is createTime in DOS or java time???
+    return FileTime.fromMillis(ze.createTime);
+  }
 
-    public boolean isDirectory() {
-        return ze.isDirectory;
-    }
+  public boolean isDirectory() {
+    return ze.isDirectory;
+  }
 
-    public boolean isOther() {
-        return ze.isOtherFile;
-    }
+  public boolean isOther() {
+    return ze.isOtherFile;
+  }
 
-    public boolean isRegularFile() {
-        return ze.isRegularFile;
-    }
+  public boolean isRegularFile() {
+    return ze.isRegularFile;
+  }
 
-    public FileTime lastAccessTime() {
-        // lastAccessTime in DOS or java time???
-        return FileTime.fromMillis(ze.lastAccessTime);
-    }
+  public FileTime lastAccessTime() {
+    // lastAccessTime in DOS or java time???
+    return FileTime.fromMillis(ze.lastAccessTime);
+  }
 
-    public FileTime lastModifiedTime() {
-        long time = ze.lastModifiedTime;
-        Calendar cal = dosTimeToJavaTime(time);
-        return FileTime.fromMillis(cal.getTimeInMillis());
-    }
+  public FileTime lastModifiedTime() {
+    long time = ze.lastModifiedTime;
+    Calendar cal = dosTimeToJavaTime(time);
+    return FileTime.fromMillis(cal.getTimeInMillis());
+  }
 
-    private Calendar dosTimeToJavaTime(long time) {
-        Calendar cal = Calendar.getInstance();
-        cal.set((int) (((time >> 25) & 0x7f) + 1980),
-                (int) (((time >> 21) & 0x0f) - 1),
-                (int) ((time >> 16) & 0x1f),
-                (int) ((time >> 11) & 0x1f),
-                (int) ((time >> 5) & 0x3f),
-                (int) ((time << 1) & 0x3e));
-        return cal;
-    }
+  private Calendar dosTimeToJavaTime(long time) {
+    Calendar cal = Calendar.getInstance();
+    cal.set((int) (((time >> 25) & 0x7f) + 1980),
+        (int) (((time >> 21) & 0x0f) - 1),
+        (int) ((time >> 16) & 0x1f),
+        (int) ((time >> 11) & 0x1f),
+        (int) ((time >> 5) & 0x3f),
+        (int) ((time << 1) & 0x3e));
+    return cal;
+  }
 
-    public long size() {
-        return ze.size;
-    }
+  public long size() {
+    return ze.size;
+  }
 
-    public boolean isSymbolicLink() {
-        return false;
-    }
+  public boolean isSymbolicLink() {
+    return false;
+  }
 
-    public Object fileKey() {
-        return null;
-    }
+  public Object fileKey() {
+    return null;
+  }
 }

@@ -64,422 +64,433 @@ import java.util.zip.*;
  */
 public class ZipUtils {
 
-    /**
-     * This map stores all the zip files that are extracted during the
-     * course of time when zip operations are performed on the zip file.
-     * The key for the map is the zip file reference.
-     * The zip file entries themselves are stored as map entries whose
-     * keys are zip file references to the entries.
-     */
-    public static Map<URI, Map<ZipFilePath, ZipEntryInfo>> cachedEntries =
-            new HashMap<URI, Map<ZipFilePath, ZipEntryInfo>>();
-    private static final boolean debug = true;
-    private static final FileSystem defFileSystem = FileSystems.getDefault();
+  /**
+   * This map stores all the zip files that are extracted during the
+   * course of time when zip operations are performed on the zip file.
+   * The key for the map is the zip file reference.
+   * The zip file entries themselves are stored as map entries whose
+   * keys are zip file references to the entries.
+   */
+  public static Map<URI, Map<ZipFilePath, ZipEntryInfo>> cachedEntries =
+      new HashMap<URI, Map<ZipFilePath, ZipEntryInfo>>();
+  private static final boolean debug = true;
+  private static final FileSystem defFileSystem = FileSystems.getDefault();
 
-    static SeekableByteChannel open(FileRef fr) throws IOException {
-        Set<StandardOpenOption> options = new HashSet<StandardOpenOption>();
-        options.add(StandardOpenOption.READ);
+  static SeekableByteChannel open(FileRef fr) throws IOException {
+    Set<StandardOpenOption> options = new HashSet<StandardOpenOption>();
+    options.add(StandardOpenOption.READ);
 
-        final Path p = (Path) fr;
-        return new FileChannelAdapter(
-          p.getFileSystem().provider().newFileChannel(p, options));
+    final Path p = (Path) fr;
+    return new FileChannelAdapter(
+      p.getFileSystem().provider().newFileChannel(p, options));
+  }
+
+  private static ByteBuffer getHeaderField(
+      SeekableByteChannel ch, long offset, int nBytes)
+      throws IOException {
+    ByteBuffer buf = ByteBuffer.allocate(nBytes);
+    buf = buf.order(ByteOrder.LITTLE_ENDIAN);
+    ch.position(offset);
+    int read = ch.read(buf);
+    if (read <= 0) {
+      return null;
+    }
+    buf.flip();
+    return (buf);
+  }
+
+  private static int readInt(SeekableByteChannel ch, long offset)
+      throws IOException {
+    ByteBuffer buf = getHeaderField(ch, offset, 4);
+    return buf.getInt();
+  }
+
+  private static int readShort(SeekableByteChannel ch, long offset)
+      throws IOException {
+    ByteBuffer buf = getHeaderField(ch, offset, 2);
+    return buf.getShort();
+  }
+
+  private static byte[] readBytes(SeekableByteChannel ch, long offset, int len)
+      throws IOException {
+    ByteBuffer buf = getHeaderField(ch, offset, len);
+    return buf.array();
+  }
+
+  static long locateEndOfCentralDirRecord(
+      SeekableByteChannel ch, FileRef file)
+      throws IOException {
+
+    long fileLen = ch.size();
+    // read the file backwards 4 bytes at a time
+    long backOffset = fileLen - C_END_RECORD_MIN_OFF;
+    byte[] signature = new byte[]{0x06, 0x05, 0x4b, 0x50};
+    int matchedIndex = 0;
+    for (; (backOffset >= 0); backOffset--) {
+      ByteBuffer buf = getHeaderField(ch, backOffset, 1);
+      if (buf == null) {
+        break;
+      }
+
+      byte b;
+      if ((b = buf.get()) == signature[matchedIndex]) {
+        matchedIndex++;
+      } 
+      else {
+        matchedIndex = 0;
+      }
+
+      if (matchedIndex == 4) {
+        return backOffset; // this needs to be verified.
+      }
+    }
+    throw new IOException("Could not locate the central header");
+  }
+
+  /**
+   * logicalRef is the Logical file reference to the zip file.
+   * LogicalRef is of type: ZipFileRef
+   * <tt>file</tt> is the reference to the physical location of the file
+   * and is of type FileRef.
+   */
+  public static Map<ZipFilePath, ZipEntryInfo> fillEntries(
+      ZipFilePath zipPath, FileRef file)
+      throws IOException {
+
+    SeekableByteChannel ch = open(file);
+    ZipFileSystem m = zipPath.getFileSystem();
+    FileSystem fs = null;
+    Map<ZipFilePath, ZipEntryInfo> entries =
+        new HashMap<ZipFilePath, ZipEntryInfo>();
+
+    long endOfCentralDirOff = locateEndOfCentralDirRecord(ch, file);
+    int totalEntries = readShort(ch,
+        endOfCentralDirOff + C_TOTAL_ENTRIES_OFF);
+    long centralDirOff = readInt(ch,
+        endOfCentralDirOff + C_DIR_START_OFF);
+    Path fileName1 = zipPath.getName();
+    boolean isJar = false;
+    if (fileName1 != null) {
+      isJar = isJar(fileName1.toString());
+    }
+    else {
+      isJar = isJar(zipPath.getFileSystem().getZipFileSystemFile());
     }
 
-    private static ByteBuffer getHeaderField(
-            SeekableByteChannel ch, long offset, int nBytes)
-            throws IOException {
-        ByteBuffer buf = ByteBuffer.allocate(nBytes);
-        buf = buf.order(ByteOrder.LITTLE_ENDIAN);
-        ch.position(offset);
-        int read = ch.read(buf);
-        if (read <= 0) {
-            return null;
+    for (int count = 0; count < totalEntries; count++) {
+      int sig;
+      if ((sig = readInt(ch, centralDirOff)) != CENTRAL_FILE_HDR_SIG) {
+        throw new IOException("Not the beginning of the central directory!");
+      }
+      ZipEntryInfo ze = new ZipEntryInfo();
+      JarEntryInfo jentry = null;
+      ze.versionMadeBy = readShort(ch, centralDirOff + C_VER_MADE_BY);
+      ze.method = readShort(ch, centralDirOff + C_COMP_METHOD_OFF);
+      ze.lastModifiedTime = readInt(ch, centralDirOff + C_LAST_MOD_TIME_OFF);
+      ze.crc = readInt(ch, centralDirOff + C_CRC_OFF);
+      ze.compSize = readInt(ch, centralDirOff + C_COMP_SIZE_OFF);
+      ze.size = readInt(ch, centralDirOff + C_UCOMP_SIZE_OFF);
+
+      int filenameLen = readShort(ch, centralDirOff + C_FILE_NAME_LEN_OFF);
+      int extraFieldLen = readShort(ch, centralDirOff + C_EXTRA_FLD_LEN_OFF);
+      int commentLen = readShort(ch, centralDirOff + C_COMMENT_LEN_OFF);
+
+      ze.extAttrs = readInt(ch, centralDirOff + C_EXT_ATTR_OFF);
+
+      // check which address the offset is relative to
+      ze.streamOffset = readInt(ch, centralDirOff + C_REL_OFF_LOCAL_HDR_OFF);
+      // the above line will give offset for the file name.
+
+      ze.filename = readBytes(ch, centralDirOff + C_FILE_NAME_OFF, filenameLen);
+      if (extraFieldLen > 0) {
+        ze.extraField = readBytes(ch, centralDirOff + C_FILE_NAME_OFF +
+            filenameLen, extraFieldLen);
+      }
+      if (commentLen > 0) {
+        ze.comment = readBytes(ch, centralDirOff + C_FILE_NAME_OFF +
+            filenameLen + extraFieldLen, commentLen);
+      }
+      centralDirOff = centralDirOff + C_FILE_NAME_OFF +
+          filenameLen + extraFieldLen + commentLen;
+
+      ZipFilePath entryPath = null;
+      entryPath = zipPath.resolve(new String(ze.filename));
+
+      ze.isArchiveFile = entryPath.isArchiveFile();
+      ze.isDirectory = (entryPath.toString().endsWith("/") ? true : false);
+      ze.isRegularFile = !ze.isDirectory;
+      if (isJar) {
+        jentry = new JarEntryInfo(ze);
+        JarFile jarfile = new JarFile(file.toString());
+        Manifest manifest = jarfile.getManifest();
+        Attributes attrs = null;
+        if (manifest != null) {
+          attrs = manifest.getMainAttributes();
         }
-        buf.flip();
-        return (buf);
+        if (attrs != null) {
+          jentry.manifestMainAttrs = attrs.entrySet();
+        }
+        JarEntry jarentry = jarfile.getJarEntry(new String(ze.filename));
+        if (jarentry != null) {
+          Attributes attributes = jarentry.getAttributes();
+          if (attributes != null) {
+            jentry.entryAttributes = attributes.entrySet();
+          }
+        }
+      }
+      // cache the entry
+      if (!isJar) {
+        entries.put(entryPath, ze);
+      }
+      else {
+        entries.put(entryPath, jentry);
+      }
+    }
+    ch.close();
+
+    //root entry
+
+    ZipEntryInfo rootentry = new ZipEntryInfo();
+    rootentry.isDirectory = true;
+    rootentry.isRegularFile = false;
+    JarEntryInfo jarRootEntry = null;
+    if (isJar) {
+      jarRootEntry = new JarEntryInfo(rootentry);
+    }
+    ZipFilePath root1 = zipPath.getRoot();
+    ZipFilePath root = (root1 == null) ? zipPath.toAbsolutePath().getRoot() : root1;
+    if (isJar) {
+      entries.put(root, jarRootEntry);
+    }
+    else {
+      entries.put(root, rootentry);
+    }
+    return entries;
+  }
+
+  public static boolean isJar(String path) {
+    String lowerCase = path.toLowerCase();
+    return (lowerCase.endsWith(".jar"));
+
+  }
+
+  public static void extractZip(ZipFilePath f)
+      throws IOException {
+    Map<ZipFilePath, ZipEntryInfo> entries;
+    FileRef refToPhysicalZipFile = f;
+    if (f.isNestedZip()) {
+      refToPhysicalZipFile = extractNestedZip(f);
+    }
+    else {
+      refToPhysicalZipFile = defFileSystem.getPath(f.getFileSystem().getZipFileSystemFile());//zp.zipPath;
+    }
+    entries = fillEntries(f, refToPhysicalZipFile);
+    cachedEntries.put(f.toUri0(), entries);
+  }
+
+  /**
+   *  getKey() returns path upto archive file if exists
+   *  otherwise path to Zip file in native filesytem
+   */
+  public static ZipFilePath getKey(ZipFilePath zp) {
+    int count = zp.getEntryNameCount();
+    if ((count == 0 || count == 1) && !zp.isArchiveFile()) { // / or /a/b/c
+      ZipFilePath root1 = zp.getRoot();
+      ZipFilePath root = (root1 == null) ? zp.toAbsolutePath().getRoot() : root1;
+      return root; //zp.zipPath;
+    }
+    if (count > 1 && !zp.isArchiveFile()) {  // /a.zip/e/f --> /a.zip
+      return zp.getParentEntry();
+    }
+    return zp; //no change /a.zip, /x/b.zip, /a.zip/b.zip, /a.zip/b.jar
+  }
+
+  /*
+   * Returns a map containing the all the entries of the given zip file
+   */
+  public static Map<ZipFilePath, ZipEntryInfo> getEntries(
+      ZipFilePath file)
+      throws IOException {
+
+    //getKey() returns path upto archive file if exists
+    //otherwise path to Zip file in native filesytem
+
+    ZipFilePath key = getKey(file);
+    Map<ZipFilePath, ZipEntryInfo> entries = cachedEntries.get(key.toUri0());
+    if (entries == null) {
+      extractZip(key);
+    }
+    entries = cachedEntries.get(key.toUri0());
+    if (entries == null) {
+      throw new IOException(
+          "Zip entries for the file could not be found:" + key);
+    }
+    return entries;
+  }
+
+  /**
+   * Returns an entry refered by the given file reference
+   */
+  public static ZipEntryInfo getEntry(FileRef file1)
+      throws IOException {
+    Map<ZipFilePath, ZipEntryInfo> entries = null;
+    ZipEntryInfo ze = null;
+    ZipFilePath file = (ZipFilePath) file1;
+    int entryCount = file.getEntryNameCount();
+    if (file.isArchiveFile() && entryCount == 1) {
+      ZipFilePath root1 = file.getRoot();
+      ZipFilePath root = (root1 == null) ? (file.toAbsolutePath().getRoot()) : root1;
+      entries = ZipUtils.getEntries(root);
+      ze = getElement(entries, file);
+      ze.isDirectory = true; // Since it is Archive
+      ze.isRegularFile = false;
+    }
+    else if (file.isArchiveFile() && entryCount > 1) {
+      ZipFilePath path = file.getParentEntry();
+      entries = ZipUtils.getEntries(path);
+      ze = getElement(entries, file);
+      ze.isDirectory = true; // Since it is Archive
+      ze.isArchiveFile = false;
+    }
+    else {
+      entries = ZipUtils.getEntries(file);
+      ze = getElement(entries, file);
     }
 
-    private static int readInt(SeekableByteChannel ch, long offset)
-            throws IOException {
-        ByteBuffer buf = getHeaderField(ch, offset, 4);
-        return buf.getInt();
+    if (ze == null) {
+      throw new NoSuchFileException(
+          "Zip file entry not found:" + file);
     }
+    return ze;
+  }
 
-    private static int readShort(SeekableByteChannel ch, long offset)
-            throws IOException {
-        ByteBuffer buf = getHeaderField(ch, offset, 2);
-        return buf.getShort();
-    }
+  static ZipEntryInfo getElement(Map<ZipFilePath, ZipEntryInfo> entries, ZipFilePath zfp)
+      throws IOException {
 
-    private static byte[] readBytes(SeekableByteChannel ch, long offset, int len)
-            throws IOException {
-        ByteBuffer buf = getHeaderField(ch, offset, len);
-        return buf.array();
-    }
-
-    static long locateEndOfCentralDirRecord(
-            SeekableByteChannel ch, FileRef file)
-            throws IOException {
-
-        long fileLen = ch.size();
-        // read the file backwards 4 bytes at a time
-        long backOffset = fileLen - C_END_RECORD_MIN_OFF;
-        byte[] signature = new byte[]{0x06, 0x05, 0x4b, 0x50};
-        int matchedIndex = 0;
-        for (; (backOffset >= 0); backOffset--) {
-            ByteBuffer buf = getHeaderField(ch, backOffset, 1);
-            if (buf == null) {
-                break;
-            }
-            byte b;
-            if ((b = buf.get()) == signature[matchedIndex]) {
-                matchedIndex++;
-            } else {
-                matchedIndex = 0;
-            }
-            if (matchedIndex == 4) {
-                return backOffset; // this needs to be verified.
-            }
-        }
-        throw new IOException("Could not locate the central header");
-    }
-
-    /**
-     * logicalRef is the Logical file reference to the zip file.
-     * LogicalRef is of type: ZipFileRef
-     * <tt>file</tt> is the reference to the physical location of the file
-     * and is of type FileRef.
-     */
-    public static Map<ZipFilePath, ZipEntryInfo> fillEntries(
-            ZipFilePath zipPath, FileRef file)
-            throws IOException {
-
-        SeekableByteChannel ch = open(file);
-        ZipFileSystem m = zipPath.getFileSystem();
-        FileSystem fs = null;
-        Map<ZipFilePath, ZipEntryInfo> entries =
-                new HashMap<ZipFilePath, ZipEntryInfo>();
-
-        long endOfCentralDirOff = locateEndOfCentralDirRecord(ch, file);
-        int totalEntries = readShort(ch,
-                endOfCentralDirOff + C_TOTAL_ENTRIES_OFF);
-        long centralDirOff = readInt(ch,
-                endOfCentralDirOff + C_DIR_START_OFF);
-        Path fileName1 = zipPath.getName();
-        boolean isJar = false;
-        if (fileName1 != null) {
-            isJar = isJar(fileName1.toString());
-        } else {
-            isJar = isJar(zipPath.getFileSystem().getZipFileSystemFile());
-        }
-
-        for (int count = 0; count < totalEntries; count++) {
-            int sig;
-            if ((sig = readInt(ch, centralDirOff)) != CENTRAL_FILE_HDR_SIG) {
-                throw new IOException("Not the beginning of the central directory!");
-            }
-            ZipEntryInfo ze = new ZipEntryInfo();
-            JarEntryInfo jentry = null;
-            ze.versionMadeBy = readShort(ch, centralDirOff + C_VER_MADE_BY);
-            ze.method = readShort(ch, centralDirOff + C_COMP_METHOD_OFF);
-            ze.lastModifiedTime = readInt(ch, centralDirOff + C_LAST_MOD_TIME_OFF);
-            ze.crc = readInt(ch, centralDirOff + C_CRC_OFF);
-            ze.compSize = readInt(ch, centralDirOff + C_COMP_SIZE_OFF);
-            ze.size = readInt(ch, centralDirOff + C_UCOMP_SIZE_OFF);
-
-            int filenameLen = readShort(ch, centralDirOff + C_FILE_NAME_LEN_OFF);
-            int extraFieldLen = readShort(ch, centralDirOff + C_EXTRA_FLD_LEN_OFF);
-            int commentLen = readShort(ch, centralDirOff + C_COMMENT_LEN_OFF);
-
-            ze.extAttrs = readInt(ch, centralDirOff + C_EXT_ATTR_OFF);
-
-            // check which address the offset is relative to
-            ze.streamOffset = readInt(ch, centralDirOff + C_REL_OFF_LOCAL_HDR_OFF);
-            // the above line will give offset for the file name.
-
-            ze.filename = readBytes(ch, centralDirOff + C_FILE_NAME_OFF, filenameLen);
-            if (extraFieldLen > 0) {
-                ze.extraField = readBytes(ch, centralDirOff + C_FILE_NAME_OFF +
-                        filenameLen, extraFieldLen);
-            }
-            if (commentLen > 0) {
-                ze.comment = readBytes(ch, centralDirOff + C_FILE_NAME_OFF +
-                        filenameLen + extraFieldLen, commentLen);
-            }
-            centralDirOff = centralDirOff + C_FILE_NAME_OFF +
-                    filenameLen + extraFieldLen + commentLen;
-
-            ZipFilePath entryPath = null;
-            entryPath = zipPath.resolve(new String(ze.filename));
-
-            ze.isArchiveFile = entryPath.isArchiveFile();
-            ze.isDirectory = (entryPath.toString().endsWith("/") ? true : false);
-            ze.isRegularFile = !ze.isDirectory;
-            if (isJar) {
-                jentry = new JarEntryInfo(ze);
-                JarFile jarfile = new JarFile(file.toString());
-                Manifest manifest = jarfile.getManifest();
-                Attributes attrs = null;
-                if (manifest != null) {
-                    attrs = manifest.getMainAttributes();
-                }
-                if (attrs != null) {
-                    jentry.manifestMainAttrs = attrs.entrySet();
-                }
-                JarEntry jarentry = jarfile.getJarEntry(new String(ze.filename));
-                if (jarentry != null) {
-                    Attributes attributes = jarentry.getAttributes();
-                    if (attributes != null) {
-                        jentry.entryAttributes = attributes.entrySet();
-                    }
-                }
-            }
-            // cache the entry
-            if (!isJar) {
-                entries.put(entryPath, ze);
-            } else {
-                entries.put(entryPath, jentry);
-            }
-        }
-        ch.close();
-
-        //root entry
-
-        ZipEntryInfo rootentry = new ZipEntryInfo();
-        rootentry.isDirectory = true;
-        rootentry.isRegularFile = false;
-        JarEntryInfo jarRootEntry = null;
-        if (isJar) {
-            jarRootEntry = new JarEntryInfo(rootentry);
-        }
-        ZipFilePath root1 = zipPath.getRoot();
-        ZipFilePath root = (root1 == null) ? zipPath.toAbsolutePath().getRoot() : root1;
-        if (isJar) {
-            entries.put(root, jarRootEntry);
-        } else {
-            entries.put(root, rootentry);
-        }
-        return entries;
-    }
-
-    public static boolean isJar(String path) {
-        String lowerCase = path.toLowerCase();
-        return (lowerCase.endsWith(".jar"));
-
-    }
-
-    public static void extractZip(ZipFilePath f)
-            throws IOException {
-        Map<ZipFilePath, ZipEntryInfo> entries;
-        FileRef refToPhysicalZipFile = f;
-        if (f.isNestedZip()) {
-            refToPhysicalZipFile = extractNestedZip(f);
-        } else {
-            refToPhysicalZipFile = defFileSystem.getPath(f.getFileSystem().getZipFileSystemFile());//zp.zipPath;
-        }
-        entries = fillEntries(f, refToPhysicalZipFile);
-        cachedEntries.put(f.toUri0(), entries);
-    }
-
-    /**
-     *  getKey() returns path upto archive file if exists
-     *  otherwise path to Zip file in native filesytem
-     */
-    public static ZipFilePath getKey(ZipFilePath zp) {
-        int count = zp.getEntryNameCount();
-        if ((count == 0 || count == 1) && !zp.isArchiveFile()) { // / or /a/b/c
-            ZipFilePath root1 = zp.getRoot();
-            ZipFilePath root = (root1 == null) ? zp.toAbsolutePath().getRoot() : root1;
-            return root; //zp.zipPath;
-        }
-        if (count > 1 && !zp.isArchiveFile()) {  // /a.zip/e/f --> /a.zip
-            return zp.getParentEntry();
-        }
-        return zp; //no change /a.zip, /x/b.zip, /a.zip/b.zip, /a.zip/b.jar
-
-    }
-
-    /*
-     * Returns a map containing the all the entries of the given zip file
-     */
-    public static Map<ZipFilePath, ZipEntryInfo> getEntries(
-            ZipFilePath file)
-            throws IOException {
-
-        //getKey() returns path upto archive file if exists
-        //otherwise path to Zip file in native filesytem
-
-        ZipFilePath key = getKey(file);
-        Map<ZipFilePath, ZipEntryInfo> entries = cachedEntries.get(key.toUri0());
-        if (entries == null) {
-            extractZip(key);
-        }
-        entries = cachedEntries.get(key.toUri0());
-        if (entries == null) {
-
-            throw new IOException(
-                    "Zip entries for the file could not be found:" + key);
-        }
-        return entries;
-    }
-
-    /**
-     * Returns an entry refered by the given file reference
-     */
-    public static ZipEntryInfo getEntry(FileRef file1)
-            throws IOException {
-        Map<ZipFilePath, ZipEntryInfo> entries = null;
-        ZipEntryInfo ze = null;
-        ZipFilePath file = (ZipFilePath) file1;
-        int entryCount = file.getEntryNameCount();
-        if (file.isArchiveFile() && entryCount == 1) {
-            ZipFilePath root1 = file.getRoot();
-            ZipFilePath root = (root1 == null) ? (file.toAbsolutePath().getRoot()) : root1;
-            entries = ZipUtils.getEntries(root);
-            ze = getElement(entries, file);
-            ze.isDirectory = true; // Since it is Archive
-            ze.isRegularFile = false;
-        } else if (file.isArchiveFile() && entryCount > 1) {
-            ZipFilePath path = file.getParentEntry();
-            entries = ZipUtils.getEntries(path);
-            ze = getElement(entries, file);
-            ze.isDirectory = true; // Since it is Archive
-            ze.isArchiveFile = false;
-        } else {
-            entries = ZipUtils.getEntries(file);
-            ze = getElement(entries, file);
-        }
-        if (ze == null) {
-            throw new NoSuchFileException(
-                    "Zip file entry not found:" + file);
-        }
-        return ze;
-    }
-
-    static ZipEntryInfo getElement(Map<ZipFilePath, ZipEntryInfo> entries, ZipFilePath zfp)
-            throws IOException {
-
-        ZipEntryInfo zei = null;
-        zei = entries.get(zfp);
-        if (zei != null) {
-            if (zfp.getNameCount() == 0) { //zfp.equals(zfp.getRoot())
-                Path p = Paths.get(zfp.getFileSystem().getZipFileSystemFile());
-                try {
-                    long time = VASSAL.tools.nio.file.attribute.Attributes
-                        .readBasicFileAttributes(p).lastModifiedTime().toMillis();
-                    zei.lastModifiedTime = javaTimeToDosTime(time);
-                } catch (IOException e) {
-                    throw e;
-                }
-            }
-            return zei;
-        }
-        for (ZipFilePath f : entries.keySet()) {
-            if (f.startsWith(zfp)) {
-                if (zfp.getNameCount() == f.getNameCount()) {
-                    zei = entries.get(f);
-                    return zei;
-                }
-            }
-        }
-        for (ZipFilePath f : entries.keySet()) {
-            if (f.startsWith(zfp)) {
-                if (zfp.getNameCount() < f.getNameCount()) {
-                    zei = new ZipEntryInfo(); //it is a path component in an entry,
-                    zei.isDirectory = true;   // jar/zip file won't contain any information
-                    zei.isRegularFile = false;  // about this dir component
-                    // Set directory as readable and executable
-                    zei.extAttrs = Integer.parseInt("-1111110101111111111111111111111", 2);
-                    boolean isJar = false;
-                    if (f.getEntryNameCount() > 1) {
-                        isJar = f.getParentEntry().getName().toString().toLowerCase().endsWith(".jar");
-                    } else {
-                        isJar = f.getFileSystem().getZipFileSystemFile().toLowerCase().endsWith(".jar");
-                    }
-                    if (isJar) {
-                        zei = new JarEntryInfo(zei);
-                    }
-                    return zei;
-                }
-            }
-        }
-        throw new NoSuchFileException("" + zfp); // no matching
-
-    }
-
-    private static long javaTimeToDosTime(long time) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(time);
-        int year = cal.get(Calendar.YEAR);
-        if (year < 1980) {
-            return ((1 << 21) | (1 << 16));
-        }
-        return ((year - 1980) << 25 | (cal.get(Calendar.MONTH) + 1) << 21 |
-                cal.get(Calendar.DAY_OF_MONTH) << 16 | cal.get(Calendar.HOUR_OF_DAY) << 11 | cal.get(Calendar.MINUTE) << 5 |
-                cal.get(Calendar.SECOND) >> 1);
-    }
-
-    static void remove(URI uri) {
-        cachedEntries.remove(uri);
-    }
-
-    /**
-     * Extract the nested zips in a given file reference
-     * by extracting the intermediate zip file contents to a temporary
-     * location of the Platform file system
-     */
-    static FileRef extractNestedZip(ZipFilePath f) throws IOException {
-
-
-        if (f.getEntryNameCount() == 0) {
-            return null;
-        }
-        String zipFile = f.getFileSystem().getZipFileSystemFile();
-        int end = f.getEntryNameCount();
-        ZipFile zfile = null;
-        for (int i = 0; i < end; i++) {
-            try {
-                String nestedZip = f.getEntryName(i).toString();
-                zfile = new ZipFile(zipFile);
-                ZipEntry entry = zfile.getEntry(nestedZip);
-                if (entry == null) {
-                    throw new IOException("Invalid Zip Entry:" + nestedZip);
-                }
-                zipFile = readFileInZip(zfile.getInputStream(entry));
-            } finally {
-                zfile.close();
-            }
-        }
-        FileSystem m = FileSystems.getDefault();
-        FileRef retrievedZip = m.getPath(zipFile);
-        return retrievedZip;
-    }
-
-    static String readFileInZip(InputStream entry) throws IOException {
-
-        File tmpFile = null;
+    ZipEntryInfo zei = null;
+    zei = entries.get(zfp);
+    if (zei != null) {
+      if (zfp.getNameCount() == 0) { //zfp.equals(zfp.getRoot())
+        Path p = Paths.get(zfp.getFileSystem().getZipFileSystemFile());
         try {
-            BufferedInputStream zipStream = new BufferedInputStream(
-                    entry);
-
-            // unzip the file contents to a temp directory
-            String prefix = "zipfs";
-            String suffix = String.valueOf((new Date()).getTime());
-            tmpFile = File.createTempFile(prefix, suffix);
-            FileOutputStream tmpOut = new FileOutputStream(tmpFile);
-            byte buf[] = new byte[1024];
-            int read;
-            int offset = 0;
-            while ((read = zipStream.read(buf)) > 0) {
-                tmpOut.write(buf, 0, read);
-                offset = offset + read;
-            }
-            zipStream.close();
-            tmpOut.close();
-            tmpFile.deleteOnExit();
-        } catch (IOException e) {
-            throw e;
+          long time = VASSAL.tools.nio.file.attribute.Attributes
+            .readBasicFileAttributes(p).lastModifiedTime().toMillis();
+          zei.lastModifiedTime = javaTimeToDosTime(time);
         }
-        return tmpFile.getAbsolutePath();
+        catch (IOException e) {
+          throw e;
+        }
+      }
+      return zei;
     }
+    for (ZipFilePath f : entries.keySet()) {
+      if (f.startsWith(zfp)) {
+        if (zfp.getNameCount() == f.getNameCount()) {
+          zei = entries.get(f);
+          return zei;
+        }
+      }
+    }
+    for (ZipFilePath f : entries.keySet()) {
+      if (f.startsWith(zfp)) {
+        if (zfp.getNameCount() < f.getNameCount()) {
+          zei = new ZipEntryInfo(); //it is a path component in an entry,
+          zei.isDirectory = true;   // jar/zip file won't contain any information
+          zei.isRegularFile = false;  // about this dir component
+          // Set directory as readable and executable
+          zei.extAttrs = Integer.parseInt("-1111110101111111111111111111111", 2);
+          boolean isJar = false;
+          if (f.getEntryNameCount() > 1) {
+            isJar = f.getParentEntry().getName().toString().toLowerCase().endsWith(".jar");
+          }
+          else {
+            isJar = f.getFileSystem().getZipFileSystemFile().toLowerCase().endsWith(".jar");
+          }
+
+          if (isJar) {
+            zei = new JarEntryInfo(zei);
+          }
+          return zei;
+        }
+      }
+    }
+    throw new NoSuchFileException("" + zfp); // no matching
+  }
+
+  private static long javaTimeToDosTime(long time) {
+    Calendar cal = Calendar.getInstance();
+    cal.setTimeInMillis(time);
+    int year = cal.get(Calendar.YEAR);
+    if (year < 1980) {
+      return ((1 << 21) | (1 << 16));
+    }
+    return ((year - 1980) << 25 | (cal.get(Calendar.MONTH) + 1) << 21 |
+        cal.get(Calendar.DAY_OF_MONTH) << 16 | cal.get(Calendar.HOUR_OF_DAY) << 11 | cal.get(Calendar.MINUTE) << 5 |
+        cal.get(Calendar.SECOND) >> 1);
+  }
+
+  static void remove(URI uri) {
+    cachedEntries.remove(uri);
+  }
+
+  /**
+   * Extract the nested zips in a given file reference
+   * by extracting the intermediate zip file contents to a temporary
+   * location of the Platform file system
+   */
+  static FileRef extractNestedZip(ZipFilePath f) throws IOException {
+    if (f.getEntryNameCount() == 0) {
+      return null;
+    }
+
+    String zipFile = f.getFileSystem().getZipFileSystemFile();
+    int end = f.getEntryNameCount();
+    ZipFile zfile = null;
+    for (int i = 0; i < end; i++) {
+      try {
+        String nestedZip = f.getEntryName(i).toString();
+        zfile = new ZipFile(zipFile);
+        ZipEntry entry = zfile.getEntry(nestedZip);
+        if (entry == null) {
+          throw new IOException("Invalid Zip Entry:" + nestedZip);
+        }
+        zipFile = readFileInZip(zfile.getInputStream(entry));
+      }
+      finally {
+        zfile.close();
+      }
+    }
+
+    FileSystem m = FileSystems.getDefault();
+    FileRef retrievedZip = m.getPath(zipFile);
+    return retrievedZip;
+  }
+
+  static String readFileInZip(InputStream entry) throws IOException {
+    File tmpFile = null;
+    try {
+      BufferedInputStream zipStream = new BufferedInputStream(
+          entry);
+
+      // unzip the file contents to a temp directory
+      String prefix = "zipfs";
+      String suffix = String.valueOf((new Date()).getTime());
+      tmpFile = File.createTempFile(prefix, suffix);
+      FileOutputStream tmpOut = new FileOutputStream(tmpFile);
+      byte buf[] = new byte[1024];
+      int read;
+      int offset = 0;
+      while ((read = zipStream.read(buf)) > 0) {
+        tmpOut.write(buf, 0, read);
+        offset = offset + read;
+      }
+      zipStream.close();
+      tmpOut.close();
+      tmpFile.deleteOnExit();
+    }
+    catch (IOException e) {
+      throw e;
+    }
+    return tmpFile.getAbsolutePath();
+  }
 }
