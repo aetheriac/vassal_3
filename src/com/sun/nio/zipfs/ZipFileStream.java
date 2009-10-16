@@ -101,7 +101,6 @@ public class ZipFileStream implements DirectoryStream<Path> {
             return null;
         }
 
-        @Override
         public synchronized boolean hasNext() {
             boolean isThereNext = entryIterator.hasNext();
             if (!isThereNext) {
@@ -110,7 +109,6 @@ public class ZipFileStream implements DirectoryStream<Path> {
             return isThereNext;
         }
 
-        @Override
         public synchronized Path next() {
             if (nextEntry == null) {
                 if (!atEof) {
@@ -126,7 +124,6 @@ public class ZipFileStream implements DirectoryStream<Path> {
             return prevEntry;
         }
 
-        @Override
         public void remove() {
             UnsupportedOperationException e = new UnsupportedOperationException();
             e.initCause(new ReadOnlyFileSystemException());
@@ -134,7 +131,6 @@ public class ZipFileStream implements DirectoryStream<Path> {
         }
     }
 
-    @Override
     public Iterator<Path> iterator() {
         synchronized (this) {
             if (iterator != null) {
@@ -151,7 +147,6 @@ public class ZipFileStream implements DirectoryStream<Path> {
         }
     }
 
-    @Override
     public void close() throws IOException {
     // no impl
     }

@@ -132,12 +132,10 @@ public class ZipFileStore extends FileStore {
             this.fileStore = fileStore;
         }
 
-        @Override
         public String name() {
             return "space";
         }
 
-        @Override
         public FileStoreSpaceAttributes readAttributes() throws IOException {
             // get the size of the zip file
             String file = fileStore.name();

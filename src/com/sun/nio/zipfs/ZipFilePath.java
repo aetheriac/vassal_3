@@ -734,7 +734,6 @@ public class ZipFilePath extends Path {
         return pathToZip;
     }
 
-    @Override
     public InputStream newInputStream(OpenOption... options)
             throws IOException {
         if (options.length > 0) {
@@ -782,7 +781,6 @@ public class ZipFilePath extends Path {
     private static final DirectoryStream.Filter<Path> acceptAllFilter =
             new DirectoryStream.Filter<Path>() {
 
-                @Override
                 public boolean accept(Path entry) {
                     return true;
                 }
@@ -801,7 +799,6 @@ public class ZipFilePath extends Path {
 
         final PathMatcher matcher = getFileSystem().getPathMatcher("glob:" + glob);
         DirectoryStream.Filter<Path> filter = new DirectoryStream.Filter<Path>() {
-            @Override
             public boolean accept(Path entry)  {
                 return matcher.matches(entry.getName());
             }
@@ -819,7 +816,6 @@ public class ZipFilePath extends Path {
         throw new ReadOnlyFileSystemException();
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public <V extends FileAttributeView> V getFileAttributeView(Class<V> type, LinkOption... options) {
         if (type == null) {
@@ -854,12 +850,10 @@ public class ZipFilePath extends Path {
 
     }
 
-    @Override
     public void setAttribute(String attribute, Object value, LinkOption... options) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public Object getAttribute(String attribute, LinkOption... options) throws IOException {
 
         String view = null;
@@ -881,7 +875,6 @@ public class ZipFilePath extends Path {
 
     }
 
-    @Override
     public Map<String,?> readAttributes(String attribute, LinkOption... options)
         throws IOException
     {
@@ -949,12 +942,10 @@ public class ZipFilePath extends Path {
 
             private int i = 0;
 
-            @Override
             public boolean hasNext() {
                 return (i < getNameCount());
             }
 
-            @Override
             public Path next() {
                 if (i < getNameCount()) {
                     Path result = getName(i);
@@ -967,7 +958,6 @@ public class ZipFilePath extends Path {
 
             }
 
-            @Override
             public void remove() {
                 throw new ReadOnlyFileSystemException();
             }

@@ -52,34 +52,28 @@ public class ZipFileBasicAttributes implements
         ze = ZipUtils.getEntry(file);
     }
 
-    @Override
     public FileTime creationTime() {
         // is createTime in DOS or java time???
         return FileTime.fromMillis(ze.createTime);
     }
 
-    @Override
     public boolean isDirectory() {
         return ze.isDirectory;
     }
 
-    @Override
     public boolean isOther() {
         return ze.isOtherFile;
     }
 
-    @Override
     public boolean isRegularFile() {
         return ze.isRegularFile;
     }
 
-    @Override
     public FileTime lastAccessTime() {
         // lastAccessTime in DOS or java time???
         return FileTime.fromMillis(ze.lastAccessTime);
     }
 
-    @Override
     public FileTime lastModifiedTime() {
         long time = ze.lastModifiedTime;
         Calendar cal = dosTimeToJavaTime(time);
@@ -97,17 +91,14 @@ public class ZipFileBasicAttributes implements
         return cal;
     }
 
-    @Override
     public long size() {
         return ze.size;
     }
 
-    @Override
     public boolean isSymbolicLink() {
         return false;
     }
 
-    @Override
     public Object fileKey() {
         return null;
     }

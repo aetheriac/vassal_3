@@ -228,7 +228,6 @@ public class ZipFileSystem extends FileSystem {
             }
         }
 
-        @Override
         public synchronized boolean hasNext() {
             if (next != null) {
                 return true;
@@ -303,7 +302,6 @@ public class ZipFileSystem extends FileSystem {
         final Pattern pattern = Pattern.compile(input);
         return new PathMatcher() {
 
-            @Override
             public boolean matches(Path path) {
                 // match on file name only
                 Path name = path.getName();

@@ -48,7 +48,6 @@ public class ZipFileBasicAttributeView implements BasicFileAttributeView, Readab
         this.file = file;
     }
 
-    @Override
     public String name() {
         return "basic";
     }
@@ -58,7 +57,6 @@ public class ZipFileBasicAttributeView implements BasicFileAttributeView, Readab
         return new ZipFileBasicAttributes(file);
     }
 
-    @Override
     public void setTimes(FileTime lastModifiedTime,
                          FileTime lastAccessTime,
                          FileTime createTimethrows)
@@ -66,7 +64,6 @@ public class ZipFileBasicAttributeView implements BasicFileAttributeView, Readab
         throw new ReadOnlyFileSystemException();
     }
 
-    @Override
     public Object getAttribute(String attribute) throws IOException {
         BasicFileAttributes bfa = readAttributes();
         if (attribute.equals("lastModifiedTime")) {
