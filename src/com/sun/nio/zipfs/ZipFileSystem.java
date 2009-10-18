@@ -55,7 +55,9 @@ public class ZipFileSystem extends FileSystem {
   private final String defaultdir;
   private final ReadWriteLock closeLock = new ReentrantReadWriteLock();
   private boolean open = true;
-  private Set<Closeable> closeableObjects = new HashSet<Closeable>();
+
+  private Set<Closeable> closeables =
+    Collections.synchronizedSet(new HashSet<Closeable>());
 
   ZipFileSystem(ZipFileSystemProvider provider, FileRef fref) {
     this(provider, fref.toString(), "/");
@@ -82,6 +84,7 @@ public class ZipFileSystem extends FileSystem {
     return open;
   }
 
+// FIXME
   @Override
   public boolean isReadOnly() {
     return true;
@@ -115,12 +118,13 @@ public class ZipFileSystem extends FileSystem {
     closeLock.readLock().unlock();
   }
 
+// FIXME: closeables needs to be synchronized or concurrent
+// FIXME
   // Free all cached Zip/Jar files
-
   private void implClose(URI root) throws IOException {
     ZipUtils.remove(root); // remove cached filesystem
     provider.removeFileSystem(root);
-    Iterator<Closeable> itr = closeableObjects.iterator();
+    Iterator<Closeable> itr = closeables.iterator();
     while (itr.hasNext()) {
       try {
         itr.next().close();
@@ -132,8 +136,12 @@ public class ZipFileSystem extends FileSystem {
     }
   }
 
-  boolean addCloseableObjects(Closeable obj) {
-    return closeableObjects.add(obj);
+  boolean addCloseable(Closeable obj) {
+    return closeables.add(obj);
+  }
+
+  boolean removeCloseable(Closeable obj) {
+    return closeables.remove(obj);
   }
 
   @Override
@@ -205,6 +213,7 @@ public class ZipFileSystem extends FileSystem {
     }
   }
 
+// FIXME: What is this for?!
   private static class ZipFileStoreIterator implements Iterator<FileStore> {
 
     private final Iterator<Path> roots;

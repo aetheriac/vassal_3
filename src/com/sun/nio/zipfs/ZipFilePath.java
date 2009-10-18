@@ -31,6 +31,7 @@
 package com.sun.nio.zipfs;
 
 import java.io.File;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -41,6 +42,7 @@ import java.io.OutputStream;
 import java.util.*;
 //import java.nio.file.attribute.*;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 //import java.nio.file.attribute.Attributes;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -736,8 +738,7 @@ public class ZipFilePath extends Path {
     return pathToZip;
   }
 
-  public InputStream newInputStream(OpenOption... options)
-      throws IOException {
+  public InputStream newInputStream(OpenOption... options) throws IOException {
     if (options.length > 0) {
       for (OpenOption opt : options) {
         if (opt != StandardOpenOption.READ) {
@@ -745,6 +746,7 @@ public class ZipFilePath extends Path {
         }
       }
     }
+
     try {
       begin();
       ZipFilePath realPath = getResolvedPathForZip();
@@ -760,13 +762,69 @@ public class ZipFilePath extends Path {
           zfile.close();
           throw new IOException("entry not found" + entryStr);
         }
-        InputStream is = zfile.getInputStream(entry);
-        fileSystem.addCloseableObjects(is);
-        return is;
+
+        return new ZipFilePathInputStream(zfile.getInputStream(entry));
       }
     }
     finally {
       end();
+    }
+  }
+
+  private class ZipFilePathInputStream extends FilterInputStream {
+    public ZipFilePathInputStream(InputStream in) {
+      super(in);
+      fileSystem.addCloseable(this);
+    }
+
+    @Override
+    public void close() throws IOException {
+      in.close();
+      fileSystem.removeCloseable(this);
+    }
+  }
+
+  private class ZipFilePathSeekableByteChannel implements SeekableByteChannel {
+    private final SeekableByteChannel ch;
+
+    public ZipFilePathSeekableByteChannel(SeekableByteChannel ch) {
+      this.ch = ch;
+      fileSystem.addCloseable(this);
+    }
+
+    public long position() throws IOException {
+      return ch.position();
+    }
+
+    public SeekableByteChannel position(long newPosition) throws IOException {
+      ch.position(newPosition);
+      return this;
+    }
+    
+    public int read(ByteBuffer dst) throws IOException {
+      return ch.read(dst);
+    }
+    
+    public long size() throws IOException {
+      return ch.size();
+    }
+
+    public SeekableByteChannel truncate(long size) throws IOException {
+      ch.truncate(size);
+      return this;
+    }
+
+    public int write(ByteBuffer src) throws IOException {
+      return ch.write(src);
+    }
+
+    public boolean isOpen() {
+      return ch.isOpen();
+    }
+
+    public void close() throws IOException {
+      ch.close();
+      fileSystem.removeCloseable(this);
     }
   }
 
@@ -994,6 +1052,7 @@ public class ZipFilePath extends Path {
     if (!openedForRead) {
       throw new IllegalArgumentException("not opened for Read"); //this is never thrown
     }
+
     try {
       begin();
       ZipFilePath realPath = getResolvedPathForZip();
@@ -1013,11 +1072,11 @@ public class ZipFilePath extends Path {
         Path pathtoZip = Paths.get(ZipUtils.readFileInZip(in));
         zfile.close();
 
-        SeekableByteChannel sbc = new FileChannelAdapter(
-          fileSystem.provider().newFileChannel(pathToZip, options));
-
-        fileSystem.addCloseableObjects(sbc);
-        return sbc;
+        return new ZipFilePathSeekableByteChannel(
+          new FileChannelAdapter(
+            fileSystem.provider().newFileChannel(pathToZip, options)
+          )
+        );
       }
     }
     finally {
