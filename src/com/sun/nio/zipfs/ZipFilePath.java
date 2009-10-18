@@ -961,7 +961,6 @@ public class ZipFilePath extends Path {
         else {
           throw new NoSuchElementException();
         }
-
       }
 
       public void remove() {
