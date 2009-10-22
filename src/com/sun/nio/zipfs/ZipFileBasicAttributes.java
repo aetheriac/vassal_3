@@ -28,7 +28,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sun.nio.zipfs;
+package VASSAL.tools.nio.file.zipfs;
 
 import VASSAL.tools.nio.file.*;
 import VASSAL.tools.nio.file.attribute.*;
@@ -38,17 +38,23 @@ import VASSAL.tools.nio.file.attribute.*;
 import java.io.IOException;
 import java.util.Calendar;
 
-public class ZipFileBasicAttributes implements
-    BasicFileAttributes {
+public class ZipFileBasicAttributes implements BasicFileAttributes {
 
   ZipEntryInfo ze;
 
   /** Creates a new instance of ZipFileAttributes */
-  public ZipFileBasicAttributes(FileRef file) throws IOException {
-    if (file instanceof ZipFilePath && !((ZipFilePath) file).getFileSystem().isOpen()) {
+  public ZipFileBasicAttributes(ZipFilePath file) throws IOException {
+    if (!file.getFileSystem().isOpen()) {
       throw new ClosedFileSystemException();
     }
-    ze = ZipUtils.getEntry(file);
+
+    try {
+      ZipIO.readLock(file);
+      ze = ZipUtils.getEntry(file);
+    }
+    finally {
+      ZipIO.readUnlock(file);
+    }
   }
 
   public FileTime creationTime() {

@@ -28,7 +28,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sun.nio.zipfs;
+package VASSAL.tools.nio.file.zipfs;
 
 import VASSAL.tools.nio.file.*;
 import VASSAL.tools.nio.file.attribute.*;
@@ -42,6 +42,7 @@ import java.net.URI;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.channels.FileChannel;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +50,9 @@ import java.util.Set;
 public class ZipFileSystemProvider extends FileSystemProvider {
 
   private String scheme = "zip";
-  private Map<URI, ZipFileSystem> fileSystems = new HashMap<URI, ZipFileSystem>();
+
+  private Map<URI,ZipFileSystem> fileSystems =
+    Collections.synchronizedMap(new HashMap<URI,ZipFileSystem>());
 
   public ZipFileSystemProvider() {
   }
@@ -215,6 +218,7 @@ public class ZipFileSystemProvider extends FileSystemProvider {
     return path;
   }
 
+// FIXME: It's weird that this uses the default fs!
   @Override
   public FileChannel newFileChannel(Path path,
       Set<? extends OpenOption> options,

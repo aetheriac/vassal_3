@@ -28,7 +28,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sun.nio.zipfs;
+package VASSAL.tools.nio.file.zipfs;
 
 import VASSAL.tools.nio.file.*;
 import VASSAL.tools.nio.channels.SeekableByteChannel;
@@ -271,7 +271,6 @@ public class ZipUtils {
   public static boolean isJar(String path) {
     String lowerCase = path.toLowerCase();
     return (lowerCase.endsWith(".jar"));
-
   }
 
   public static void extractZip(ZipFilePath f)
@@ -469,8 +468,7 @@ public class ZipUtils {
   static String readFileInZip(InputStream entry) throws IOException {
     File tmpFile = null;
     try {
-      BufferedInputStream zipStream = new BufferedInputStream(
-          entry);
+      BufferedInputStream zipStream = new BufferedInputStream(entry);
 
       // unzip the file contents to a temp directory
       String prefix = "zipfs";

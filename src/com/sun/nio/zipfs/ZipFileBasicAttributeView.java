@@ -28,7 +28,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sun.nio.zipfs;
+package VASSAL.tools.nio.file.zipfs;
 
 import VASSAL.tools.nio.file.attribute.*;
 import VASSAL.tools.nio.file.*;
@@ -41,10 +41,10 @@ import java.io.IOException;
 public class ZipFileBasicAttributeView implements BasicFileAttributeView, ReadableAttributeViewByName {
   // encapsulates the object that we are bound too
 
-  protected final FileRef file;
+  protected final ZipFilePath file;
 
   /** Creates a new instance of ZipFileAttributeView */
-  public ZipFileBasicAttributeView(FileRef file) {
+  public ZipFileBasicAttributeView(ZipFilePath file) {
     this.file = file;
   }
 

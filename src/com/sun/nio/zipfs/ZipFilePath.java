@@ -28,7 +28,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sun.nio.zipfs;
+package VASSAL.tools.nio.file.zipfs;
 
 import java.io.File;
 import java.io.FilterInputStream;
@@ -271,7 +271,6 @@ public class ZipFilePath extends Path {
     int position = offsets.get(count - 1);
     String parent = subString(0, position - 1);
     return new ZipFilePath(this.fileSystem, parent.getBytes());
-
   }
 
   public ZipFilePath getParentEntry() {
@@ -417,7 +416,7 @@ public class ZipFilePath extends Path {
       return this;
     } 
     else {
-      //add / bofore the existing path
+      // add / bofore the existing path
       byte[] defaultdir = fileSystem.getDefaultDir().getBytes();
       int defaultlen = defaultdir.length;
       boolean endsWith = (defaultdir[defaultlen - 1] == '/');
@@ -725,6 +724,7 @@ public class ZipFilePath extends Path {
     throw new UnsupportedOperationException("Not supported.");
   }
 
+// FIXME: write lock
   @Override
   public Path createDirectory(
       FileAttribute<?>... attrs) throws IOException {
@@ -747,84 +747,19 @@ public class ZipFilePath extends Path {
       }
     }
 
+// FIXME: why is this under a lock?
     try {
       begin();
+
       ZipFilePath realPath = getResolvedPathForZip();
       if (realPath.getNameCount() == 0) {
         throw new IOException("entry missing in the path");
       }
-      else {
-        String zf = getZipFile();
-        ZipFile zfile = new ZipFile(zf);
-        String entryStr = realPath.getEntryName(realPath.getEntryNameCount() - 1).toString();
-        ZipEntry entry = zfile.getEntry(entryStr);
-        if (entry == null) {
-          zfile.close();
-          throw new IOException("entry not found" + entryStr);
-        }
 
-        return new ZipFilePathInputStream(zfile.getInputStream(entry));
-      }
+      return ZipIO.in(this, options);
     }
     finally {
       end();
-    }
-  }
-
-  private class ZipFilePathInputStream extends FilterInputStream {
-    public ZipFilePathInputStream(InputStream in) {
-      super(in);
-      fileSystem.addCloseable(this);
-    }
-
-    @Override
-    public void close() throws IOException {
-      in.close();
-      fileSystem.removeCloseable(this);
-    }
-  }
-
-  private class ZipFilePathSeekableByteChannel implements SeekableByteChannel {
-    private final SeekableByteChannel ch;
-
-    public ZipFilePathSeekableByteChannel(SeekableByteChannel ch) {
-      this.ch = ch;
-      fileSystem.addCloseable(this);
-    }
-
-    public long position() throws IOException {
-      return ch.position();
-    }
-
-    public SeekableByteChannel position(long newPosition) throws IOException {
-      ch.position(newPosition);
-      return this;
-    }
-    
-    public int read(ByteBuffer dst) throws IOException {
-      return ch.read(dst);
-    }
-    
-    public long size() throws IOException {
-      return ch.size();
-    }
-
-    public SeekableByteChannel truncate(long size) throws IOException {
-      ch.truncate(size);
-      return this;
-    }
-
-    public int write(ByteBuffer src) throws IOException {
-      return ch.write(src);
-    }
-
-    public boolean isOpen() {
-      return ch.isOpen();
-    }
-
-    public void close() throws IOException {
-      ch.close();
-      fileSystem.removeCloseable(this);
     }
   }
 
@@ -869,11 +804,13 @@ public class ZipFilePath extends Path {
     return newDirectoryStream(filter);
   }
 
+// FIXME: write lock
   @Override
   public void delete() throws IOException {
     throw new ReadOnlyFileSystemException();
   }
 
+// FIXME: write lock
   @Override
   public void deleteIfExists() throws IOException {
     throw new ReadOnlyFileSystemException();
@@ -910,9 +847,9 @@ public class ZipFilePath extends Path {
       return new JarFileAttributeView(this);
     }
     return null;
-
   }
 
+// FIXME: write lock
   public void setAttribute(String attribute, Object value, LinkOption... options) {
     throw new UnsupportedOperationException();
   }
@@ -938,6 +875,7 @@ public class ZipFilePath extends Path {
     return fileView.getAttribute(attr);
   }
 
+// FIXME: read lock
   public Map<String,?> readAttributes(String attribute, LinkOption... options)
     throws IOException
   {
@@ -1027,12 +965,13 @@ public class ZipFilePath extends Path {
     };
   }
 
+// FIXME: read lock
+// FIXME: write lock
   @Override
   public SeekableByteChannel newByteChannel(
       Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws IOException {
 
     // check for options of null type and option is an intance of StandardOpenOption
-
     for (OpenOption option : options) {
       if (option == null) {
         throw new NullPointerException();
@@ -1041,11 +980,13 @@ public class ZipFilePath extends Path {
         throw new IllegalArgumentException();
       }
     }
+
     boolean openedForWriteOrAppend = options.contains(StandardOpenOption.WRITE) ||
         options.contains(StandardOpenOption.APPEND);
     if (openedForWriteOrAppend) {
       throw new ReadOnlyFileSystemException();
     }
+
     boolean openedForRead = options.contains(StandardOpenOption.READ);
     openedForRead = openedForRead || true; // if not opened for read then set openedForRed to true;
 
@@ -1055,29 +996,13 @@ public class ZipFilePath extends Path {
 
     try {
       begin();
+
       ZipFilePath realPath = getResolvedPathForZip();
       if (realPath.getNameCount() == 0) {
         throw new IOException("entry Not Found");
       }
-      else {
-        String zf = getZipFile();
-        ZipFile zfile = new ZipFile(zf);
-        String entryStr = realPath.getEntryName(realPath.getEntryNameCount() - 1).toString();
-        ZipEntry entry = zfile.getEntry(entryStr);
-        if (entry == null) {
-          throw new IOException("entry not found" + entryStr);
-        }
 
-        InputStream in = zfile.getInputStream(entry);
-        Path pathtoZip = Paths.get(ZipUtils.readFileInZip(in));
-        zfile.close();
-
-        return new ZipFilePathSeekableByteChannel(
-          new FileChannelAdapter(
-            fileSystem.provider().newFileChannel(pathToZip, options)
-          )
-        );
-      }
+      return ZipIO.channel(this, options);
     }
     finally {
       end();
@@ -1092,7 +1017,7 @@ public class ZipFilePath extends Path {
     return newByteChannel(set);
   }
 
-  private String getZipFile() throws IOException {
+  String getZipFile() throws IOException {
 
     String pathtoZip = null;
     ZipFilePath realPath = getResolvedPathForZip();
@@ -1139,15 +1064,26 @@ public class ZipFilePath extends Path {
       if (nameCount == 0) {
         throw new NoSuchFileException(toString());
       }
-      ZipEntryInfo ze = ZipUtils.getEntry(resolvedZipPath);
-      if (w) {
-        throw new AccessDeniedException("write access denied for the file: " + this.toString());
-      }
-      if (x) {
-        long attrs = ze.extAttrs;
-        if (!((((attrs << 4) >> 24) & 0x04) == 0x04)) {
-          throw new AccessDeniedException("execute access denied for the file: " + this.toString());
+
+      try {
+        ZipIO.readLock(resolvedZipPath);
+
+        ZipEntryInfo ze = ZipUtils.getEntry(resolvedZipPath);
+        if (w) {
+          throw new AccessDeniedException(
+            "write access denied for the file: " + this.toString());
         }
+
+        if (x) {
+          long attrs = ze.extAttrs;
+          if (!((((attrs << 4) >> 24) & 0x04) == 0x04)) {
+            throw new AccessDeniedException(
+              "execute access denied for the file: " + this.toString());
+          }
+        }
+      }
+      finally {
+        ZipIO.readUnlock(resolvedZipPath);
       }
     }
     finally {
@@ -1200,22 +1136,26 @@ public class ZipFilePath extends Path {
     return new ZipFilePath(fileSystem, pathForZip, pathForZip);
   }
 
+// FIXME: write lock
   @Override
   public Path createFile(FileAttribute<?>... attrs) {
     throw new ReadOnlyFileSystemException();
   }
 
+// FIXME: write lock
   @Override
   public OutputStream newOutputStream(OpenOption... options) {
     throw new ReadOnlyFileSystemException();
   }
 
-
+// FIXME: write lock
   @Override
   public Path moveTo(Path target, CopyOption... options) {
     throw new ReadOnlyFileSystemException();
   }
 
+// FIXME: read lock
+// FIXME: write lock
   @Override
   public Path copyTo(Path target, CopyOption... options) throws IOException {
     if ((getFileSystem().provider() == target.getFileSystem().provider()))

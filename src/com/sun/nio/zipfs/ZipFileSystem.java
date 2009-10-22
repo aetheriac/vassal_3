@@ -28,7 +28,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.sun.nio.zipfs;
+package VASSAL.tools.nio.file.zipfs;
 
 import VASSAL.tools.nio.file.*;
 import VASSAL.tools.nio.file.attribute.*;
@@ -56,7 +56,7 @@ public class ZipFileSystem extends FileSystem {
   private final ReadWriteLock closeLock = new ReentrantReadWriteLock();
   private boolean open = true;
 
-  private Set<Closeable> closeables =
+  private final Set<Closeable> closeables =
     Collections.synchronizedSet(new HashSet<Closeable>());
 
   ZipFileSystem(ZipFileSystemProvider provider, FileRef fref) {
@@ -118,7 +118,6 @@ public class ZipFileSystem extends FileSystem {
     closeLock.readLock().unlock();
   }
 
-// FIXME: closeables needs to be synchronized or concurrent
 // FIXME
   // Free all cached Zip/Jar files
   private void implClose(URI root) throws IOException {
@@ -136,11 +135,11 @@ public class ZipFileSystem extends FileSystem {
     }
   }
 
-  boolean addCloseable(Closeable obj) {
+  boolean registerCloseable(Closeable obj) {
     return closeables.add(obj);
   }
 
-  boolean removeCloseable(Closeable obj) {
+  boolean unregisterCloseable(Closeable obj) {
     return closeables.remove(obj);
   }
 

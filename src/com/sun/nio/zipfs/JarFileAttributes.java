@@ -28,8 +28,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-package com.sun.nio.zipfs;
+package VASSAL.tools.nio.file.zipfs;
 
 import VASSAL.tools.nio.file.*;
 
@@ -41,7 +40,7 @@ import java.util.Set;
 public class JarFileAttributes extends ZipFileAttributes {
 
   /** Creates a new instance of JarFileAttributes */
-  public JarFileAttributes(FileRef file) throws IOException {
+  public JarFileAttributes(ZipFilePath file) throws IOException {
     super(file);
 
   }

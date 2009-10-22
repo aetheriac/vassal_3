@@ -29,7 +29,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.sun.nio.zipfs;
+package VASSAL.tools.nio.file.zipfs;
 
 import java.util.Map;
 import java.util.Set;

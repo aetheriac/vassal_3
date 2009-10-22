@@ -28,8 +28,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-package com.sun.nio.zipfs;
+package VASSAL.tools.nio.file.zipfs;
 
 import VASSAL.tools.nio.file.*;
 
@@ -60,10 +59,9 @@ public class ZipFileAttributes extends ZipFileBasicAttributes {
     "Tandem"
   };
 
-  public ZipFileAttributes(FileRef file) throws IOException {
+  public ZipFileAttributes(ZipFilePath file) throws IOException {
     super(file);
   }
-
 
   public byte[] comment() {
     return ze.comment;
