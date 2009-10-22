@@ -85,9 +85,6 @@ public abstract class Path implements FileRef,
   public abstract DirectoryStream<Path> newDirectoryStream(String glob)
                                                             throws IOException;
 
-  public abstract OutputStream newOutputStream(OpenOption... options)
-                                                            throws IOException;
-
   public abstract Path normalize();
 
   public abstract boolean notExists();
