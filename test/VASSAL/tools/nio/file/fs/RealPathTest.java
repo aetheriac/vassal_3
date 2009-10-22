@@ -636,10 +636,7 @@ public abstract class RealPathTest extends AbstractPathTest {
   @Test
   public void testReadAttributes() {
     try {
-      
-      assertEquals(testingDirectory.isDirectory(), pathTestingDirectory.readAttributes(
-          "basic:isDirectory").values().toArray()[0]);
-      
+      assertEquals(testingDirectory.isDirectory(), pathTestingDirectory.readAttributes("basic:isDirectory").values().toArray()[0]);
     }
     catch (IOException e) {
       fail(e.getMessage());
