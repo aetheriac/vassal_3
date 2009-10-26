@@ -1143,7 +1143,6 @@ public class ZipFilePath extends Path {
   }
 
 // FIXME: write lock
-  @Override
   public OutputStream newOutputStream(OpenOption... options) {
     throw new ReadOnlyFileSystemException();
   }
