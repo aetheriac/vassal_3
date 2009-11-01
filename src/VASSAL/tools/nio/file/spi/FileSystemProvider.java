@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
-
 import VASSAL.tools.nio.channels.AsynchronousFileChannel;
 import VASSAL.tools.nio.file.FileRef;
 import VASSAL.tools.nio.file.FileSystem;
