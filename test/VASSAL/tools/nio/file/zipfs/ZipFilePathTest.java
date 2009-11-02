@@ -24,6 +24,7 @@ import VASSAL.tools.nio.file.LinkOption;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.Paths;
 import VASSAL.tools.nio.file.NoSuchFileException;
+import VASSAL.tools.nio.file.ReadOnlyFileSystemException;
 import VASSAL.tools.nio.file.StandardOpenOption;
 import VASSAL.tools.nio.file.WatchEvent;
 import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
@@ -120,60 +121,68 @@ public class ZipFilePathTest {
     pathTestFileCreated.checkAccess(AccessMode.READ);
   }
 
-  @Test
+//  @Test
+  @Test(expected = ReadOnlyFileSystemException.class)
   public void testCreateDirectory() throws IOException {
     try {
       pathTestDirOther.createDirectory();
-      assertTrue("Test directory was not created.", pathTestDirOther.isDirectory());
+      assertTrue("Test directory was not created.",
+                 pathTestDirOther.isDirectory());
     }
-    catch (IOException e) {
-      fail(e.getMessage());
-    } finally {
+    finally {
       pathTestDirOther.deleteIfExists();
     }
   }
 
-  @Test
+//  @Test
+  @Test(expected = ReadOnlyFileSystemException.class)
   public void testCreateFile() throws IOException {
     try {
       pathTestFileOther.createFile();
       assertTrue("Test file was not created.", pathTestFileOther.exists());
     }
-    catch (Exception e) {
-      fail(e.getMessage());
-    } finally {
+    finally {
       pathTestFileOther.delete();
     }
   }
 
-  @Test
+//  @Test
+  @Test(expected = ReadOnlyFileSystemException.class)
   public void testDelete() throws IOException {
     try {
       pathTestFileOther.createFile();
       pathTestFileOther.delete();
       assertFalse(pathTestFileOther.exists());
     }
-    catch (IOException e) {
-      fail(e.getMessage());
-    } finally {
+    finally {
       pathTestFileOther.delete();
     }
   }
 
-  @Test
-  public void testDeleteIfExists() throws IOException {
+//  @Test
+  @Test(expected = ReadOnlyFileSystemException.class)
+  public void testDeleteIfExistsDoesExist() throws IOException {
     try {
       pathTestFileOther.createFile();
-      pathTestFileOther.delete();
+      pathTestFileOther.deleteIfExists();
       assertFalse(pathTestFileOther.exists());
     }
-    catch (IOException e) {
-      fail(e.getMessage());
-    } finally {
+    finally {
       pathTestFileOther.delete();
     }
   }
 
+//  @Test
+  @Test(expected = ReadOnlyFileSystemException.class)
+  public void testDeleteIfExistsDoesNotExist() throws IOException {
+    try {
+      pathTestFileOther.deleteIfExists();
+      assertFalse(pathTestFileOther.exists());
+    }
+    finally {
+      pathTestFileOther.delete();
+    }
+  }
 
   @Test
   public void testEndsWithEndSelf() {
@@ -190,7 +199,6 @@ public class ZipFilePathTest {
     assertFalse(pathTestFileOther.endsWith(endPath));
   }
 
-
   @Test
   public void testEqualsObject() {
     assertTrue(pathTestFileCreated.equals(new ZipFilePath(fs, pathTestFileCreated.toString().getBytes())));
@@ -198,12 +206,14 @@ public class ZipFilePathTest {
 
   @Test
   public void testEqualsSelf() {
-    assertTrue("Path is not equal with itself", pathTestFileCreated.equals(pathTestFileCreated));
+    assertTrue("Path is not equal with itself",
+               pathTestFileCreated.equals(pathTestFileCreated));
   }
 
   @Test
   public void testEqualsFalse() {
-    assertFalse("Different paths should not equal", pathTestFileCreated.equals(pathTestFileOther));
+    assertFalse("Different paths should not equal",
+                pathTestFileCreated.equals(pathTestFileOther));
   }
 
   @Test
@@ -217,16 +227,10 @@ public class ZipFilePathTest {
   }
 
   @Test
-  public void testGetFileStore() {
-    try {
-      assertEquals(fs.getFileStores().iterator().next(),
-          pathTestingDirectory.getFileStore());
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
+  public void testGetFileStore() throws IOException {
+    assertEquals(fs.getFileStores().iterator().next(),
+                 pathTestingDirectory.getFileStore());
   }
-
 
   @Test
   public void testGetFileSystem() {
