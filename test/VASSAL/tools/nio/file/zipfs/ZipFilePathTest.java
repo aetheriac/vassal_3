@@ -653,13 +653,11 @@ public class ZipFilePathTest {
   }
   
   @Test
-  public void testSetAttributeModifTime() {
-    try {
-      pathTestFileCreated.setAttribute("basic:lastModifiedTime", FileTime.fromMillis(System.currentTimeMillis()));
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
+  public void testSetAttributeModifTime() throws IOException {
+    pathTestFileCreated.setAttribute(
+      "basic:lastModifiedTime",
+      FileTime.fromMillis(System.currentTimeMillis())
+    );
   }
 
 
