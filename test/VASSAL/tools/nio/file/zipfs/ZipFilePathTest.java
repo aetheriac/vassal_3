@@ -44,7 +44,7 @@ public class ZipFilePathTest {
   ZipFileSystemProvider provider;
   ZipFileSystem fs;
   
-  final String testFileCreatedName = "/testFileInZip.txt";
+  final String testFileCreatedName = "testFileInZip.txt";
   ZipFilePath pathTestFileCreated; 
 
   final String testingDirectoryName = "/dirInZip";
@@ -458,7 +458,7 @@ public class ZipFilePathTest {
 
   @Test
   public void testResolvePathOther() {
-    String resolvedPath = ".." + testFileCreatedName;
+    String resolvedPath = ".." + File.separator + testFileCreatedName;
     assertEquals(resolvedPath, pathTestingDirectory.resolve(pathTestFileCreated).toString());
   }
 
