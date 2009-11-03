@@ -21,6 +21,8 @@ import VASSAL.tools.nio.file.Paths;
 class ZipIO {
   private ZipIO() {}
 
+  // This node is the parent of all nodes corresponding to ZIP archive
+  // roots. This node should never be locked.
   private static final ZipNode roots = new ZipNode(null, "");
 
   static void readLock(ZipFilePath path) {
@@ -71,7 +73,10 @@ class ZipIO {
       roots.children.get(path.getFileSystem().getZipFileSystemFile());
     
     for (Path part : path) zn = zn.children.get(part.toString());
-    while (zn != null) {
+
+    // unlock from root to leaf
+    while (zn != roots) {
+System.out.println("u " + zn.name);
       zn.lock.readLock().unlock();
       zn = zn.parent;
     }
