@@ -76,7 +76,6 @@ class ZipIO {
 
     // unlock from root to leaf
     while (zn != roots) {
-System.out.println("u " + zn.name);
       zn.lock.readLock().unlock();
       zn = zn.parent;
     }
