@@ -18,6 +18,7 @@ import VASSAL.tools.nio.file.FileSystem;
 import VASSAL.tools.nio.file.FileSystemAlreadyExistsException;
 import VASSAL.tools.nio.file.OpenOption;
 import VASSAL.tools.nio.file.Path;
+import VASSAL.tools.nio.file.ProviderMismatchException;
 import VASSAL.tools.nio.file.StandardOpenOption;
 import VASSAL.tools.nio.file.attribute.FileAttribute;
 import VASSAL.tools.nio.file.spi.FileSystemProvider;
@@ -73,19 +74,23 @@ public class RealFileSystemProvider extends FileSystemProvider {
       TRUNCATE_EXISTING,
       WRITE
     );
- 
+
+  @Override 
   public FileChannel newFileChannel(
-    RealPath path,
+    Path path,
     Set<? extends OpenOption> options,
     FileAttribute<?>... attrs) throws IOException
   {
+    if (!(path instanceof RealPath)) throw new ProviderMismatchException();
+    final File file = ((RealPath) path).file;
+
     if (attrs.length > 0) throw new UnsupportedOperationException();
 
     if (!supportedOpenOptions.containsAll(options)) 
       throw new UnsupportedOperationException();
 
-    if (options.contains(CREATE_NEW) && path.file.exists())
-      throw new FileAlreadyExistsException(path.toString());
+    if (options.contains(CREATE_NEW) && file.exists())
+      throw new FileAlreadyExistsException(file.toString());
 
     if (options.contains(APPEND)) {
       if (options.contains(READ) ||
@@ -93,33 +98,34 @@ public class RealFileSystemProvider extends FileSystemProvider {
         throw new IllegalArgumentException();
       }
 
-      return new FileOutputStream(path.file, true).getChannel();
+      return new FileOutputStream(file, true).getChannel();
     }
 
     if (options.contains(WRITE)) {
       if (options.contains(READ)) {
         // read-write
-        final FileChannel fc =
-          new RandomAccessFile(path.file, "rw").getChannel();
+        final FileChannel fc = new RandomAccessFile(file, "rw").getChannel();
         if (options.contains(TRUNCATE_EXISTING)) fc.truncate(0);
         return fc;
       }
       else {
         // write-only
-        return new FileOutputStream(path.file, false).getChannel();
+        return new FileOutputStream(file, false).getChannel();
       }
     }
     else {
       // read-only
-      return path.newInputStream().getChannel();
+      return ((RealPath) path).newInputStream().getChannel();
     }
   }
-  
+ 
+  @Override 
   public FileSystem newFileSystem(FileRef file, Map<String,?> env)
                                                            throws IOException {
-     throw new FileSystemAlreadyExistsException();
+    throw new FileSystemAlreadyExistsException();
   }
 
+  @Override
   public FileSystem newFileSystem(URI uri, Map<String,?> env)
                                                            throws IOException {
     throw new FileSystemAlreadyExistsException();
