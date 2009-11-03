@@ -19,6 +19,7 @@ import org.junit.Test;
 
 import VASSAL.tools.io.IOUtils;
 import VASSAL.tools.nio.channels.FileChannelAdapter;
+import VASSAL.tools.nio.file.AccessDeniedException;
 import VASSAL.tools.nio.file.AccessMode;
 import VASSAL.tools.nio.file.LinkOption;
 import VASSAL.tools.nio.file.Path;
@@ -64,7 +65,7 @@ public class ZipFilePathTest {
   public void setUp() throws Exception {
     
 
-    testZipFilePath = Paths.get(pathToTestZipFileName);
+    testZipFilePath = Paths.get(pathToTestZipFileName).toAbsolutePath();
 
     ZipFileSystemProvider provider = new ZipFileSystemProvider();
     ZipFileSystem fs = new ZipFileSystem(provider, testZipFilePath);
@@ -100,24 +101,28 @@ public class ZipFilePathTest {
     assertFalse(pathTestFileCreated.hashCode() == pathTestFileOther.hashCode());
   }
 
+// FIXME: need to also check a file which does exist!
   @Test(expected = NoSuchFileException.class)
   public void testCheckAccessExist() throws IOException {
-    pathTestFileOther.checkAccess(AccessMode.WRITE);
+    pathTestFileOther.checkAccess();
   }
 
-  @Test(expected = UnsupportedOperationException.class)
+// FIXME: need to also check a file which has execute permission!
+  @Test(expected = AccessDeniedException.class)
   public void testCheckAccessExecute() throws IOException {
     pathTestFileCreated.checkAccess(AccessMode.EXECUTE);
   }
 
+// FIXME: need to also check a file which cannot be read!
   @Test
   public void testCheckAccessRead() throws IOException {
     pathTestFileCreated.checkAccess(AccessMode.READ);
   }
 
+// FIXME: need to also check a file which does not have write access!
   @Test
   public void testCheckAccessWrite() throws IOException {
-    pathTestFileCreated.checkAccess(AccessMode.READ);
+    pathTestFileCreated.checkAccess(AccessMode.WRITE);
   }
 
 //  @Test
