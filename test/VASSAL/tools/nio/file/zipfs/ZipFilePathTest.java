@@ -30,7 +30,6 @@ import VASSAL.tools.nio.file.WatchEvent;
 import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
 import VASSAL.tools.nio.file.attribute.FileAttributeView;
 import VASSAL.tools.nio.file.attribute.FileTime;
-import VASSAL.tools.nio.file.fs.RealPath;
 
 public class ZipFilePathTest {
 
@@ -39,7 +38,7 @@ public class ZipFilePathTest {
   final String pathToTestZipFileName = "test/VASSAL/tools/nio/file/zipfs/".replace("/", File.separator)
       + testZipFileName;
 
-  RealPath testZipFilePath;
+  Path testZipFilePath;
 
   ZipFileSystemProvider provider;
   ZipFileSystem fs;
@@ -65,7 +64,7 @@ public class ZipFilePathTest {
   public void setUp() throws Exception {
     
 
-    testZipFilePath = (RealPath) Paths.get(pathToTestZipFileName);
+    testZipFilePath = Paths.get(pathToTestZipFileName);
 
     ZipFileSystemProvider provider = new ZipFileSystemProvider();
     ZipFileSystem fs = new ZipFileSystem(provider, testZipFilePath);
