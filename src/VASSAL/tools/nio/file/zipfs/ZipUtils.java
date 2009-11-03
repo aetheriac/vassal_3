@@ -37,11 +37,13 @@ import VASSAL.tools.nio.file.FileSystem;
 import VASSAL.tools.nio.file.FileSystems;
 import VASSAL.tools.nio.file.Path;
 
+import static VASSAL.tools.nio.file.zipfs.ZipHeaderConstants.*;
+
 //import java.nio.file.*;
 //import java.nio.channels.SeekableByteChannel;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import static com.sun.nio.zipfs.ZipHeaderConstants.*;
+//import static com.sun.nio.zipfs.ZipHeaderConstants.*;
 import java.io.*;
 import java.net.URI;
 //import java.nio.channels.FileChannel;
