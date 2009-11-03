@@ -68,7 +68,8 @@ class ZipLock implements ReadWriteLock {
 
     @Override
     protected boolean tryRelease(int dummy) {
-      if (getState() != -1) throw new IllegalMonitorStateException();
+      final int s = getState();
+      if (s != -1) throw new IllegalMonitorStateException("state == " + s);
       return compareAndSetState(-1, 0);
     }
 
@@ -81,7 +82,7 @@ class ZipLock implements ReadWriteLock {
     @Override
     protected boolean tryReleaseShared(int dummy) {
       final int s = getState();
-      if (s < 1) throw new IllegalMonitorStateException();
+      if (s < 1) throw new IllegalMonitorStateException("state == " + s);
       return compareAndSetState(s, s-1);
     }
   }
