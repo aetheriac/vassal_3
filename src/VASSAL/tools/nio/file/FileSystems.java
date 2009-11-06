@@ -15,7 +15,7 @@ public final class FileSystems {
 
   private static FileSystemProvider getProviderForScheme(String scheme) {
     for (FileSystemProvider p : FileSystemProvider.installedProviders()) {
-      if (scheme.equalsIgnoreCase(p.getScheme())) return p;
+      if (p.getScheme().equalsIgnoreCase(scheme)) return p;
     }
     return null;
   }
