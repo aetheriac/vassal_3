@@ -9,14 +9,11 @@ import org.junit.Test;
 import VASSAL.Info;
 
 public class RealUnixPathTest extends RealPathTest {
-
-
   @Before
   public void setUp() throws Exception {
     super.setUp();
     assumeTrue(!Info.isWindows());
   }
-
 
   @Test
   public void testFindRootSepUnixRoot() {
@@ -32,5 +29,4 @@ public class RealUnixPathTest extends RealPathTest {
     RealPath p1 = new RealUnixPath(testFileCreated.getPath(), fs);
     assertEquals(p1.toString(), testFileCreated.toString());
   }
-
 }

@@ -10,7 +10,7 @@ public abstract class AbstractPathTest {
   public abstract void testCompareTo();
 
   @Test
-  public abstract void testCopyTo();
+  public abstract void testCopyTo() throws IOException;
 
   @Test
   public abstract void testCreateLink() throws IOException;

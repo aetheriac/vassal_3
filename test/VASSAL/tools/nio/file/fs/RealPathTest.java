@@ -141,56 +141,47 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testCreateDirectory() {
+  public void testCreateDirectory() throws IOException {
     try {
       pathTestDirOther.createDirectory();
       assertTrue("Test directory was not created.", testDirOther.isDirectory());
     }
-    catch (IOException e) {
-      fail(e.getMessage());
-    } finally {
+    finally {
       testDirOther.delete();
     }
-
   }
 
   @Test
-  public void testCreateFile() {
+  public void testCreateFile() throws IOException {
     try {
       pathTestFileOther.createFile();
       assertTrue("Test file was not created.", testFileOther.exists());
     }
-    catch (Exception e) {
-      fail(e.getMessage());
-    } finally {
+    finally {
       testFileOther.delete();
     }
   }
 
   @Test
-  public void testDelete() {
+  public void testDelete() throws IOException {
     try {
       testFileOther.createNewFile();
       pathTestFileOther.delete();
       assertFalse(testFileOther.exists());
     }
-    catch (IOException e) {
-      fail(e.getMessage());
-    } finally {
+    finally {
       testFileOther.delete();
     }
   }
 
   @Test
-  public void testDeleteIfExists() {
+  public void testDeleteIfExists() throws IOException {
     try {
       testFileOther.createNewFile();
       pathTestFileOther.delete();
       assertFalse(testFileOther.exists());
     }
-    catch (IOException e) {
-      fail(e.getMessage());
-    } finally {
+    finally {
       testFileOther.delete();
     }
   }
@@ -236,14 +227,11 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testGetFileStore() {
-    try {
-      assertEquals(pathTestingDirectory.getFileSystem().getFileStores().iterator().next(),
-          pathTestingDirectory.getFileStore());
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
+  public void testGetFileStore() throws IOException {
+    assertEquals(
+      pathTestingDirectory.getFileSystem().getFileStores().iterator().next(),
+      pathTestingDirectory.getFileStore()
+    );
   }
 
   @Test
@@ -309,13 +297,8 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testIsHidden() {
-    try {
-      assertFalse(pathTestFileCreated.isHidden());
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
+  public void testIsHidden() throws IOException {
+    assertFalse(pathTestFileCreated.isHidden());
   }
 
   @Test
@@ -346,52 +329,30 @@ public abstract class RealPathTest extends AbstractPathTest {
 
   // TODO add exception and replace testing
   @Test
-  public void testMoveTo() {
+  public void testMoveTo() throws IOException {
 
     File sourceFile = new File(testingDirectory.getAbsolutePath() + separator + "fileCopySource");
     Path pathSourceFile = Paths.get(sourceFile.getAbsolutePath());
 
-    try {
-      pathTestFileCreated.copyTo(pathSourceFile);
-    }
-    catch (IOException e1) {
-      fail(e1.getMessage());
-    }
+    pathTestFileCreated.copyTo(pathSourceFile);
 
-    try {
-      pathSourceFile.moveTo(pathTestFileOther);
-      assertTrue("Source file not moved correctly", testFileOther.exists() && !sourceFile.exists());
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
+    pathSourceFile.moveTo(pathTestFileOther);
+    assertTrue("Source file not moved correctly",
+      testFileOther.exists() && !sourceFile.exists());
 
     sourceFile.delete();
     testFileOther.delete();
-
   }
 
   // FIXME can check success only with lack of exception. 
   @Test
-  public void testNewDirectoryStream() {
-    try {
-      pathTestingDirectory.newDirectoryStream();
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
+  public void testNewDirectoryStream() throws IOException {
+    pathTestingDirectory.newDirectoryStream();
   }
 
   @Test
-  public void testNewDirectoryStreamFilterOfQsuperPath() {
-
-    try {
-      assertTrue(pathTestingDirectory.newDirectoryStream().iterator().hasNext());
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
-
+  public void testNewDirectoryStreamFilterOfQsuperPath() throws IOException {
+    assertTrue(pathTestingDirectory.newDirectoryStream().iterator().hasNext());
   }
 
   @Test(expected = UnsupportedOperationException.class)
@@ -502,31 +463,15 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testToAbsolutePath() {
-
+  public void testToAbsolutePath() throws IOException {
     Path test = Paths.get("name");
-    try {
-      assertEquals(Paths.get(new File(".").getCanonicalPath() + separator + "name"), test
-          .toAbsolutePath());
-    }
-    catch (IOException e) {
-      // TODO Auto-generated catch block
-      fail(e.getMessage());
-    }
-
+    assertEquals(Paths.get(new File(".").getCanonicalPath() + separator + "name"), test.toAbsolutePath());
   }
 
   @Test
-  public void testToRealPath() {
+  public void testToRealPath() throws IOException {
     Path test = Paths.get("name");
-    try {
-      assertEquals(Paths.get(new File(".").getCanonicalPath() + separator + "name"), test
-          .toRealPath(true));
-    }
-    catch (IOException e) {
-      // TODO Auto-generated catch block
-      fail(e.getMessage());
-    }
+    assertEquals(Paths.get(new File(".").getCanonicalPath() + separator + "name"), test.toRealPath(true));
   }
 
   @Test
@@ -556,13 +501,8 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testGetAttributeNull() {
-    try {
-      pathTestingDirectory.getAttribute(null);
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
+  public void testGetAttributeNull() throws IOException {
+    pathTestingDirectory.getAttribute(null);
   }
 
   @Test(expected = UnsupportedOperationException.class)
@@ -571,76 +511,80 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testGetAttributeBasic() {
-    try {
-      assertTrue((Boolean) pathTestingDirectory.getAttribute("basic:isDirectory"));
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
+  public void testGetAttributeBasic() throws IOException {
+    assertTrue(
+      (Boolean) pathTestingDirectory.getAttribute("basic:isDirectory"));
   }
 
-  @Test(expected = UnsupportedOperationException.class)
-  public void testNewByteChannelOpenOptionArray() throws Exception {
-    StandardOpenOption opt = StandardOpenOption.READ;
-    FileChannelAdapter fca = pathTestFileCreated.newByteChannel(opt);
+  @Test
+  public void testNewByteChannelOpenOptionArray() throws IOException {
+    final StandardOpenOption opt = StandardOpenOption.READ;
+
+    FileChannelAdapter fca = null; 
+    try {
+      fca = pathTestFileCreated.newByteChannel(opt);
+    }
+    finally {
+      IOUtils.closeQuietly(fca);
+    }
   }
 
   @Test
   public void testStandardOpenOptionSet() {
-    StandardOpenOption[] opts = new StandardOpenOption[] { StandardOpenOption.APPEND,
-        StandardOpenOption.CREATE };
+    final StandardOpenOption[] opts = new StandardOpenOption[] {
+      StandardOpenOption.APPEND,
+      StandardOpenOption.CREATE
+    };
 
-    assertArrayEquals((Object[]) opts, pathTestFileOther.standardOpenOptionSet(opts).toArray());
-
-  }
-
-  @Test(expected = UnsupportedOperationException.class)
-  public void testNewByteChannelSetOfQextendsOpenOptionFileAttributeOfQArray() throws Exception {
-    StandardOpenOption[] opts = new StandardOpenOption[] { StandardOpenOption.READ };
-    final Set<StandardOpenOption> opt = pathTestFileCreated.standardOpenOptionSet(opts);
-    FileChannelAdapter fca = pathTestFileCreated.newByteChannel(opt);
+    assertArrayEquals(
+      (Object[]) opts,
+      pathTestFileOther.standardOpenOptionSet(opts).toArray()
+    );
   }
 
   @Test
-  public void testNewInputStream() {
+  public void testNewByteChannelSetOfQextendsOpenOptionFileAttributeOfQArray()
+                                                           throws IOException {
+    final Set<StandardOpenOption> opt =
+      pathTestFileCreated.standardOpenOptionSet(StandardOpenOption.READ);
 
+    FileChannelAdapter fca = null; 
+    try {
+      fca = pathTestFileCreated.newByteChannel(opt);
+    }
+    finally {
+      IOUtils.closeQuietly(fca);
+    }
+  }
+
+  @Test
+  public void testNewInputStream() throws IOException {
     FileInputStream in = null;
     try {
       in = pathTestFileCreated.newInputStream();
       assertTrue(in != null);
     }
-    catch (IOException e) {
-      fail(e.getMessage());
-    } finally {
+    finally {
       IOUtils.closeQuietly(in);
     }
   }
 
   @Test
-  public void testNewOutputStreamOpenOptionArray() {
+  public void testNewOutputStreamOpenOptionArray() throws IOException {
 
     FileOutputStream out = null;
     try {
       out = pathTestFileOther.newOutputStream(StandardOpenOption.CREATE_NEW);
       assertTrue(out != null);
     }
-    catch (IOException e) {
-      fail(e.getMessage());
-    } finally {
+    finally {
       IOUtils.closeQuietly(out);
-      testFileOther.delete();
     }
   }
 
   @Test
-  public void testReadAttributes() {
-    try {
-      assertEquals(testingDirectory.isDirectory(), pathTestingDirectory.readAttributes("basic:isDirectory").values().toArray()[0]);
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
+  public void testReadAttributes() throws IOException {
+    assertEquals(testingDirectory.isDirectory(), pathTestingDirectory.readAttributes("basic:isDirectory").values().toArray()[0]);
   }
 
   @Test(expected = UnsupportedOperationException.class)
@@ -664,13 +608,8 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
   
   @Test
-  public void testSetAttributeModifTime() {
-    try {
-      pathTestFileCreated.setAttribute("basic:lastModifiedTime", FileTime.fromMillis(System.currentTimeMillis()));
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
+  public void testSetAttributeModifTime() throws IOException {
+    pathTestFileCreated.setAttribute("basic:lastModifiedTime", FileTime.fromMillis(System.currentTimeMillis()));
   }
 
   @Test
@@ -680,16 +619,11 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testCopyTo() {
+  public void testCopyTo() throws IOException {
+    pathTestFileCreated.copyTo(pathTestFileOther);
+    assertTrue(pathTestFileOther.exists());
 
-    try {
-      pathTestFileCreated.copyTo(pathTestFileOther);
-      assertTrue(pathTestFileOther.exists());
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
-
+// FIXME: don't use Scanner for this, do a byte-byte comparison
     Scanner sC = null;
     Scanner sT = null;
 
@@ -704,22 +638,12 @@ public abstract class RealPathTest extends AbstractPathTest {
       }
       assertTrue("Target file content not equal to source", fileEquals);
     }
-
-    catch (FileNotFoundException e) {
-      fail(e.getMessage());
-
-    } finally {
+    finally {
       sC.close();
       sT.close();
     }
 
-    try {
-      pathTestFileOther.deleteIfExists();
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
-
+    pathTestFileOther.deleteIfExists();
   }
 
   @Test(expected = UnsupportedOperationException.class)
