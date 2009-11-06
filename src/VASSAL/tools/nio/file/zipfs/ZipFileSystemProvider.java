@@ -231,10 +231,12 @@ public class ZipFileSystemProvider extends FileSystemProvider {
 
   @Override
   public FileSystem getFileSystem(URI uri) {
-    String scheme1 = uri.getScheme();
+    final String scheme1 = uri.getScheme();
     if (scheme1 == null || !scheme.equalsIgnoreCase(getScheme())) {
-      throw new IllegalArgumentException("URI scheme is not '" + getScheme() + "'");
+      throw new IllegalArgumentException(
+        "URI scheme is not '" + getScheme() + "'");
     }
+
     //construct uri ignoring fragement in the given URI
     URI uriPath = null;
     try {
