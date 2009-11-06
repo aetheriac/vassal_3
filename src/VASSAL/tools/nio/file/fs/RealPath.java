@@ -331,7 +331,7 @@ public abstract class RealPath extends AbstractPath {
     return newByteChannel(opt);
   }
 
-  protected Set<StandardOpenOption> standardOpenOptionSet(OpenOption[] opts) {
+  protected Set<StandardOpenOption> standardOpenOptionSet(OpenOption... opts) {
     final Set<StandardOpenOption> opt =
       EnumSet.noneOf(StandardOpenOption.class);
 
