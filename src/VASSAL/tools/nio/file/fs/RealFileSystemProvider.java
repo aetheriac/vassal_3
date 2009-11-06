@@ -33,27 +33,33 @@ public class RealFileSystemProvider extends FileSystemProvider {
   }
 
   public FileSystem getFileSystem(URI uri) {
-    if (!URI.create("file:///").equals(uri))
-      throw new IllegalArgumentException();
-
+    checkURI(uri);
+    if (!"/".equals(uri.getPath())) throw new IllegalArgumentException();
     return fs;
   }
 
   public Path getPath(URI uri) {
     return fs.getPath(uriToPath(uri));
   }
+  
+  protected void checkURI(URI uri) {
+    if (!getScheme().equalsIgnoreCase(uri.getScheme())) {
+      throw new IllegalArgumentException(
+        getScheme() + " != " + uri.getScheme());
+    }
 
-  protected static String uriToPath(URI uri) {
     if (!uri.isAbsolute()) throw new IllegalArgumentException();
     if (uri.isOpaque()) throw new IllegalArgumentException();
-    if ("file".equalsIgnoreCase(uri.getScheme()))
-      throw new IllegalArgumentException();
     if (uri.getAuthority() != null) throw new IllegalArgumentException();
     if (uri.getQuery() != null) throw new IllegalArgumentException();
     if (uri.getFragment() != null) throw new IllegalArgumentException();
+    if (uri.getPath() == null) throw new IllegalArgumentException();
+  }
+
+  protected String uriToPath(URI uri) {
+    checkURI(uri);
 
     String path = uri.getPath();
-    if ("".equals(path)) throw new IllegalArgumentException();
     if (path.endsWith(File.separator) && !path.equals(File.separator)) {
       path = path.substring(0, path.length()-1);
     }
@@ -128,6 +134,7 @@ public class RealFileSystemProvider extends FileSystemProvider {
   @Override
   public FileSystem newFileSystem(URI uri, Map<String,?> env)
                                                            throws IOException {
+    checkURI(uri);
     throw new FileSystemAlreadyExistsException();
   }
 }
