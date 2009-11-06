@@ -18,9 +18,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import VASSAL.tools.io.IOUtils;
-import VASSAL.tools.nio.channels.FileChannelAdapter;
+import VASSAL.tools.nio.channels.SeekableByteChannel;
 import VASSAL.tools.nio.file.AccessDeniedException;
 import VASSAL.tools.nio.file.AccessMode;
+import VASSAL.tools.nio.file.FileSystems;
 import VASSAL.tools.nio.file.LinkOption;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.Paths;
@@ -36,18 +37,16 @@ public class ZipFilePathTest {
 
   final String zipScheme = "zip";
   final String testZipFileName = "testZipFile.zip";
-  final String pathToTestZipFileName = "test/VASSAL/tools/nio/file/zipfs/".replace("/", File.separator)
-      + testZipFileName;
+  final String pathToTestZipFileName = "test/VASSAL/tools/nio/file/zipfs/".replace("/", File.separator) + testZipFileName;
 
   Path testZipFilePath;
 
-  ZipFileSystemProvider provider;
   ZipFileSystem fs;
   
   final String testFileCreatedName = "testFileInZip.txt";
   ZipFilePath pathTestFileCreated; 
 
-  final String testingDirectoryName = "/dirInZip";
+  final String testingDirectoryName = "dirInZip";
   ZipFilePath pathTestingDirectory;
   
   final String testFileOtherName = testingDirectoryName + "/testFileVolatile";
@@ -60,30 +59,23 @@ public class ZipFilePathTest {
   ZipFilePath pathRoot;
   ZipFilePath endPath;
 
-
   @Before
   public void setUp() throws Exception {
-    
-
     testZipFilePath = Paths.get(pathToTestZipFileName).toAbsolutePath();
 
-    ZipFileSystemProvider provider = new ZipFileSystemProvider();
-    ZipFileSystem fs = new ZipFileSystem(provider, testZipFilePath);
-    
+    fs = (ZipFileSystem) FileSystems.newFileSystem(
+      URI.create("zip://" + testZipFilePath), null);
 
-    
-        
-    pathTestingDirectory = new ZipFilePath(fs,testingDirectoryName.getBytes());
-    pathTestDirOther = new ZipFilePath(fs, testDirOtherName.getBytes());
-    pathTestFileCreated = new ZipFilePath(fs, testFileCreatedName.getBytes());
-    pathTestFileOther = new ZipFilePath(fs,testFileOtherName.getBytes());
-    
-    pathRoot = pathTestingDirectory.getRoot();
+    pathRoot = (ZipFilePath) fs.getRootDirectories().iterator().next();
     pathRootName = pathRoot.toString();
 
+    pathTestingDirectory = pathRoot.resolve(testingDirectoryName);
+    pathTestDirOther = pathRoot.resolve(testDirOtherName);
+    pathTestFileCreated = pathRoot.resolve(testFileCreatedName);
+    pathTestFileOther = pathRoot.resolve(testFileOtherName);
+    
     int nc = pathTestFileCreated.getNameCount();
     endPath = pathTestFileCreated.subpath(nc - 1, nc);
-    
   }
 
   @After
@@ -93,8 +85,6 @@ public class ZipFilePathTest {
 //    pathTestDirOther.deleteIfExists();
     // pathTestingDirectory.deleteIfExists();
   }
-  
-  
 
   @Test
   public void testHashCode() {
@@ -120,7 +110,9 @@ public class ZipFilePathTest {
   }
 
 // FIXME: need to also check a file which does not have write access!
-  @Test
+// FIXME: need to also check a file which has write access!
+//  @Test
+  @Test(expected = AccessDeniedException.class)
   public void testCheckAccessWrite() throws IOException {
     pathTestFileCreated.checkAccess(AccessMode.WRITE);
   }
@@ -264,28 +256,8 @@ public class ZipFilePathTest {
   }
 
   @Test
-  public void testGetRootSelf() {
-    assumeTrue(File.listRoots().length > 0);
-    File root = File.listRoots()[0];
-    assertEquals(Paths.get(root.getAbsolutePath()), Paths.get(root.getAbsolutePath()).getRoot());
-  }
-
-  @Test
   public void testGetRoot() {
-    File[] rootList = File.listRoots();
-    boolean rootFound = false;
-
-    for (File singleRoot : rootList) {
-      Path testRoot = Paths.get(singleRoot.getAbsolutePath());
-      Path testPath = pathTestingDirectory.getRoot();
-      if (testPath.equals(testRoot)) {
-        rootFound = true;
-      }
-    }
-
-    assertTrue("Expected root not found: \"" + pathTestingDirectory.getRoot()
-        + "\" returned. Expected root in the form of \"" + rootList[0].getAbsolutePath() + "\"",
-        rootFound);
+    assertEquals(pathTestingDirectory.getRoot(), pathRoot);
   }
 
   @Test
@@ -310,7 +282,7 @@ public class ZipFilePathTest {
 
   @Test
   public void testGetParentFalse() {
-    assertFalse(pathTestingDirectory.getParent().equals(pathTestingDirectory));
+    assertFalse(pathTestingDirectory.equals(pathTestingDirectory.getParent()));
   }
 
   @Test
@@ -359,25 +331,13 @@ public class ZipFilePathTest {
 
   // FIXME can check success only with lack of exception. 
   @Test
-  public void testNewDirectoryStream() {
-    try {
-      pathTestingDirectory.newDirectoryStream();
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
+  public void testNewDirectoryStream() throws IOException {
+    pathTestingDirectory.newDirectoryStream();
   }
 
   @Test
-  public void testNewDirectoryStreamFilterOfQsuperPath() {
-
-    try {
-      assertTrue(pathTestingDirectory.newDirectoryStream().iterator().hasNext());
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
-
+  public void testNewDirectoryStreamFilterOfQsuperPath() throws IOException {
+    assertTrue(pathTestingDirectory.newDirectoryStream().iterator().hasNext());
   }
 
   @Test(expected = UnsupportedOperationException.class)
@@ -387,51 +347,60 @@ public class ZipFilePathTest {
 
   @Test
   public void testNormalizeCurDir() {
+    final String redundantPathString =
+      pathRootName + "./thisDir/./././dir2/././trail/.";
+    final String normalizedPathString = pathRootName + "thisDir/dir2/trail";
 
-    // in Windows: "C:\thisDir\\.\\.\\dir2\\.\\."
-    String redundantPathString = pathRootName + "./thisDir/./././dir2/././trail/.";
-    String normalizedPathString = pathRootName + "thisDir/dir2/trail";
-
-    assertEquals(normalizedPathString, 
-        (new ZipFilePath(fs, redundantPathString.getBytes())).normalize().toString());
-
+    assertEquals(
+      normalizedPathString,
+      fs.getPath(redundantPathString).normalize().toString()
+    );
   }
 
   @Test
   public void testNormalizePrevDirNonSaturated() {
-    String redundantPathString = "dir1/dir2/dir3/../dir4/dir5/../../../trail";
-    String normalizedPathString = "dir1/trail";
+    final String redundantPathString =
+      "dir1/dir2/dir3/../dir4/dir5/../../../trail";
+    final String normalizedPathString = "dir1/trail";
 
-    assertEquals(normalizedPathString, 
-        (new ZipFilePath(fs, redundantPathString.getBytes())).normalize().toString());
+    assertEquals(
+      normalizedPathString,
+      fs.getPath(redundantPathString).normalize().toString()
+    );
   }
 
   @Test
   public void testNormalizePrevDirSaturatedRelative() {
-    String redundantPathString = "dir1/dir2/dir3/../../../../../trail";
-    String normalizedPathString = "../../trail";
+    final String redundantPathString = "dir1/dir2/dir3/../../../../../trail";
+    final String normalizedPathString = "../../trail";
 
-    assertEquals(normalizedPathString, 
-        (new ZipFilePath(fs, redundantPathString.getBytes())).normalize().toString());
+    assertEquals(
+      normalizedPathString, 
+      fs.getPath(redundantPathString).normalize().toString()
+    );
   }
 
   @Test
   public void testNormalizePrevDirSaturatedAbsolute() {
-    String redundantPathString = pathRootName + "dir1/dir2/dir3/../../../../../trail";
-    String normalizedPathString = pathRootName + "trail";
+    final String redundantPathString =
+      pathRootName + "dir1/dir2/dir3/../../../../../trail";
+    final String normalizedPathString = pathRootName + "trail";
 
-    assertEquals(normalizedPathString, 
-        (new ZipFilePath(fs, redundantPathString.getBytes())).normalize().toString());
-
+    assertEquals(
+      normalizedPathString, 
+      fs.getPath(redundantPathString).normalize().toString()
+    );
   }
 
   @Test
   public void testNormalizePrevDirRoot() {
-    String redundantPathString = pathRootName + "../../../../..";
-    String normalizedPathString = pathRootName;
+    final String redundantPathString = pathRootName + "../../../../..";
+    final String normalizedPathString = pathRootName;
 
-    assertEquals(normalizedPathString, 
-        (new ZipFilePath(fs, redundantPathString.getBytes())).normalize().toString());
+    assertEquals(
+      normalizedPathString, 
+      fs.getPath(redundantPathString).normalize().toString()
+    );
   }
 
   @Test
@@ -444,9 +413,10 @@ public class ZipFilePathTest {
     assertFalse(pathTestFileCreated.notExists());
   }
 
-  @Test(expected = UnsupportedOperationException.class)
+  @Test
   public void testRelativize() {
-    pathTestingDirectory.relativize(pathTestDirOther);
+//    pathTestingDirectory.relativize(pathTestDirOther);
+    fail("test not yet implemented");
   }
 
   @Test
@@ -459,10 +429,9 @@ public class ZipFilePathTest {
     assertEquals(pathTestFileCreated, pathTestFileCreated.resolve((Path) null));
   }
 
-
   @Test
   public void testResolvePathOther() {
-    String resolvedPath = ".." + File.separator + testFileCreatedName;
+    final String resolvedPath = "../" + testFileCreatedName;
     assertEquals(resolvedPath, pathTestingDirectory.resolve(pathTestFileCreated).toString());
   }
 
@@ -493,31 +462,15 @@ public class ZipFilePathTest {
   }
 
   @Test
-  public void testToAbsolutePath() {
-
+  public void testToAbsolutePath() throws IOException {
     Path test = Paths.get("name");
-    try {
-      assertEquals(Paths.get(new File(".").getCanonicalPath() + "/name"), test
-          .toAbsolutePath());
-    }
-    catch (IOException e) {
-      // TODO Auto-generated catch block
-      fail(e.getMessage());
-    }
-
+    assertEquals(Paths.get(new File(".").getCanonicalPath() + "/name"), test.toAbsolutePath());
   }
 
   @Test
-  public void testToRealPath() {
+  public void testToRealPath() throws IOException {
     Path test = Paths.get("name");
-    try {
-      assertEquals(Paths.get(new File(".").getCanonicalPath() + "/name"), test
-          .toRealPath(true));
-    }
-    catch (IOException e) {
-      // TODO Auto-generated catch block
-      fail(e.getMessage());
-    }
+    assertEquals(Paths.get(new File(".").getCanonicalPath() + "/name"), test.toRealPath(true));
   }
 
   @Test
@@ -526,11 +479,11 @@ public class ZipFilePathTest {
   }
 
   @Test
-  public void testToUri() throws URISyntaxException {
-    URI expectedUri = new URI(testZipFilePath.toUri().toString() + testFileCreatedName);
+  public void testToUri() {
+    final URI expectedUri = 
+      URI.create("zip://" + testZipFilePath + "#/" + testFileCreatedName);
     assertEquals(expectedUri, pathTestFileCreated.toUri());
   }
-
 
   @Test
   public void testGetFileAttributeViewBasicFileAttributeView() {
@@ -542,42 +495,31 @@ public class ZipFilePathTest {
     assertNull(pathTestFileCreated.getFileAttributeView(FileAttributeView.class));
   }
 
-  @Test(expected = UnsupportedOperationException.class)
+  @Test
   public void testGetFileAttributeViewLinkOptions() {
-    pathTestFileCreated.getFileAttributeView(BasicFileAttributeView.class,
-        LinkOption.NOFOLLOW_LINKS);
+    assertNotNull(pathTestFileCreated.getFileAttributeView(BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS));
   }
 
   @Test
-  public void testGetAttributeNull() {
-    try {
-      pathTestingDirectory.getAttribute(null);
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
-  }
-
-  @Test(expected = UnsupportedOperationException.class)
-  public void testGetAttributeUnsupported() throws Exception {
-    pathTestingDirectory.getAttribute("whatever", LinkOption.NOFOLLOW_LINKS);
+  public void testGetAttributeNull() throws IOException {
+    pathTestingDirectory.getAttribute(null);
   }
 
   @Test
-  public void testGetAttributeBasic() {
-    try {
-      assertTrue((Boolean) pathTestingDirectory.getAttribute("basic:isDirectory"));
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
+  public void testGetAttributeUnknown() throws Exception {
+    assertNull(pathTestingDirectory.getAttribute("whatever"));
   }
 
+  @Test
+  public void testGetAttributeBasic() throws IOException {
+    assertTrue(
+      (Boolean) pathTestingDirectory.getAttribute("basic:isDirectory"));
+  }
 
   @Test(expected = UnsupportedOperationException.class)
   public void testNewByteChannelOpenOptionArray() throws Exception {
     StandardOpenOption opt = StandardOpenOption.READ;
-    FileChannelAdapter fca = (FileChannelAdapter) pathTestFileCreated.newByteChannel(opt);
+    SeekableByteChannel sbc = pathTestFileCreated.newByteChannel(opt);
   }
 
   @Test
@@ -598,17 +540,14 @@ public class ZipFilePathTest {
 //    FileChannelAdapter fca = pathTestFileCreated.newByteChannel(opt);
   }
 
-
   @Test
-  public void testNewInputStream() {
+  public void testNewInputStream() throws IOException {
     InputStream in = null;
     try {
       in = pathTestFileCreated.newInputStream();
       assertTrue(in != null);
     }
-    catch (IOException e) {
-      fail(e.getMessage());
-    } finally {
+    finally {
       IOUtils.closeQuietly(in);
     }
   }
@@ -625,20 +564,10 @@ public class ZipFilePathTest {
     
   }
 
-
   @Test
-  public void testReadAttributes() {
-    try {
-      
-      assertEquals(pathTestingDirectory.isDirectory(), pathTestingDirectory.readAttributes(
-          "basic:isDirectory").values().toArray()[0]);
-      
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
+  public void testReadAttributes() throws IOException {
+    assertEquals(pathTestingDirectory.isDirectory(), pathTestingDirectory.readAttributes("basic:isDirectory").values().toArray()[0]);
   }
-
 
   @Test(expected = UnsupportedOperationException.class)
   public void testReadAttributesFailOptions() throws IOException {
@@ -668,11 +597,9 @@ public class ZipFilePathTest {
     );
   }
 
-
   @Test
   public void testCompareTo() {
-    assertEquals(pathTestFileCreated.toString().compareTo(pathTestFileOther.toString()),
-        pathTestFileCreated.compareTo(pathTestFileOther));
+    assertEquals(pathTestFileCreated.toString().compareTo(pathTestFileOther.toString()), pathTestFileCreated.compareTo(pathTestFileOther));
   }
   
 
