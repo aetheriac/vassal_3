@@ -564,17 +564,18 @@ public class ZipFilePath extends Path {
   }
 
   public ZipFilePath resolve(Path other) {
-    // zip/jar path are always absolute
-    if (other == null) {
-      throw new NullPointerException();
-    }
+    if (other == null) return this;
+
     if (!(other instanceof ZipFilePath)) {
       throw new ProviderMismatchException();
     }
+
+    // zip/jar path are always absolute
     ZipFilePath other1 = (ZipFilePath) other;
     if (other1.isAbsolute()) {
       return other1;
     }
+
     byte[] resolved = null;
     if (this.path[path.length - 1] == '/') {
       resolved = new byte[path.length + other1.path.length];
