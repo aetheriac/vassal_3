@@ -500,7 +500,7 @@ public class ZipFilePathTest {
     assertNotNull(pathTestFileCreated.getFileAttributeView(BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS));
   }
 
-  @Test
+  @Test(expected = NullPointerException.class)
   public void testGetAttributeNull() throws IOException {
     pathTestingDirectory.getAttribute(null);
   }

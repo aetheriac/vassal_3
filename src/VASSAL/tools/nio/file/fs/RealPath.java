@@ -178,7 +178,6 @@ public abstract class RealPath extends AbstractPath {
   public Object getAttribute(String attribute, LinkOption... options)
                                                            throws IOException {
     if (options.length > 0) throw new UnsupportedOperationException();
-    if (attribute == null) return null;
 
     if (attribute.indexOf(':') == -1) attribute = "basic:" + attribute;
     final int colon = attribute.indexOf(':');

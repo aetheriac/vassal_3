@@ -500,7 +500,7 @@ public abstract class RealPathTest extends AbstractPathTest {
         LinkOption.NOFOLLOW_LINKS);
   }
 
-  @Test
+  @Test(expected = NullPointerException.class)
   public void testGetAttributeNull() throws IOException {
     pathTestingDirectory.getAttribute(null);
   }
