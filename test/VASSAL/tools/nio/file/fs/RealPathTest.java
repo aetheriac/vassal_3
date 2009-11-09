@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Scanner;
@@ -620,30 +621,35 @@ public abstract class RealPathTest extends AbstractPathTest {
 
   @Test
   public void testCopyTo() throws IOException {
-    pathTestFileCreated.copyTo(pathTestFileOther);
-    assertTrue(pathTestFileOther.exists());
-
-// FIXME: don't use Scanner for this, do a byte-byte comparison
-    Scanner sC = null;
-    Scanner sT = null;
-
     try {
-      sC = new Scanner(testFileCreated);
-      sT = new Scanner(testFileOther);
+      pathTestFileCreated.copyTo(pathTestFileOther);
+      assertTrue(pathTestFileOther.exists());
 
-      boolean fileEquals = false;
-      while (sC.hasNext()) {
-        sC.next().compareTo(sT.next());
-        fileEquals = true;
+      byte[] expected = null;
+      byte[] actual = null;
+
+      InputStream in = null;
+      try {
+        in = pathTestFileCreated.newInputStream();
+        expected = IOUtils.toByteArray(in);
       }
-      assertTrue("Target file content not equal to source", fileEquals);
+      finally {
+        IOUtils.closeQuietly(in);
+      }
+  
+      try {
+        in = pathTestFileCreated.newInputStream();
+        actual = IOUtils.toByteArray(in);
+      }
+      finally {
+        IOUtils.closeQuietly(in);
+      }
+
+      assertArrayEquals(expected, actual);
     }
     finally {
-      sC.close();
-      sT.close();
+      pathTestFileOther.deleteIfExists();
     }
-
-    pathTestFileOther.deleteIfExists();
   }
 
   @Test(expected = UnsupportedOperationException.class)
