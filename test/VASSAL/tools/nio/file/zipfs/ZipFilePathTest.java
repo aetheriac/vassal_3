@@ -28,6 +28,7 @@ import VASSAL.tools.nio.file.Paths;
 import VASSAL.tools.nio.file.NoSuchFileException;
 import VASSAL.tools.nio.file.ReadOnlyFileSystemException;
 import VASSAL.tools.nio.file.StandardOpenOption;
+import VASSAL.tools.nio.file.StandardCopyOption;
 import VASSAL.tools.nio.file.WatchEvent;
 import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
 import VASSAL.tools.nio.file.attribute.FileAttributeView;
@@ -48,7 +49,10 @@ public class ZipFilePathTest {
 
   final String testingDirectoryName = "dirInZip";
   ZipFilePath pathTestingDirectory;
-  
+ 
+  final String testingDirectory2Name = "dirInZip/foo";
+  ZipFilePath pathTestingDirectory2; 
+ 
   final String testFileOtherName = testingDirectoryName + "/testFileVolatile";
   ZipFilePath pathTestFileOther;
   
@@ -59,9 +63,12 @@ public class ZipFilePathTest {
   ZipFilePath pathRoot;
   ZipFilePath endPath;
 
+  Path externalPath;
+
   @Before
   public void setUp() throws Exception {
     testZipFilePath = Paths.get(pathToTestZipFileName).toAbsolutePath();
+    externalPath = testZipFilePath.getParent().resolve("tmpFile");
 
     fs = (ZipFileSystem) FileSystems.newFileSystem(
       URI.create("zip://" + testZipFilePath), null);
@@ -70,6 +77,7 @@ public class ZipFilePathTest {
     pathRootName = pathRoot.toString();
 
     pathTestingDirectory = pathRoot.resolve(testingDirectoryName);
+    pathTestingDirectory2 = pathRoot.resolve(testingDirectory2Name);
     pathTestDirOther = pathRoot.resolve(testDirOtherName);
     pathTestFileCreated = pathRoot.resolve(testFileCreatedName);
     pathTestFileOther = pathRoot.resolve(testFileOtherName);
@@ -224,6 +232,8 @@ public class ZipFilePathTest {
 
   @Test
   public void testGetFileStore() throws IOException {
+// FIXME: File stores not guaranteed to be identical, and FileStore
+// does not reimiplement equals().
     assertEquals(fs.getFileStores().iterator().next(),
                  pathTestingDirectory.getFileStore());
   }
@@ -251,7 +261,7 @@ public class ZipFilePathTest {
   @Test
   public void testGetNameCount() {
     final String p = "/first/second/third/fourth";
-    Path path4 = Paths.get(p);
+    Path path4 = fs.getPath(p);
     assertEquals(4, path4.getNameCount());
   }
 
@@ -262,12 +272,12 @@ public class ZipFilePathTest {
 
   @Test
   public void testIsAbsoluteTrue() {
-    assertTrue((Paths.get(File.listRoots()[0].getAbsolutePath())).isAbsolute());
+    assertTrue(fs.getPath("/").isAbsolute());
   }
 
   @Test
   public void testIsAbsoluteFalse() {
-    assertFalse(Paths.get("somedir/somefile").isAbsolute());
+    assertFalse(fs.getPath("somedir/somefile").isAbsolute());
   }
 
   @Test
@@ -442,20 +452,23 @@ public class ZipFilePathTest {
 
   @Test
   public void testStartsWithTrue() {
-    assertTrue(pathTestingDirectory.startsWith(Paths.get(pathTestingDirectory.getRoot().toString()
-        + pathTestingDirectory.subpath(0, 2).toString())));
+    assertTrue(
+      pathTestingDirectory2.startsWith(pathTestingDirectory2.subpath(0,2))
+    );
   }
 
   @Test
   public void testStartsWithFalse() {
-    assertFalse(pathTestingDirectory.startsWith(pathTestingDirectory.subpath(1, 3)));
+    assertFalse(
+      pathTestingDirectory2.startsWith(pathTestingDirectory2.subpath(1, 2))
+    );
   }
 
   @Test
   public void testSubpath() {
     String targetName = "target";
-    Path test = Paths.get("firstIgnored/" + targetName + "/secondIgnored");
-    Path targetPath = Paths.get(targetName);
+    Path test = fs.getPath("firstIgnored/" + targetName + "/secondIgnored");
+    Path targetPath = fs.getPath(targetName);
     int index = 1;
 
     assertEquals(targetPath, test.subpath(index, index + 1));
@@ -463,14 +476,15 @@ public class ZipFilePathTest {
 
   @Test
   public void testToAbsolutePath() throws IOException {
-    Path test = Paths.get("name");
-    assertEquals(Paths.get(new File(".").getCanonicalPath() + "/name"), test.toAbsolutePath());
+    Path test = fs.getPath("name");
+    assertEquals(fs.getPath(new File(".").getCanonicalPath() + "/name"), test.toAbsolutePath());
   }
 
   @Test
   public void testToRealPath() throws IOException {
-    Path test = Paths.get("name");
-    assertEquals(Paths.get(new File(".").getCanonicalPath() + "/name"), test.toRealPath(true));
+    Path test = fs.getPath("name");
+// FIXME: don't use File!
+    assertEquals(fs.getPath(new File(".").getCanonicalPath() + "/name"), test.toRealPath(true));
   }
 
   @Test
@@ -518,6 +532,7 @@ public class ZipFilePathTest {
 
   @Test(expected = UnsupportedOperationException.class)
   public void testNewByteChannelOpenOptionArray() throws Exception {
+// FIXME: do a read?
     StandardOpenOption opt = StandardOpenOption.READ;
     SeekableByteChannel sbc = pathTestFileCreated.newByteChannel(opt);
   }
@@ -542,6 +557,7 @@ public class ZipFilePathTest {
 
   @Test
   public void testNewInputStream() throws IOException {
+// FIXME: do a read test
     InputStream in = null;
     try {
       in = pathTestFileCreated.newInputStream();
@@ -554,7 +570,7 @@ public class ZipFilePathTest {
 
   @Test
   public void testNewOutputStreamOpenOptionArray() throws IOException {
-
+// FIXME: do a write test
     OutputStream out = null;
       out = pathTestFileOther.newOutputStream(StandardOpenOption.CREATE_NEW);
       assertTrue(out != null);
@@ -604,48 +620,43 @@ public class ZipFilePathTest {
   
 
   @Test
-  public void testCopyTo() {
-
+  public void testCopyToZip() throws IOException {
     fail("ZipFilePath is still read only");
-    
-//    try {
-//      pathTestFileCreated.copyTo(pathTestFileOther);
-//      assertTrue(pathTestFileOther.exists());
-//    }
-//    catch (IOException e) {
-//      fail(e.getMessage());
-//    }
-//
-//    Scanner sC = null;
-//    Scanner sT = null;
-//
-//    try {
-//      sC = new Scanner(testFileCreated);
-//      sT = new Scanner(testFileOther);
-//
-//      boolean fileEquals = false;
-//      while (sC.hasNext()) {
-//        sC.next().compareTo(sT.next());
-//        fileEquals = true;
-//      }
-//      assertTrue("Target file content not equal to source", fileEquals);
-//    }
-//
-//    catch (FileNotFoundException e) {
-//      fail(e.getMessage());
-//
-//    } finally {
-//      sC.close();
-//      sT.close();
-//    }
-//
-//    try {
-//      pathTestFileOther.deleteIfExists();
-//    }
-//    catch (IOException e) {
-//      fail(e.getMessage());
-//    }
+  }
 
+  @Test
+  public void testCopyToExternalReplaceExisting() throws IOException {
+// FIXME: copy to a path on disk
+    try {
+      pathTestFileCreated.copyTo(
+        externalPath, StandardCopyOption.REPLACE_EXISTING);
+      assertTrue(externalPath.exists());
+
+      byte[] expected = null;
+      byte[] actual = null;
+
+      InputStream in = null;
+      try {
+        in = pathTestFileCreated.newInputStream();
+        expected = IOUtils.toByteArray(in);
+      }
+      finally {
+        IOUtils.closeQuietly(in);
+      }
+  
+      try {
+        in = externalPath.newInputStream();
+        actual = IOUtils.toByteArray(in);
+      }
+      finally {
+        IOUtils.closeQuietly(in);
+      }
+
+      assertArrayEquals(expected, actual);
+    }
+    finally {
+      externalPath.deleteIfExists();
+    }
   }
 
   @Test(expected = UnsupportedOperationException.class)
