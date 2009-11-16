@@ -476,8 +476,7 @@ public class ZipFilePathTest {
 
   @Test
   public void testToAbsolutePath() throws IOException {
-    Path test = fs.getPath("name");
-    assertEquals(fs.getPath(new File(".").getCanonicalPath() + "/name"), test.toAbsolutePath());
+    assertEquals("/name", fs.getPath("name").toAbsolutePath().toString());
   }
 
   @Test
