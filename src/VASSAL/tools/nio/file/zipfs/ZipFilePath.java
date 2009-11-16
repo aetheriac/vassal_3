@@ -80,13 +80,13 @@ public class ZipFilePath extends Path {
   private final byte[] pathForZip;
   private final ReadLock readLock = new ReentrantReadWriteLock().readLock();
   private ZipFilePath pathToZip;
-  private final byte[] pathForprint;
+  private final byte[] pathForPrint;
 
   // package-private
   ZipFilePath(ZipFileSystem fileSystem, byte[] pathInZip) {
     this.fileSystem = fileSystem;
     this.path = pathInZip;
-    this.pathForprint = pathInZip;
+    this.pathForPrint = pathInZip;
     boolean isAbs = (path[0] == '/');
     String toResolve = new String(path);
     if (!isAbs) {
@@ -101,13 +101,13 @@ public class ZipFilePath extends Path {
     }
     pathForZip = ZipPathParser.resolve(toResolve).getBytes();
   }
-  // if given path is resolved
 
+  // if given path is resolved
   ZipFilePath(ZipFileSystem fileSystem, byte[] pathInZip, byte[] pathForZip) {
     this.fileSystem = fileSystem;
     this.path = pathForZip;
     this.pathForZip = pathForZip;
-    this.pathForprint = pathInZip; //given path
+    this.pathForPrint = pathInZip; //given path
   }
 
   public boolean isNestedZip() {
@@ -658,7 +658,7 @@ public class ZipFilePath extends Path {
 
   @Override
   public String toString() {
-    return new String(pathForprint);
+    return new String(pathForPrint);
   }
 
   @Override
