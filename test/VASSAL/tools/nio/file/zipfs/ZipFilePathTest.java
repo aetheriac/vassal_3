@@ -475,15 +475,19 @@ public class ZipFilePathTest {
   }
 
   @Test
-  public void testToAbsolutePath() throws IOException {
+  public void testToAbsolutePathRelative() throws IOException {
     assertEquals("/name", fs.getPath("name").toAbsolutePath().toString());
   }
 
   @Test
+  public void testToAbsolutePathAbsolute() throws IOException {
+    assertEquals("/name", fs.getPath("/name").toAbsolutePath().toString());
+  }
+
+  @Test
   public void testToRealPath() throws IOException {
-    Path test = fs.getPath("name");
-// FIXME: don't use File!
-    assertEquals(fs.getPath(new File(".").getCanonicalPath() + "/name"), test.toRealPath(true));
+    assertEquals("/" + testFileCreatedName,
+                 fs.getPath(testFileCreatedName).toRealPath(true).toString());
   }
 
   @Test
