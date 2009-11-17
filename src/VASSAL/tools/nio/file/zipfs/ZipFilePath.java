@@ -672,7 +672,6 @@ public class ZipFilePath extends Path {
       i++;
     }
     return hashCode;
-
   }
 
   @Override
@@ -1133,7 +1132,7 @@ public class ZipFilePath extends Path {
    **/
   @Override
   public Path normalize() {
-    //pathForZip is normalized path for ZipFileSystem
+    // pathForZip is normalized path for ZipFileSystem
     return new ZipFilePath(fileSystem, pathForZip, pathForZip);
   }
 
