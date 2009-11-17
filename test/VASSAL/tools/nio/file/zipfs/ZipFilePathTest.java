@@ -76,11 +76,11 @@ public class ZipFilePathTest {
     pathRoot = (ZipFilePath) fs.getRootDirectories().iterator().next();
     pathRootName = pathRoot.toString();
 
-    pathTestingDirectory = pathRoot.resolve(testingDirectoryName);
-    pathTestingDirectory2 = pathRoot.resolve(testingDirectory2Name);
-    pathTestDirOther = pathRoot.resolve(testDirOtherName);
-    pathTestFileCreated = pathRoot.resolve(testFileCreatedName);
-    pathTestFileOther = pathRoot.resolve(testFileOtherName);
+    pathTestingDirectory = fs.getPath(testingDirectoryName);
+    pathTestingDirectory2 = fs.getPath(testingDirectory2Name);
+    pathTestDirOther = fs.getPath(testDirOtherName);
+    pathTestFileCreated = fs.getPath(testFileCreatedName);
+    pathTestFileOther = fs.getPath(testFileOtherName);
     
     int nc = pathTestFileCreated.getNameCount();
     endPath = pathTestFileCreated.subpath(nc - 1, nc);
@@ -266,8 +266,13 @@ public class ZipFilePathTest {
   }
 
   @Test
-  public void testGetRoot() {
-    assertEquals(pathTestingDirectory.getRoot(), pathRoot);
+  public void testGetRootAbsolute() {
+    assertEquals(pathRoot, pathRoot.getRoot());
+  }
+
+  @Test
+  public void testGetRootRelative() {
+    assertEquals(null, pathTestingDirectory.getRoot());
   }
 
   @Test
