@@ -352,7 +352,7 @@ public class ZipFilePath extends Path {
 
     int elements = endIndex - beginIndex;
     String result = null;
-    StringBuffer result1 = new StringBuffer("");
+    StringBuilder result1 = new StringBuilder("");
     int index = beginIndex;
     for (; elements-- != 0;) {
       if (endIndex == offsets.size() && elements == 0) {
@@ -383,7 +383,7 @@ public class ZipFilePath extends Path {
 
     int elements = endIndex - beginIndex;
     String result = null;
-    StringBuffer result1 = new StringBuffer("");
+    StringBuilder result1 = new StringBuilder("");
     int index = beginIndex;
 
     for (; elements-- != 0;) {
@@ -1132,8 +1132,11 @@ public class ZipFilePath extends Path {
    **/
   @Override
   public Path normalize() {
-    // pathForZip is normalized path for ZipFileSystem
-    return new ZipFilePath(fileSystem, pathForZip, pathForZip);
+    return new ZipFilePath(
+      fileSystem,
+      ZipPathParser.resolve(new String(path)).getBytes(),
+      pathForZip
+    );
   }
 
 // FIXME: write lock

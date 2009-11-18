@@ -378,6 +378,9 @@ public class ZipFilePathTest {
       "dir1/dir2/dir3/../dir4/dir5/../../../trail";
     final String normalizedPathString = "dir1/trail";
 
+System.out.println("");
+System.out.println(fs.getPath(redundantPathString).normalize().toString());
+
     assertEquals(
       normalizedPathString,
       fs.getPath(redundantPathString).normalize().toString()
@@ -435,19 +438,38 @@ public class ZipFilePathTest {
   }
 
   @Test
-  public void testResolvePathSelf() {
-    assertEquals(pathTestFileOther, pathTestFileCreated.resolve(pathTestFileOther));
-  }
-
-  @Test
   public void testResolvePathNull() {
     assertEquals(pathTestFileCreated, pathTestFileCreated.resolve((Path) null));
   }
 
   @Test
-  public void testResolvePathOther() {
-    final String resolvedPath = "../" + testFileCreatedName;
-    assertEquals(resolvedPath, pathTestingDirectory.resolve(pathTestFileCreated).toString());
+  public void testResolvePathRelativeAbsolute() {
+    assertEquals(pathRoot, pathTestingDirectory.resolve(pathRoot));
+  }
+
+  @Test
+  public void testResolvePathAbsoluteAbsolute() {
+    assertEquals(pathRoot, pathRoot.resolve(pathRoot));
+  }
+
+  @Test
+  public void testResolvePathRelativeRelative() {
+    final String resolvedPath =
+      testingDirectoryName + "/" + testFileCreatedName;
+    assertEquals( 
+      resolvedPath,
+      pathTestingDirectory.resolve(pathTestFileCreated).toString()
+    );
+  }
+
+  @Test
+  public void testResolvePathAbsoluteRelative() {
+    final String resolvedPath = "/dirInZip/" + testFileCreatedName;
+    assertEquals(
+      resolvedPath,
+      pathTestingDirectory.toAbsolutePath()
+                          .resolve(pathTestFileCreated).toString()
+    );
   }
 
   @Test

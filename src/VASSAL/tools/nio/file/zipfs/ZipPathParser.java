@@ -32,8 +32,9 @@ package VASSAL.tools.nio.file.zipfs;
 
 import VASSAL.tools.nio.file.*;
 //import java.nio.file.*;
+import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Stack;
+import java.util.ListIterator;
 import java.util.regex.*;
 
 
@@ -137,7 +138,7 @@ public class ZipPathParser {
       }
       return 0; // path length >1 and No Prefix
     }
-    return 0; //Path lenght=1 and it does not have any prefix
+    return 0; //Path length=1 and it does not have any prefix
   }
 
   static int nextNonSeparator(String path, int off) {
@@ -184,7 +185,6 @@ public class ZipPathParser {
       }
     }
     return compList;
-
   }
 
   private static int findZipComponent(int prefixLen, String path) {
@@ -214,14 +214,14 @@ public class ZipPathParser {
     pathInZip.getChars(0, len, pathArr, 0);
 
     //Repleace all Separators \\ with Zip Separator /
-    //throws InavalidPathException in Windows and Unux if char is not valid
+    //throws InavalidPathException in Windows and Unix if char is not valid
     // in respective file systems.
 
     for (int i = 0; i < len; i++) {
       if (pathArr[i] == '\\') {
         pathArr[i] = '/';
       }
-      if (fileSepa == '\\') { //If Path is In Windows
+      if (fileSepa == '\\') { //If Path is in Windows
         if ((pathArr[i] < '\u0020') || (invalidChars.indexOf(pathArr[i]) != -1)) {
           throw new InvalidPathException(pathInZip, "Invalid char at " + i);
         }
@@ -230,7 +230,7 @@ public class ZipPathParser {
           throw new InvalidPathException(pathInZip, "Trailing space at" + (i - 1));
         }
       }
-      else if (fileSepa == '/') { //If path In In Unix
+      else if (fileSepa == '/') { //If path is in Unix
         if (pathArr[i] == '\u0000') {
           throw new InvalidPathException(pathInZip, "Null char at" + i);
         }
@@ -245,67 +245,64 @@ public class ZipPathParser {
         size--;
         i--;
       }
-
     }
-    return new String(pathArr).substring(0, size);
+  
+    // Remove trailing slash unless whole path is '/'
+    if (size > 1 && pathArr[size-1] == '/') size--;
+
+    return new String(pathArr, 0, size);
   }
 
   // Remove DotSlash(./) and resolve DotDot (..) components
   static String resolve(String path) {
 
-    int len = path.length();
-    char pathArr[] = new char[len];
-    path.getChars(0, len, pathArr, 0);
-    //Remove ./ component ,Remove this if not necessary
-    char ch = pathArr[0];
-    int prefixPos = (ch == '/') ? 1 : 0;
-    int size = len;
+    final boolean prefix = path.startsWith("/");
+    final LinkedList<String> parts = getComponents(path);
 
-    for (int i = prefixPos + 1; i < size; i++) {
-      if ((pathArr[i] == '/' && pathArr[i - 1] == '.') &&
-          (i == prefixPos + 1 || pathArr[i - 2] == '/')) {
-        System.arraycopy(pathArr, i + 1, pathArr, i - 1, size - (i + 1));
-        size -= 2;
-        i--;
+    int previousDirsAtBeginning = 0;
+
+    // Remove redundant parts.
+    for (ListIterator<String> i = parts.listIterator(); i.hasNext(); ) {
+      final String part = i.next();
+
+      if (part.equals(".")) {
+        // ".": Remove.
+        i.remove();
       }
-    }
+      else if (part.equals("..")) {  
+        // "..": Absolute paths: Remove this and the previous name, if any.
+        // Relative paths: Keep if we are part of a leading string of ".."
+        // names; otherwise remove this and the previous name.
+        if (prefix || i.previousIndex() > previousDirsAtBeginning) {
+          i.remove();
 
-    //Remove final . if path has one. which is not needed for zip path
-    if ((size >= 2) && pathArr[size - 1] == '.' && pathArr[size - 2] == '/') {
-      System.arraycopy(pathArr, 0, pathArr, 0, size - 1);
-      size -= 1;
-    }
-
-    //Resolve ../ components
-    String pathStr = new String(pathArr, 0, size);
-    boolean prefix = pathStr.startsWith("/");
-    boolean endsWith = pathStr.endsWith("/");
-    LinkedList<String> compArr = getComponents(pathStr);
-    Stack<String> stack = new Stack<String>();
-    for (int i = 0; i < compArr.size(); i++) {
-      stack.push(compArr.get(i));
-      if (compArr.get(i).equals("..")) {
-        stack.pop();
-        if (i > 0 && stack.size() > 0) {
-          stack.pop();
+          // hasPrevious() can be false in the case of the absolute path "/.."
+          if (i.hasPrevious()) {
+            i.previous();
+            i.remove();
+          }
+        }
+        else {
+          // We are relative, must keep leading ".."
+          previousDirsAtBeginning++;
         }
       }
-    }
-    //Construct final path
-    StringBuffer resolved = (prefix) ? new StringBuffer("/") : new StringBuffer("");
-    for (String comp : stack) {
-      resolved.append(comp).append("/");
-    }
-
-    String resolvedPath = "";
-    if (!resolved.toString().equals("")) {
-      if (!endsWith && resolved.length() != 1) {
-        resolvedPath = resolved.substring(0, resolved.length() - 1);
-      } 
       else {
-        resolvedPath = resolved.toString();
+        // Otherwise keep this name (for now).
       }
     }
-    return (resolvedPath);
+
+    // Construct the resulting path string.
+    final StringBuilder res = new StringBuilder(prefix ? "/" : "");
+
+    final Iterator<String> i = parts.iterator();
+    if (i.hasNext()) { 
+      res.append(i.next());
+      while (i.hasNext()) {
+        res.append("/").append(i.next());
+      }
+    }
+
+    return res.toString();
   }
 }
