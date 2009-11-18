@@ -420,7 +420,8 @@ public abstract class RealPath extends AbstractPath {
         final int s = outputParts.size();
         if (s > previousDirsAtBeginning) {
           outputParts.remove(s-1);
-        } else if (!this.isAbsolute()){
+        }
+        else if (!this.isAbsolute()){
           outputParts.add(currentInputPart);
           previousDirsAtBeginning++;
         }
