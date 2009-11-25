@@ -4,19 +4,18 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public abstract class PathIsAbsoluteTest {
-  protected final FileSystem fs;
+public abstract class PathIsAbsoluteTest extends AbstractPathMethodTest {
   protected final String input;
   protected final boolean expected;
 
   public PathIsAbsoluteTest(FileSystem fs, String input, boolean expected) {
-    this.fs = fs;
+    super(fs);
+
     this.input = input;
     this.expected = expected;
   }
 
-  @Test
-  public void testIsAbsolute() {
+  protected void doTest() {
     assertEquals(expected, fs.getPath(input).isAbsolute());
   }
 }

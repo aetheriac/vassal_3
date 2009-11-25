@@ -20,6 +20,7 @@ import VASSAL.tools.nio.file.PathNormalizeTest;
 import VASSAL.tools.nio.file.PathRelativizeTest;
 import VASSAL.tools.nio.file.PathResolveTest;
 import VASSAL.tools.nio.file.PathStartsWithTest;
+import VASSAL.tools.nio.file.PathSubpathTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -29,7 +30,8 @@ import VASSAL.tools.nio.file.PathStartsWithTest;
   RealUnixPathTest.NormalizeTest.class,
   RealUnixPathTest.RelativizeTest.class,
   RealUnixPathTest.ResolveTest.class,
-  RealUnixPathTest.StartsWithTest.class
+  RealUnixPathTest.StartsWithTest.class,
+  RealUnixPathTest.SubpathTest.class
 })
 public class RealUnixPathTest {
   protected static FileSystem fs;
@@ -41,7 +43,7 @@ public class RealUnixPathTest {
   }
 
   @RunWith(Parameterized.class)
-  public static class EndsWithTest extends PathEndsWithTest{
+  public static class EndsWithTest extends PathEndsWithTest {
     public EndsWithTest(String left, String right, boolean expected) {
       super(RealUnixPathTest.fs, left, right, expected);
     }
@@ -78,12 +80,17 @@ public class RealUnixPathTest {
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
         // Input   Index Expected Throws
-        { "a/b/c", -1,  null,    IllegalArgumentException.class }, 
-        { "a/b/c",  0,  "a",     null                           },
-        { "a/b/c",  1,  "b",     null                           },
-        { "a/b/c",  2,  "c",     null                           },
-        { "a/b/c",  3,  null,    IllegalArgumentException.class },
-        { "/",      0,  null,    IllegalArgumentException.class }
+        { "a/b/c",  -1,  null,    IllegalArgumentException.class }, 
+        { "a/b/c",   0,  "a",     null                           },
+        { "a/b/c",   1,  "b",     null                           },
+        { "a/b/c",   2,  "c",     null                           },
+        { "a/b/c",   3,  null,    IllegalArgumentException.class },
+        { "/a/b/c", -1,  null,    IllegalArgumentException.class }, 
+        { "/a/b/c",  0,  "a",     null                           },
+        { "/a/b/c",  1,  "b",     null                           },
+        { "/a/b/c",  2,  "c",     null                           },
+        { "/a/b/c",  3,  null,    IllegalArgumentException.class },
+        { "/",       0,  null,    IllegalArgumentException.class }
       });
     }
   }
@@ -196,6 +203,38 @@ public class RealUnixPathTest {
         { "foo/bar",  "f",        false },
         { "foo/bar",  "/foo",     false },
         { "foo/bar",  "/foo/bar", false },
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class SubpathTest extends PathSubpathTest{
+    public SubpathTest(String input, int begin, int end, String expected,
+                                           Class<? extends Throwable> tclass) {
+      super(RealUnixPathTest.fs, input, begin, end, expected, tclass);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Input       Begin End Expected   Throws 
+        { "/",             0, 1, null,      IllegalArgumentException.class },
+        { "/foo/bar/baz", -1, 0, null,      IllegalArgumentException.class },
+        { "/foo/bar/baz",  0, 1, "foo",     null                           },
+        { "/foo/bar/baz",  0, 2, "foo/bar", null                           },
+        { "/foo/bar/baz",  0, 3, "foo/bar/baz", null                       },
+        { "/foo/bar/baz",  1, 2, "bar",     null                           },
+        { "/foo/bar/baz",  1, 3, "bar/baz", null                           },
+        { "/foo/bar/baz",  2, 3, "baz",     null                           },
+        { "/foo/bar/baz",  1, 0, null,      IllegalArgumentException.class },
+        { "foo/bar/baz",  -1, 0, null,      IllegalArgumentException.class },
+        { "foo/bar/baz",   0, 1, "foo",     null                           },
+        { "foo/bar/baz",   0, 2, "foo/bar", null                           },
+        { "foo/bar/baz",   0, 3, "foo/bar/baz", null                       },
+        { "foo/bar/baz",   1, 2, "bar",     null                           },
+        { "foo/bar/baz",   1, 3, "bar/baz", null                           },
+        { "foo/bar/baz",   2, 3, "baz",     null                           },
+        { "foo/bar/baz",   1, 0, null,      IllegalArgumentException.class }
       });
     }
   }
