@@ -17,6 +17,8 @@ public abstract class PathNormalizeTest {
 
   @Test
   public void testNormalize() {
-    assertEquals(expected, fs.getPath(input).normalize().toString());
+    final Path path = fs.getPath(input).normalize();
+    final String result = path == null ? null : path.toString();
+    assertEquals(expected, result);
   }
 }
