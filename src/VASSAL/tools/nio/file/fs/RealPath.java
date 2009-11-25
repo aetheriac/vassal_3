@@ -432,11 +432,21 @@ public abstract class RealPath extends AbstractPath {
       outputParts.add(currentInputPart);
     }
 
-    // Rebuild the normalized path.
-    return fs.getPath(
-      (seps[0] == -1 ? "" : path.substring(0, seps[0]+1)) +
-      StringUtils.join(File.separator, outputParts)
-    );
+    final String prefix = seps[0] == -1 ? null : path.substring(0, seps[0]+1);
+
+    String norm;
+
+    if (outputParts.size() > 0) {
+      // Rebuild the normalized path.
+      norm = (seps[0] == -1 ? "" : path.substring(0, seps[0]+1)) +
+             StringUtils.join(File.separator, outputParts);
+    }
+    else {
+      // Whole path is just the prefix, if any.
+      norm = prefix;
+    }
+
+    return norm == null ? null : fs.getPath(norm);
   }
 
   public boolean notExists() {
