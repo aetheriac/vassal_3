@@ -79,7 +79,6 @@ public class RealUnixPathTest {
       return Arrays.asList(new Object[][] {
         // Input   Index Expected Throws
         { "a/b/c", -1,  null,    IllegalArgumentException.class }, 
-        { "a/b/c", -1,  null,    null }, 
         { "a/b/c",  0,  "a",     null                           },
         { "a/b/c",  1,  "b",     null                           },
         { "a/b/c",  2,  "c",     null                           },
