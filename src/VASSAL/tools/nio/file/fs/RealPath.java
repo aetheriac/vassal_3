@@ -518,7 +518,9 @@ public abstract class RealPath extends AbstractPath {
 
     final int oc = other.getNameCount();
     final int tc = this.getNameCount();
-    return oc <= tc ? other.subpath(0,oc).equals(this.subpath(0, oc)) : false;
+
+    return oc == 0 ? true : 
+           oc <= tc ? other.subpath(0,oc).equals(this.subpath(0, oc)) : false;
   }
 
   public Path subpath(int start, int end) {
