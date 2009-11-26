@@ -1,4 +1,4 @@
-package VASSAL.tools.nio.file.fs;
+package VASSAL.tools.nio.file.realfs;
 
 import static VASSAL.tools.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static VASSAL.tools.nio.file.StandardCopyOption.REPLACE_EXISTING;

@@ -1,4 +1,4 @@
-package VASSAL.tools.nio.file.fs;
+package VASSAL.tools.nio.file.realfs;
 
 import java.io.InputStream;
 import java.io.IOException;

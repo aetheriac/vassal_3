@@ -1,4 +1,4 @@
-package VASSAL.tools.nio.file.fs;
+package VASSAL.tools.nio.file.realfs;
 
 import VASSAL.tools.nio.file.attribute.FileStoreSpaceAttributes;
 

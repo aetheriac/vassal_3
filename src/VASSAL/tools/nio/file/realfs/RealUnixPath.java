@@ -1,4 +1,4 @@
-package VASSAL.tools.nio.file.fs;
+package VASSAL.tools.nio.file.realfs;
 
 public class RealUnixPath extends RealPath {
   public RealUnixPath(String path, RealFileSystem fs) {

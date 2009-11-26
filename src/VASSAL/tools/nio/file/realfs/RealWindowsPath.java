@@ -1,4 +1,4 @@
-package VASSAL.tools.nio.file.fs;
+package VASSAL.tools.nio.file.realfs;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

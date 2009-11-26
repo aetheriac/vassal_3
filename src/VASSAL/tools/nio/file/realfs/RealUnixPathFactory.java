@@ -1,4 +1,4 @@
-package VASSAL.tools.nio.file.fs;
+package VASSAL.tools.nio.file.realfs;
 
 class RealUnixPathFactory implements RealPathFactory {
   public RealPath getPath(String path, RealFileSystem fs) {

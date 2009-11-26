@@ -1,4 +1,4 @@
-package VASSAL.tools.nio.file.fs;
+package VASSAL.tools.nio.file.realfs;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -46,7 +46,7 @@ public abstract class RealPathTest extends AbstractPathTest {
   final String curDir = "." + separator;
   final String prevDir = ".." + separator;
   final String stringPathToFileFsTest = "test" + separator + "VASSAL" + separator + "tools"
-      + separator + "nio" + separator + "file" + separator + "fs";
+      + separator + "nio" + separator + "file" + separator + "realfs";
 
   final File pwd = new File(stringPathToFileFsTest);
 
