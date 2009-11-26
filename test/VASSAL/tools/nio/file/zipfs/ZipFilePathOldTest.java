@@ -34,7 +34,7 @@ import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
 import VASSAL.tools.nio.file.attribute.FileAttributeView;
 import VASSAL.tools.nio.file.attribute.FileTime;
 
-public class ZipFilePathTest {
+public class ZipFilePathOldTest {
 
   final String zipScheme = "zip";
   final String testZipFileName = "testZipFile.zip";
