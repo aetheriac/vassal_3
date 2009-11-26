@@ -11,11 +11,15 @@ import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
-import VASSAL.tools.nio.file.FileSystem;
+import static org.junit.Assume.assumeTrue;
 
+import VASSAL.Info;
+
+import VASSAL.tools.nio.file.FileSystem;
 import VASSAL.tools.nio.file.PathEndsWithTest;
 import VASSAL.tools.nio.file.PathGetNameIntTest;
 import VASSAL.tools.nio.file.PathIsAbsoluteTest;
+import VASSAL.tools.nio.file.PathNormalizationTest;
 import VASSAL.tools.nio.file.PathNormalizeTest;
 import VASSAL.tools.nio.file.PathRelativizeTest;
 import VASSAL.tools.nio.file.PathResolveTest;
@@ -27,6 +31,7 @@ import VASSAL.tools.nio.file.PathSubpathTest;
   RealUnixPathTest.EndsWithTest.class,
   RealUnixPathTest.GetNameIntTest.class,
   RealUnixPathTest.IsAbsoluteTest.class,
+//  RealUnixPathTest.NormalizationTest.class,
   RealUnixPathTest.NormalizeTest.class,
   RealUnixPathTest.RelativizeTest.class,
   RealUnixPathTest.ResolveTest.class,
@@ -38,6 +43,8 @@ public class RealUnixPathTest {
 
   @BeforeClass
   public static void setupFS() throws IOException {
+    assumeTrue(!Info.isWindows());
+
     final RealFileSystemProvider provider = new RealFileSystemProvider();
     fs = new RealFileSystem(provider);
   }
@@ -111,6 +118,32 @@ public class RealUnixPathTest {
       });
     }
   }
+
+/*
+  @RunWith(Parameterized.class)
+  public static class NormalizationTest extends PathNormalizationTest{
+    public NormalizationTest(String input, String expected) {
+      super(RealUnixPathTest.fs, input, expected);
+    }
+
+    @Parameters
+    public static List<String[]> cases() {
+      return Arrays.asList(new String[][] {
+        // Input                Expected
+        { "/.",            "/"       },
+        { "//foo",         "/foo"    },
+        { "/foo//",        "/foo"    },
+        { "/foo/./",       "/foo"    },
+        { "/foo/./.././.", "/foo/.." },
+        { ".",             null      },
+        { "foo",           "foo"     },
+        { "foo//",         "foo"     },
+        { "foo/./",        "foo"     },
+        { "foo/./.././.",  "foo/.."  }
+      });
+    }
+  }
+*/
 
   @RunWith(Parameterized.class)
   public static class NormalizeTest extends PathNormalizeTest{
