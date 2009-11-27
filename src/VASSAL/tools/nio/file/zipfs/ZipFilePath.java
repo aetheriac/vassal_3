@@ -110,6 +110,18 @@ public class ZipFilePath extends Path {
     this.pathForPrint = pathInZip; //given path
   }
 
+  private ZipFilePath checkPath(Path path) {
+    if (path == null) {
+      throw new NullPointerException();
+    }
+  
+    if (!(path instanceof ZipFilePath)) {
+      throw new ProviderMismatchException();
+    }
+
+    return (ZipFilePath) path;
+  }
+
   public boolean isNestedZip() {
     Pattern pattern = Pattern.compile("\\.(?i)(zip|jar)");
     Matcher matcher = null;
@@ -504,26 +516,22 @@ public class ZipFilePath extends Path {
 
   @Override
   public Path relativize(Path other) {
-    if (other == null) {
-      throw new NullPointerException();
-    }
-    if (!(other instanceof ZipFilePath)) {
-      throw new ProviderMismatchException();
-    }
-    ZipFilePath other1 = (ZipFilePath) other;
-    if (other1.equals(this)) {
+    final ZipFilePath otherPath = checkPath(other); 
+
+    if (otherPath.equals(this)) {
       return null;
     }
-    if (this.isAbsolute() != other1.isAbsolute()) {
-      return other1;
+
+    if (this.isAbsolute() != otherPath.isAbsolute()) {
+      return otherPath;
     }
 
     int i = 0;
     int ti = this.getNameCount();
-    int oi = other1.getNameCount();
+    int oi = otherPath.getNameCount();
 
     for (; i < ti && i < oi; i++) {
-      if (!this.getName(i).equals(other1.getName(i))) {
+      if (!this.getName(i).equals(otherPath.getName(i))) {
         break;
       }
     }
@@ -537,7 +545,7 @@ public class ZipFilePath extends Path {
     ZipFilePath subPath = null;
     int subpathlen = 0;
     if (i < oi) {
-      subPath = other1.subpath(i, oi);
+      subPath = otherPath.subpath(i, oi);
       subpathlen = subPath.path.length;
     }
     byte[] result = new byte[arr.length + subpathlen];
@@ -598,42 +606,30 @@ public class ZipFilePath extends Path {
 
   @Override
   public boolean startsWith(Path other) {
+    final ZipFilePath otherPath = checkPath(other);
 
-    ZipFilePath other1 = null;
-    if (other == null) {
-      throw new NullPointerException();
-    }
-    if (other instanceof ZipFilePath) {
-      other1 = (ZipFilePath) other;
-    }
-
-    int otherCount = other1.getNameCount();
+    int otherCount = otherPath.getNameCount();
     if (getNameCount() < otherCount) {
       return false;
     }
 
     for (int i = 0; i < otherCount; i++) {
-      if (other1.getName(i).equals(getName(i))) {
+      if (otherPath.getName(i).equals(getName(i))) {
         continue;
       }
       else {
         return false;
       }
     }
-    return true;
 
+    return true;
   }
 
   @Override
   public boolean endsWith(Path other) {
-    ZipFilePath other1 = null;
-    if (other == null) {
-      throw new NullPointerException();
-    }
-    if (other instanceof ZipFilePath) {
-      other1 = (ZipFilePath) other;
-    }
-    int i = other1.getNameCount();
+    final ZipFilePath otherPath = checkPath(other);
+
+    int i = otherPath.getNameCount();
     int j = getNameCount();
 
     if (j < i) {
@@ -641,7 +637,7 @@ public class ZipFilePath extends Path {
     }
 
     for (--i, --j; i >= 0; i--, j--) {
-      if (other1.getName(i).equals(getName(j))) {
+      if (otherPath.getName(i).equals(getName(j))) {
         continue;
       }
       else {
@@ -649,7 +645,6 @@ public class ZipFilePath extends Path {
       }
     }
     return true;
-
   }
 
   public FileSystemProvider provider() {
@@ -684,9 +679,7 @@ public class ZipFilePath extends Path {
 
   @Override
   public int compareTo(Path other) {
-
-    ZipFilePath otherPath = (ZipFilePath) other;
-    //int c = zipPath.compareTo(otherPath.zipPath);
+    final ZipFilePath otherPath = checkPath(other);
 
     int len1 = path.length;
     int len2 = otherPath.path.length;
