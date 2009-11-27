@@ -606,15 +606,19 @@ public class ZipFilePath extends Path {
 
   @Override
   public boolean startsWith(Path other) {
-    final ZipFilePath otherPath = checkPath(other);
+    final ZipFilePath that = checkPath(other);
 
-    int otherCount = otherPath.getNameCount();
-    if (getNameCount() < otherCount) {
+    if (that.isAbsolute() != this.isAbsolute()) {
       return false;
     }
 
-    for (int i = 0; i < otherCount; i++) {
-      if (otherPath.getName(i).equals(getName(i))) {
+    final int thatCount = that.getNameCount();
+    if (getNameCount() < thatCount) {
+      return false;
+    }
+      
+    for (int i = 0; i < thatCount; i++) {
+      if (that.getName(i).equals(getName(i))) {
         continue;
       }
       else {
@@ -627,23 +631,28 @@ public class ZipFilePath extends Path {
 
   @Override
   public boolean endsWith(Path other) {
-    final ZipFilePath otherPath = checkPath(other);
+    final ZipFilePath that = checkPath(other);
 
-    int i = otherPath.getNameCount();
-    int j = getNameCount();
+    if (that.isAbsolute()) {
+      return this.isAbsolute() ? this.equals(that) : false;
+    }
+
+    int i = that.getNameCount();
+    int j = this.getNameCount();
 
     if (j < i) {
       return false;
     }
-
+  
     for (--i, --j; i >= 0; i--, j--) {
-      if (otherPath.getName(i).equals(getName(j))) {
+      if (that.getName(i).equals(this.getName(j))) {
         continue;
       }
       else {
         return false;
       }
     }
+
     return true;
   }
 
