@@ -524,7 +524,7 @@ public class ZipFilePath extends Path {
     }
 
     if (this.isAbsolute() != otherPath.isAbsolute()) {
-      return otherPath;
+      throw new IllegalArgumentException();
     }
 
     int i = 0;
