@@ -20,11 +20,13 @@ import VASSAL.tools.nio.file.InvalidPathException;
 import VASSAL.tools.nio.file.PathCompareToTest;
 import VASSAL.tools.nio.file.PathConstructorTest;
 import VASSAL.tools.nio.file.PathEndsWithTest;
+import VASSAL.tools.nio.file.PathEqualsTest;
 import VASSAL.tools.nio.file.PathGetNameTest;
 import VASSAL.tools.nio.file.PathGetNameCountTest;
 import VASSAL.tools.nio.file.PathGetNameIntTest;
 import VASSAL.tools.nio.file.PathGetParentTest;
 import VASSAL.tools.nio.file.PathGetRootTest;
+import VASSAL.tools.nio.file.PathHashCodeTest;
 import VASSAL.tools.nio.file.PathIsAbsoluteTest;
 import VASSAL.tools.nio.file.PathNormalizeTest;
 import VASSAL.tools.nio.file.PathRelativizeTest;
@@ -39,6 +41,7 @@ import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
   RealWindowsPathOpsTest.CompareToTest.class,
   RealWindowsPathOpsTest.ConstructorTest.class,
   RealWindowsPathOpsTest.EndsWithTest.class,
+  RealWindowsPathOpsTest.EqualsTest.class,
   RealWindowsPathOpsTest.GetNameTest.class,
   RealWindowsPathOpsTest.GetNameCountTest.class,
   RealWindowsPathOpsTest.GetNameIntTest.class,
@@ -150,6 +153,25 @@ public class RealWindowsPathOpsTest {
         { "\\\\server\\share", "\\\\server\\share\\", true  },
         { "\\\\server\\share", "shared",              false },
         { "\\\\server\\share", "\\",                  false }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class EqualsTest extends PathEqualsTest {
+    public EqualsTest(String left, Object right, Object expected) {
+      super(RealWindowsPathOpsTest.fs, left, right, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Left   Right      Expected
+        { "C:\\", null,      false },
+        { "C:\\", 42,        false },
+        { "C:\\", "C:\\",    true  },
+        { "C:\\", "C:\\foo", false }
+// FIXME: should also check against Path from another provider
       });
     }
   }
@@ -270,6 +292,22 @@ public class RealWindowsPathOpsTest {
         { "\\\\server\\share\\",  "\\\\server\\share\\" },
         { "a\\b",                 null                  },
         { "foo",                  null                  }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class HashCodeTest extends PathHashCodeTest {
+    public HashCodeTest(String left, String right, Object expected) {
+      super(RealWindowsPathOpsTest.fs, left, right, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Left       Right       Expected
+        { "C:\\foo",  "C:\\foo",  true },
+        { "C:\\foo",  "c:\\FOO",  true }  // Windows is not case-sensitive
       });
     }
   }

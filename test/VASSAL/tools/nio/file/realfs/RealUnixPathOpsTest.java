@@ -20,11 +20,13 @@ import VASSAL.tools.nio.file.InvalidPathException;
 import VASSAL.tools.nio.file.PathCompareToTest;
 import VASSAL.tools.nio.file.PathConstructorTest;
 import VASSAL.tools.nio.file.PathEndsWithTest;
+import VASSAL.tools.nio.file.PathEqualsTest;
 import VASSAL.tools.nio.file.PathGetNameTest;
 import VASSAL.tools.nio.file.PathGetNameCountTest;
 import VASSAL.tools.nio.file.PathGetNameIntTest;
 import VASSAL.tools.nio.file.PathGetParentTest;
 import VASSAL.tools.nio.file.PathGetRootTest;
+import VASSAL.tools.nio.file.PathHashCodeTest;
 import VASSAL.tools.nio.file.PathIsAbsoluteTest;
 import VASSAL.tools.nio.file.PathNormalizeTest;
 import VASSAL.tools.nio.file.PathRelativizeTest;
@@ -39,11 +41,13 @@ import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
   RealUnixPathOpsTest.CompareToTest.class,
   RealUnixPathOpsTest.ConstructorTest.class,
   RealUnixPathOpsTest.EndsWithTest.class,
+  RealUnixPathOpsTest.EqualsTest.class,
   RealUnixPathOpsTest.GetNameTest.class,
   RealUnixPathOpsTest.GetNameCountTest.class,
   RealUnixPathOpsTest.GetNameIntTest.class,
   RealUnixPathOpsTest.GetParentTest.class,
   RealUnixPathOpsTest.GetRootTest.class,
+  RealUnixPathOpsTest.HashCodeTest.class,
   RealUnixPathOpsTest.IsAbsoluteTest.class,
   RealUnixPathOpsTest.NormalizeTest.class,
   RealUnixPathOpsTest.RelativizeTest.class,
@@ -128,6 +132,25 @@ public class RealUnixPathOpsTest {
         { "foo",      "foo",      true                          },
         { "foo/bar",  "bar",      true                          },
         { "foo/bar",  "foo/bar",  true                          }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class EqualsTest extends PathEqualsTest {
+    public EqualsTest(String left, Object right, Object expected) {
+      super(RealUnixPathOpsTest.fs, left, right, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Left Right   Expected
+        { "/",  null,   false },
+        { "/",  42,     false },
+        { "/",  "/",    true  },
+        { "/",  "/foo", false }
+// FIXME: should also check against Path from another provider
       });
     }
   }
@@ -229,6 +252,21 @@ public class RealUnixPathOpsTest {
         { "/",      "/"  },
         { "a/b",    null },
         { "a",      null }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class HashCodeTest extends PathHashCodeTest {
+    public HashCodeTest(String left, String right, Object expected) {
+      super(RealUnixPathOpsTest.fs, left, right, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Left       Right       Expected
+        { "/",        "/",        true  },
       });
     }
   }

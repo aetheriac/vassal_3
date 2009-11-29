@@ -21,11 +21,13 @@ import VASSAL.tools.nio.file.Paths;
 import VASSAL.tools.nio.file.PathCompareToTest;
 import VASSAL.tools.nio.file.PathConstructorTest;
 import VASSAL.tools.nio.file.PathEndsWithTest;
+import VASSAL.tools.nio.file.PathEqualsTest;
 import VASSAL.tools.nio.file.PathGetNameTest;
 import VASSAL.tools.nio.file.PathGetNameCountTest;
 import VASSAL.tools.nio.file.PathGetNameIntTest;
 import VASSAL.tools.nio.file.PathGetParentTest;
 import VASSAL.tools.nio.file.PathGetRootTest;
+import VASSAL.tools.nio.file.PathHashCodeTest;
 import VASSAL.tools.nio.file.PathIsAbsoluteTest;
 import VASSAL.tools.nio.file.PathNormalizeTest;
 import VASSAL.tools.nio.file.PathRelativizeTest;
@@ -40,11 +42,13 @@ import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
   ZipFilePathOpsTest.CompareToTest.class,
   ZipFilePathOpsTest.ConstructorTest.class,
   ZipFilePathOpsTest.EndsWithTest.class,
+  ZipFilePathOpsTest.EqualsTest.class,
   ZipFilePathOpsTest.GetNameTest.class,
   ZipFilePathOpsTest.GetNameCountTest.class,
   ZipFilePathOpsTest.GetNameIntTest.class,
   ZipFilePathOpsTest.GetParentTest.class,
   ZipFilePathOpsTest.GetRootTest.class,
+  ZipFilePathOpsTest.HashCodeTest.class,
   ZipFilePathOpsTest.IsAbsoluteTest.class,
   ZipFilePathOpsTest.NormalizeTest.class,
   ZipFilePathOpsTest.RelativizeTest.class,
@@ -135,6 +139,25 @@ public class ZipFilePathOpsTest {
         { "foo",      "foo",      true                          },
         { "foo/bar",  "bar",      true                          },
         { "foo/bar",  "foo/bar",  true                          }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class EqualsTest extends PathEqualsTest {
+    public EqualsTest(String left, Object right, Object expected) {
+      super(ZipFilePathOpsTest.fs, left, right, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Left Right           Expected
+        { "/",  null,           false },
+        { "/",  42,             false },
+        { "/",  "/",            true  },
+        { "/",  "/foo",         false },
+        { "/",  Paths.get("/"), false }
       });
     }
   }
@@ -236,6 +259,21 @@ public class ZipFilePathOpsTest {
         { "/",      "/"  },
         { "a/b",    null },
         { "a",      null }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class HashCodeTest extends PathHashCodeTest {
+    public HashCodeTest(String left, String right, Object expected) {
+      super(ZipFilePathOpsTest.fs, left, right, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Left       Right       Expected
+        { "/",        "/",        true  },
       });
     }
   }
