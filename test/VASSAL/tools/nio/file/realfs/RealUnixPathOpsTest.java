@@ -33,6 +33,7 @@ import VASSAL.tools.nio.file.PathRelativizeTest;
 import VASSAL.tools.nio.file.PathResolveTest;
 import VASSAL.tools.nio.file.PathStartsWithTest;
 import VASSAL.tools.nio.file.PathSubpathTest;
+import VASSAL.tools.nio.file.PathToStringTest;
 
 import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
 
@@ -53,7 +54,8 @@ import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
   RealUnixPathOpsTest.RelativizeTest.class,
   RealUnixPathOpsTest.ResolveTest.class,
   RealUnixPathOpsTest.StartsWithTest.class,
-  RealUnixPathOpsTest.SubpathTest.class
+  RealUnixPathOpsTest.SubpathTest.class,
+  RealUnixPathOpsTest.ToStringTest.class
 })
 public class RealUnixPathOpsTest {
   protected static FileSystem fs;
@@ -271,6 +273,8 @@ public class RealUnixPathOpsTest {
     }
   }
 
+// FIXME: add iterator() test here
+
   @RunWith(Parameterized.class)
   public static class IsAbsoluteTest extends PathIsAbsoluteTest {
     public IsAbsoluteTest(String input, Object expected) {
@@ -422,6 +426,25 @@ public class RealUnixPathOpsTest {
         { "foo/bar/baz",   1, 3, "bar/baz"                         },
         { "foo/bar/baz",   2, 3, "baz"                             },
         { "foo/bar/baz",   1, 0, t(IllegalArgumentException.class) }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class ToStringTest extends PathToStringTest {
+    public ToStringTest(String input, Object expected) {
+      super(RealUnixPathOpsTest.fs, input, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Input    Expected
+        { "/a/b/c",  "/a/b/c" },
+        { "/a/b/c/", "/a/b/c" },
+        { "/",       "/"      },
+        { "a/b",     "a/b"    },
+        { "a",       "a"      }
       });
     }
   }

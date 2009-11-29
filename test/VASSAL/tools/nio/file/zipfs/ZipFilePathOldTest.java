@@ -307,11 +307,6 @@ public class ZipFilePathOldTest {
   }
 
   @Test
-  public void testToString() {
-    assertEquals(testFileCreatedName, pathTestFileCreated.toString());
-  }
-
-  @Test
   public void testToUri() {
     final URI expectedUri = 
       URI.create("zip://" + testZipFilePath + "#/" + testFileCreatedName);

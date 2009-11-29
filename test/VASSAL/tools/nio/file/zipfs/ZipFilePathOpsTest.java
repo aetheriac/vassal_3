@@ -34,6 +34,7 @@ import VASSAL.tools.nio.file.PathRelativizeTest;
 import VASSAL.tools.nio.file.PathResolveTest;
 import VASSAL.tools.nio.file.PathStartsWithTest;
 import VASSAL.tools.nio.file.PathSubpathTest;
+import VASSAL.tools.nio.file.PathToStringTest;
 
 import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
 
@@ -54,7 +55,8 @@ import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
   ZipFilePathOpsTest.RelativizeTest.class,
   ZipFilePathOpsTest.ResolveTest.class,
   ZipFilePathOpsTest.StartsWithTest.class,
-  ZipFilePathOpsTest.SubpathTest.class
+  ZipFilePathOpsTest.SubpathTest.class,
+  ZipFilePathOpsTest.ToStringTest.class
 })
 public class ZipFilePathOpsTest {
   protected static FileSystem fs;
@@ -429,6 +431,25 @@ public class ZipFilePathOpsTest {
         { "foo/bar/baz",   1, 3, "bar/baz"                         },
         { "foo/bar/baz",   2, 3, "baz"                             },
         { "foo/bar/baz",   1, 0, t(IllegalArgumentException.class) }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class ToStringTest extends PathToStringTest {
+    public ToStringTest(String input, Object expected) {
+      super(ZipFilePathOpsTest.fs, input, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Input    Expected
+        { "/a/b/c",  "/a/b/c" },
+        { "/a/b/c/", "/a/b/c" },
+        { "/",       "/"      },
+        { "a/b",     "a/b"    },
+        { "a",       "a"      }
       });
     }
   }

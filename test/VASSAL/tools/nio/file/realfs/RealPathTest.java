@@ -291,11 +291,6 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testToString() {
-    assertEquals(testFileCreated.toString(), pathTestFileCreated.toString());
-  }
-
-  @Test
   public void testToUri() {
     assertEquals(testFileCreated.toURI(), pathTestFileCreated.toUri());
   }

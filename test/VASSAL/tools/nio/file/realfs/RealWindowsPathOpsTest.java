@@ -33,6 +33,7 @@ import VASSAL.tools.nio.file.PathRelativizeTest;
 import VASSAL.tools.nio.file.PathResolveTest;
 import VASSAL.tools.nio.file.PathStartsWithTest;
 import VASSAL.tools.nio.file.PathSubpathTest;
+import VASSAL.tools.nio.file.PathToStringTest;
 
 import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
 
@@ -52,7 +53,8 @@ import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
   RealWindowsPathOpsTest.RelativizeTest.class,
   RealWindowsPathOpsTest.ResolveTest.class,
   RealWindowsPathOpsTest.StartsWithTest.class,
-  RealWindowsPathOpsTest.SubpathTest.class
+  RealWindowsPathOpsTest.SubpathTest.class,
+  RealWindowsPathOpsTest.ToStringTest.class
 })
 public class RealWindowsPathOpsTest {
   protected static FileSystem fs;
@@ -521,6 +523,25 @@ public class RealWindowsPathOpsTest {
         { "\\\\server\\share\\foo\\bar\\baz", 1, 3, "bar\\baz"          },
         { "\\\\server\\share\\foo\\bar\\baz", 2, 3, "baz"               },
         { "\\\\server\\share\\foo\\bar\\baz", 1, 0, t(IllegalArgumentException.class) }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class ToStringTest extends PathToStringTest {
+    public ToStringTest(String input, Object expected) {
+      super(RealWindowsPathOpsTest.fs, input, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Input    Expected
+        { "C:\\a\\b\\c",   "C:\\a\\b\\c" },
+        { "C:\\a\\b\\c\\", "C:\\a\\b\\c" },
+        { "C:\\",          "C:\\"        },
+        { "a\\b",          "a\\b"        },
+        { "a",             "a"           }
       });
     }
   }
