@@ -361,64 +361,6 @@ public class ZipFilePathOldTest {
   }
 
   @Test
-  public void testNormalizeCurDir() {
-    final String redundantPathString =
-      pathRootName + "./thisDir/./././dir2/././trail/.";
-    final String normalizedPathString = pathRootName + "thisDir/dir2/trail";
-
-    assertEquals(
-      normalizedPathString,
-      fs.getPath(redundantPathString).normalize().toString()
-    );
-  }
-
-  @Test
-  public void testNormalizePrevDirNonSaturated() {
-    final String redundantPathString =
-      "dir1/dir2/dir3/../dir4/dir5/../../../trail";
-    final String normalizedPathString = "dir1/trail";
-
-    assertEquals(
-      normalizedPathString,
-      fs.getPath(redundantPathString).normalize().toString()
-    );
-  }
-
-  @Test
-  public void testNormalizePrevDirSaturatedRelative() {
-    final String redundantPathString = "dir1/dir2/dir3/../../../../../trail";
-    final String normalizedPathString = "../../trail";
-
-    assertEquals(
-      normalizedPathString, 
-      fs.getPath(redundantPathString).normalize().toString()
-    );
-  }
-
-  @Test
-  public void testNormalizePrevDirSaturatedAbsolute() {
-    final String redundantPathString =
-      pathRootName + "dir1/dir2/dir3/../../../../../trail";
-    final String normalizedPathString = pathRootName + "trail";
-
-    assertEquals(
-      normalizedPathString, 
-      fs.getPath(redundantPathString).normalize().toString()
-    );
-  }
-
-  @Test
-  public void testNormalizePrevDirRoot() {
-    final String redundantPathString = pathRootName + "../../../../..";
-    final String normalizedPathString = pathRootName;
-
-    assertEquals(
-      normalizedPathString, 
-      fs.getPath(redundantPathString).normalize().toString()
-    );
-  }
-
-  @Test
   public void testNotExistsTrue() {
     assertTrue(pathTestFileOther.notExists());
   }
@@ -426,70 +368,6 @@ public class ZipFilePathOldTest {
   @Test
   public void testNotExistsFalse() {
     assertFalse(pathTestFileCreated.notExists());
-  }
-
-  @Test
-  public void testResolvePathNull() {
-    assertEquals(pathTestFileCreated, pathTestFileCreated.resolve((Path) null));
-  }
-
-  @Test
-  public void testResolvePathRelativeAbsolute() {
-    assertEquals(pathRoot, pathTestingDirectory.resolve(pathRoot));
-  }
-
-  @Test
-  public void testResolvePathAbsoluteAbsolute() {
-    assertEquals(pathRoot, pathRoot.resolve(pathRoot));
-  }
-
-  @Test
-  public void testResolvePathRelativeRelative() {
-    final String resolvedPath =
-      testingDirectoryName + "/" + testFileCreatedName;
-    assertEquals( 
-      resolvedPath,
-      pathTestingDirectory.resolve(pathTestFileCreated).toString()
-    );
-  }
-
-  @Test
-  public void testResolvePathAbsoluteRelative() {
-    final String resolvedPath = "/dirInZip/" + testFileCreatedName;
-    assertEquals(
-      resolvedPath,
-      pathTestingDirectory.toAbsolutePath()
-                          .resolve(pathTestFileCreated).toString()
-    );
-  }
-
-  @Test
-  public void testResolveString() {
-    assertEquals(pathTestFileOther, pathTestFileCreated.resolve(pathTestFileOther.toString()));
-  }
-
-  @Test
-  public void testStartsWithTrue() {
-    assertTrue(
-      pathTestingDirectory2.startsWith(pathTestingDirectory2.subpath(0,2))
-    );
-  }
-
-  @Test
-  public void testStartsWithFalse() {
-    assertFalse(
-      pathTestingDirectory2.startsWith(pathTestingDirectory2.subpath(1, 2))
-    );
-  }
-
-  @Test
-  public void testSubpath() {
-    String targetName = "target";
-    Path test = fs.getPath("firstIgnored/" + targetName + "/secondIgnored");
-    Path targetPath = fs.getPath(targetName);
-    int index = 1;
-
-    assertEquals(targetPath, test.subpath(index, index + 1));
   }
 
   @Test
