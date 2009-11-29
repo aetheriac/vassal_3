@@ -475,7 +475,32 @@ public abstract class RealPath extends AbstractPath {
 
   public Path relativize(Path other) {
     // FIXME: Implementing this will require some thought...
-    throw new UnsupportedOperationException();
+
+    if (other.equals(this)) return null;
+
+    if (this.isAbsolute() != other.isAbsolute()) {
+      throw new IllegalArgumentException();
+    }
+    
+    int i = 0;
+    final int ti = this.getNameCount();
+    final int oi = other.getNameCount();
+
+    // find first name mismatch
+    for ( ; i < ti && i < oi; i++) {
+      if (!this.getName(i).equals(other.getName(i))) break;
+    }
+
+    final StringBuilder sb = new StringBuilder();
+
+    // backup to the mismatch
+    final int nc = ti - i;
+    for (int j = 0; j < nc; ++j) sb.append("../");
+
+    // append the rest of the other path, if any
+    if (i < oi) sb.append(other.subpath(i, oi).toString());
+
+    return fs.getPath(sb.toString());
   }
 
   public Path resolve(Path other) {
