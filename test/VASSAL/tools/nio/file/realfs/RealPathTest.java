@@ -114,13 +114,6 @@ public abstract class RealPathTest extends AbstractPathTest {
     // pathTestingDirectory.deleteIfExists();
   }
 
-  @Test
-  public void testHashCode() {
-    assertEquals("Path Hashcode does not match File hashcode", pathTestFileCreated.hashCode(),
-        testFileCreated.hashCode());
-
-  }
-
   @Test(expected = NoSuchFileException.class)
   public void testCheckAccessExist() throws IOException {
     pathTestFileOther.checkAccess(AccessMode.WRITE);
@@ -188,36 +181,6 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testEndsWithEndSelf() {
-    assertTrue(pathTestFileCreated.endsWith(pathTestFileCreated));
-  }
-
-  @Test
-  public void testEndsWithEndOther() {
-    assertTrue(pathTestFileCreated.endsWith(endPath));
-  }
-
-  @Test
-  public void testEndsWithFalse() {
-    assertFalse(pathTestFileOther.endsWith(endPath));
-  }
-
-  @Test
-  public void testEqualsObject() {
-    assertTrue(pathTestFileCreated.equals(Paths.get(pathTestFileCreated.toString())));
-  }
-
-  @Test
-  public void testEqualsSelf() {
-    assertTrue("Path is not equal with itself", pathTestFileCreated.equals(pathTestFileCreated));
-  }
-
-  @Test
-  public void testEqualsFalse() {
-    assertFalse("Different paths should not equal", pathTestFileCreated.equals(pathTestFileOther));
-  }
-
-  @Test
   public void testExistsTrue() {
     assertTrue(pathTestFileCreated.exists());
   }
@@ -241,75 +204,8 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testGetName() {
-    assertEquals(testFileCreated.getName(), pathTestFileCreated.getName().toString());
-  }
-
-  @Test
-  public void testGetNameInt() {
-    File f = testFileCreated;
-    for (int i = pathTestFileCreated.getNameCount()-1; i >= 0; --i) {
-      assertEquals(f.getName(), pathTestFileCreated.getName(i).toString());
-      f = f.getParentFile();
-    }
-  }
-
-  @Test
-  public void testGetNameCount() {
-    final String p = "first" + separator + "second" + separator + "third" + separator + "fourth";
-    Path path4 = Paths.get(p);
-    assertEquals(4, path4.getNameCount());
-  }
-
-  @Test
-  public void testGetRootSelf() {
-    assumeTrue(File.listRoots().length > 0);
-    File root = File.listRoots()[0];
-    assertEquals(Paths.get(root.getAbsolutePath()), Paths.get(root.getAbsolutePath()).getRoot());
-  }
-
-  @Test
-  public void testGetRoot() {
-    File[] rootList = File.listRoots();
-    boolean rootFound = false;
-
-    for (File singleRoot : rootList) {
-      Path testRoot = Paths.get(singleRoot.getAbsolutePath());
-      Path testPath = pathTestingDirectory.getRoot();
-      if (testPath.equals(testRoot)) {
-        rootFound = true;
-      }
-    }
-
-    assertTrue("Expected root not found: \"" + pathTestingDirectory.getRoot()
-        + "\" returned. Expected root in the form of \"" + rootList[0].getAbsolutePath() + "\"",
-        rootFound);
-
-  }
-
-  @Test
-  public void testIsAbsoluteTrue() {
-    assertTrue((Paths.get(File.listRoots()[0].getAbsolutePath())).isAbsolute());
-  }
-
-  @Test
-  public void testIsAbsoluteFalse() {
-    assertFalse(Paths.get("somedir" + separator + "somefile").isAbsolute());
-  }
-
-  @Test
   public void testIsHidden() throws IOException {
     assertFalse(pathTestFileCreated.isHidden());
-  }
-
-  @Test
-  public void testGetParentTrue() {
-    assertEquals(pathTestFileCreated.getParent(), pathTestingDirectory);
-  }
-
-  @Test
-  public void testGetParentFalse() {
-    assertFalse(pathTestingDirectory.getParent().equals(pathTestingDirectory));
   }
 
   @Test
@@ -373,40 +269,6 @@ public abstract class RealPathTest extends AbstractPathTest {
   }
 
   @Test
-  public void testNormalizePrevDirNonSaturated() {
-    String redundantPathString = "dir1/dir2/dir3/../dir4/dir5/../../../trail".replace("/", separator);
-    String normalizedPathString = "dir1/trail".replace("/", separator);
-
-    assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize().toString());
-  }
-
-  @Test
-  public void testNormalizePrevDirSaturatedRelative() {
-    String redundantPathString = "dir1/dir2/dir3/../../../../../trail".replace("/", separator);
-    String normalizedPathString = "../../trail".replace("/", separator);
-
-    assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize().toString());
-
-  }
-
-  @Test
-  public void testNormalizePrevDirSaturatedAbsolute() {
-    String redundantPathString = pathRootName + "dir1/dir2/dir3/../../../../../trail".replace("/", separator);
-    String normalizedPathString = pathRootName + "trail";
-
-    assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize().toString());
-
-  }
-
-  @Test
-  public void testNormalizePrevDirRoot() {
-    String redundantPathString = pathRootName + "../../../../..".replace("/", separator);
-    String normalizedPathString = pathRootName;
-
-    assertEquals(normalizedPathString, Paths.get(redundantPathString).normalize().toString());
-  }
-
-  @Test
   public void testNotExistsTrue() {
     assertTrue(pathTestFileOther.notExists());
   }
@@ -414,48 +276,6 @@ public abstract class RealPathTest extends AbstractPathTest {
   @Test
   public void testNotExistsFalse() {
     assertFalse(pathTestFileCreated.notExists());
-  }
-
-  @Test
-  public void testResolvePathSelf() {
-    assertEquals(pathTestFileOther, pathTestFileCreated.resolve(pathTestFileOther));
-  }
-
-  @Test
-  public void testResolvePathNull() {
-    assertEquals(pathTestFileCreated, pathTestFileCreated.resolve((Path) null));
-  }
-
-  @Test
-  public void testResolvePathOther() {
-    String resolvedPath = (new File(testingDirectory, testFileCreatedName)).toString();
-    assertEquals(resolvedPath, pathTestingDirectory.resolve(pathTestFileCreated).toString());
-  }
-
-  @Test
-  public void testResolveString() {
-    assertEquals(pathTestFileOther, pathTestFileCreated.resolve(pathTestFileOther.toString()));
-  }
-
-  @Test
-  public void testStartsWithTrue() {
-    assertTrue(pathTestingDirectory.startsWith(Paths.get(pathTestingDirectory.getRoot().toString()
-        + pathTestingDirectory.subpath(0, 2).toString())));
-  }
-
-  @Test
-  public void testStartsWithFalse() {
-    assertFalse(pathTestingDirectory.startsWith(pathTestingDirectory.subpath(1, 3)));
-  }
-
-  @Test
-  public void testSubpath() {
-    String targetName = "target";
-    Path test = Paths.get("firstIgnored" + separator + targetName + separator + "secondIgnored");
-    Path targetPath = Paths.get(targetName);
-    int index = 1;
-
-    assertEquals(targetPath, test.subpath(index, index + 1));
   }
 
   @Test

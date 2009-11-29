@@ -94,11 +94,6 @@ public class ZipFilePathOldTest {
     // pathTestingDirectory.deleteIfExists();
   }
 
-  @Test
-  public void testHashCode() {
-    assertFalse(pathTestFileCreated.hashCode() == pathTestFileOther.hashCode());
-  }
-
 // FIXME: need to also check a file which does exist!
   @Test(expected = NoSuchFileException.class)
   public void testCheckAccessExist() throws IOException {
@@ -189,23 +184,6 @@ public class ZipFilePathOldTest {
   }
 
   @Test
-  public void testEqualsObject() {
-    assertTrue(pathTestFileCreated.equals(new ZipFilePath(fs, pathTestFileCreated.toString().getBytes())));
-  }
-
-  @Test
-  public void testEqualsSelf() {
-    assertTrue("Path is not equal with itself",
-               pathTestFileCreated.equals(pathTestFileCreated));
-  }
-
-  @Test
-  public void testEqualsFalse() {
-    assertFalse("Different paths should not equal",
-                pathTestFileCreated.equals(pathTestFileOther));
-  }
-
-  @Test
   public void testExistsTrue() {
     assertTrue(pathTestFileCreated.exists());
   }
@@ -236,13 +214,6 @@ public class ZipFilePathOldTest {
 //      f = f.getParentFile();
 //    }
 //  }
-
-  @Test
-  public void testGetNameCount() {
-    final String p = "/first/second/third/fourth";
-    Path path4 = fs.getPath(p);
-    assertEquals(4, path4.getNameCount());
-  }
 
   @Test
   public void testIsHidden() {
@@ -462,12 +433,6 @@ public class ZipFilePathOldTest {
   }
 
   @Test
-  public void testCompareTo() {
-    assertEquals(pathTestFileCreated.toString().compareTo(pathTestFileOther.toString()), pathTestFileCreated.compareTo(pathTestFileOther));
-  }
-  
-
-  @Test
   public void testCopyToZip() throws IOException {
     fail("ZipFilePath is still read only");
   }
@@ -531,5 +496,4 @@ public class ZipFilePathOldTest {
   public void testRegisterWatchServiceKindOfQArrayModifierArray() throws IOException {
     pathTestFileOther.register(null, (WatchEvent.Kind<?>[]) null);
   }
-
 }
