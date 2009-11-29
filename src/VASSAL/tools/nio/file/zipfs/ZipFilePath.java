@@ -1135,11 +1135,10 @@ public class ZipFilePath extends Path {
    **/
   @Override
   public Path normalize() {
-    return new ZipFilePath(
-      fileSystem,
-      ZipPathParser.resolve(new String(path)).getBytes(),
-      pathForZip
-    );
+    final String parsed = ZipPathParser.resolve(new String(path));
+
+    return parsed.equals("") ? null :
+      new ZipFilePath(fileSystem, parsed.getBytes(), pathForZip);
   }
 
 // FIXME: write lock
