@@ -416,11 +416,6 @@ public abstract class RealPathTest extends AbstractPathTest {
     assertFalse(pathTestFileCreated.notExists());
   }
 
-  @Test(expected = UnsupportedOperationException.class)
-  public void testRelativize() {
-    pathTestingDirectory.relativize(pathTestDirOther);
-  }
-
   @Test
   public void testResolvePathSelf() {
     assertEquals(pathTestFileOther, pathTestFileCreated.resolve(pathTestFileOther));

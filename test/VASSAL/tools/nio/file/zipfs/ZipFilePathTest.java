@@ -182,17 +182,27 @@ public class ZipFilePathTest {
 
   @RunWith(Parameterized.class)
   public static class RelativizeTest extends PathRelativizeTest {
-    public RelativizeTest(String left, String right, String expected) {
-      super(ZipFilePathTest.fs, left, right, expected);
+    public RelativizeTest(String left, String right,
+                          String expected, Class<? extends Throwable> tclass) {
+      super(ZipFilePathTest.fs, left, right, expected, tclass);
     }
 
     @Parameters
-    public static List<String[]> cases() {
-      return Arrays.asList(new String[][] {
-        // Left     Right         Expected
-        { "/a/b/c", "/a/b/c",     null      },
-        { "/a/b/c", "/a/b/c/d/e", "d/e",    },
-        { "/a/b/c", "/a/x",       "../../x" }
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Left     Right         Expected   Throws
+        { "/a/b/c", "/a/b/c",     null,      null                           },
+        { "/a/b/c", "/a/b/c/d/e", "d/e",     null                           },
+        { "/a/b/c", "/a/x",       "../../x", null                           },
+        { "a/b/c", "a/b/c",       null,      null                           }, 
+        { "a/b/c", "a/b/c/d/e",   "d/e",     null                           }, 
+        { "a/b/c", "a/x",         "../../x", null                           }, 
+        { "a/b/c",  "/a/b/c",     null,      IllegalArgumentException.class },
+        { "a/b/c",  "/a/b/c/d/e", null,      IllegalArgumentException.class },
+        { "a/b/c",  "/a/x",       null,      IllegalArgumentException.class },
+        { "/a/b/c", "a/b/c",      null,      IllegalArgumentException.class },
+        { "/a/b/c", "a/b/c/d/e",  null,      IllegalArgumentException.class },
+        { "/a/b/c", "a/x",        null,      IllegalArgumentException.class }
       });
     }
   }

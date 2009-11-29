@@ -378,9 +378,6 @@ public class ZipFilePathOldTest {
       "dir1/dir2/dir3/../dir4/dir5/../../../trail";
     final String normalizedPathString = "dir1/trail";
 
-System.out.println("");
-System.out.println(fs.getPath(redundantPathString).normalize().toString());
-
     assertEquals(
       normalizedPathString,
       fs.getPath(redundantPathString).normalize().toString()
@@ -429,12 +426,6 @@ System.out.println(fs.getPath(redundantPathString).normalize().toString());
   @Test
   public void testNotExistsFalse() {
     assertFalse(pathTestFileCreated.notExists());
-  }
-
-  @Test
-  public void testRelativize() {
-//    pathTestingDirectory.relativize(pathTestDirOther);
-    fail("test not yet implemented");
   }
 
   @Test

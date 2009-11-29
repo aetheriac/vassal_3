@@ -4,14 +4,16 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public abstract class PathRelativizeTest extends AbstractPathMethodTest {
+public abstract class PathRelativizeTest
+                                       extends AbstractThrowingPathMethodTest {
   protected final String left;
   protected final String right;
   protected final String expected;
 
   public PathRelativizeTest(FileSystem fs, String left,
-                            String right, String expected) {
-    super(fs);
+                            String right, String expected,
+                            Class<? extends Throwable> tclass) {
+    super(fs, tclass);
 
     this.left = left;
     this.right = right;

@@ -228,18 +228,19 @@ public class RealWindowsPathTest {
 
   @RunWith(Parameterized.class)
   public static class RelativizeTest extends PathRelativizeTest {
-    public RelativizeTest(String left, String right, String expected) {
-      super(RealWindowsPathTest.fs, left, right, expected);
+    public RelativizeTest(String left, String right,
+                          String expected, Class<? extends Throwable> tclass) {
+      super(RealWindowsPathTest.fs, left, right, expected, tclass);
     }
 
     @Parameters
-    public static List<String[]> cases() {
-      return Arrays.asList(new String[][] {
-        // Left                     Right                     Expected
-        { "foo\\bar",               "foo\\bar",               null      },
-        { "foo\\bar",               "foo",                    ".."      },
-        { "C:\\a\\b\\c",            "C:\\a",                  "..\\.."  },
-        { "\\\\server\\share\\foo", "\\\\server\\share\\bar", "..\\bar" }
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Left                     Right                     Expected   Throws
+        { "foo\\bar",               "foo\\bar",               null,      null },
+        { "foo\\bar",               "foo",                    "..",      null },
+        { "C:\\a\\b\\c",            "C:\\a",                  "..\\..",  null },
+        { "\\\\server\\share\\foo", "\\\\server\\share\\bar", "..\\bar", null }
       });
     }
   }
