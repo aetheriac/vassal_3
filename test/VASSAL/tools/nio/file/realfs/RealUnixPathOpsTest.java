@@ -17,7 +17,10 @@ import VASSAL.Info;
 
 import VASSAL.tools.nio.file.FileSystem;
 import VASSAL.tools.nio.file.PathEndsWithTest;
+import VASSAL.tools.nio.file.PathGetNameTest;
 import VASSAL.tools.nio.file.PathGetNameIntTest;
+import VASSAL.tools.nio.file.PathGetParentTest;
+import VASSAL.tools.nio.file.PathGetRootTest;
 import VASSAL.tools.nio.file.PathIsAbsoluteTest;
 import VASSAL.tools.nio.file.PathNormalizationTest;
 import VASSAL.tools.nio.file.PathNormalizeTest;
@@ -28,17 +31,20 @@ import VASSAL.tools.nio.file.PathSubpathTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-  RealUnixPathTest.EndsWithTest.class,
-  RealUnixPathTest.GetNameIntTest.class,
-  RealUnixPathTest.IsAbsoluteTest.class,
-//  RealUnixPathTest.NormalizationTest.class,
-  RealUnixPathTest.NormalizeTest.class,
-  RealUnixPathTest.RelativizeTest.class,
-  RealUnixPathTest.ResolveTest.class,
-  RealUnixPathTest.StartsWithTest.class,
-  RealUnixPathTest.SubpathTest.class
+  RealUnixPathOpsTest.EndsWithTest.class,
+  RealUnixPathOpsTest.GetNameTest.class,
+  RealUnixPathOpsTest.GetNameIntTest.class,
+  RealUnixPathOpsTest.GetParentTest.class,
+  RealUnixPathOpsTest.GetRootTest.class,
+  RealUnixPathOpsTest.IsAbsoluteTest.class,
+//  RealUnixPathOpsTest.NormalizationTest.class,
+  RealUnixPathOpsTest.NormalizeTest.class,
+  RealUnixPathOpsTest.RelativizeTest.class,
+  RealUnixPathOpsTest.ResolveTest.class,
+  RealUnixPathOpsTest.StartsWithTest.class,
+  RealUnixPathOpsTest.SubpathTest.class
 })
-public class RealUnixPathTest {
+public class RealUnixPathOpsTest {
   protected static FileSystem fs;
 
   @BeforeClass
@@ -52,7 +58,7 @@ public class RealUnixPathTest {
   @RunWith(Parameterized.class)
   public static class EndsWithTest extends PathEndsWithTest {
     public EndsWithTest(String left, String right, boolean expected) {
-      super(RealUnixPathTest.fs, left, right, expected);
+      super(RealUnixPathOpsTest.fs, left, right, expected);
     }
 
     @Parameters
@@ -77,10 +83,28 @@ public class RealUnixPathTest {
   }
 
   @RunWith(Parameterized.class)
+  public static class GetNameTest extends PathGetNameTest{
+    public GetNameTest(String input, String expected) {
+      super(RealUnixPathOpsTest.fs, input, expected);
+    }
+
+    @Parameters
+    public static List<String[]> cases() {
+      return Arrays.asList(new String[][] {
+        // Input    Expected
+        { "/a/b/c", "c"  },
+        { "/",      null },
+        { "a/b",    "b"  },
+        { "a",      "a"  },
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
   public static class GetNameIntTest extends PathGetNameIntTest{
     public GetNameIntTest(String input, int index,
                           String expected, Class<? extends Throwable> tclass) {
-      super(RealUnixPathTest.fs, input, index, expected, tclass);
+      super(RealUnixPathOpsTest.fs, input, index, expected, tclass);
     }
 
     @Parameters
@@ -103,9 +127,46 @@ public class RealUnixPathTest {
   }
 
   @RunWith(Parameterized.class)
+  public static class GetParentTest extends PathGetParentTest{
+    public GetParentTest(String input, String expected) {
+      super(RealUnixPathOpsTest.fs, input, expected);
+    }
+
+    @Parameters
+    public static List<String[]> cases() {
+      return Arrays.asList(new String[][] {
+        // Input    Expected
+        { "/a/b/c", "/a/b" },
+        { "/",      null   },
+        { "/a",     "/"    },
+        { "a/b",    "a"    },
+        { "a",      null   }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class GetRootTest extends PathGetRootTest {
+    public GetRootTest(String input, String expected) {
+      super(RealUnixPathOpsTest.fs, input, expected);
+    }
+
+    @Parameters
+    public static List<String[]> cases() {
+      return Arrays.asList(new String[][] {
+        // Input    Expected
+        { "/a/b/c", "/"  },
+        { "/",      "/"  },
+        { "a/b",    null },
+        { "a",      null }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
   public static class IsAbsoluteTest extends PathIsAbsoluteTest {
     public IsAbsoluteTest(String input, boolean expected) {
-      super(RealUnixPathTest.fs, input, expected);
+      super(RealUnixPathOpsTest.fs, input, expected);
     }
 
     @Parameters
@@ -123,7 +184,7 @@ public class RealUnixPathTest {
   @RunWith(Parameterized.class)
   public static class NormalizationTest extends PathNormalizationTest{
     public NormalizationTest(String input, String expected) {
-      super(RealUnixPathTest.fs, input, expected);
+      super(RealUnixPathOpsTest.fs, input, expected);
     }
 
     @Parameters
@@ -148,7 +209,7 @@ public class RealUnixPathTest {
   @RunWith(Parameterized.class)
   public static class NormalizeTest extends PathNormalizeTest{
     public NormalizeTest(String input, String expected) {
-      super(RealUnixPathTest.fs, input, expected);
+      super(RealUnixPathOpsTest.fs, input, expected);
     }
 
     @Parameters
@@ -177,7 +238,7 @@ public class RealUnixPathTest {
   public static class RelativizeTest extends PathRelativizeTest {
     public RelativizeTest(String left, String right,
                           String expected, Class<? extends Throwable> tclass) {
-      super(RealUnixPathTest.fs, left, right, expected, tclass);
+      super(RealUnixPathOpsTest.fs, left, right, expected, tclass);
     }
 
     @Parameters
@@ -203,7 +264,7 @@ public class RealUnixPathTest {
   @RunWith(Parameterized.class)
   public static class ResolveTest extends PathResolveTest {
     public ResolveTest(String left, String right, String expected) {
-      super(RealUnixPathTest.fs, left, right, expected);
+      super(RealUnixPathOpsTest.fs, left, right, expected);
     }
 
     @Parameters
@@ -221,7 +282,7 @@ public class RealUnixPathTest {
   @RunWith(Parameterized.class)
   public static class StartsWithTest extends PathStartsWithTest{
     public StartsWithTest(String left, String right, boolean expected) {
-      super(RealUnixPathTest.fs, left, right, expected);
+      super(RealUnixPathOpsTest.fs, left, right, expected);
     }
 
     @Parameters
@@ -254,7 +315,7 @@ public class RealUnixPathTest {
   public static class SubpathTest extends PathSubpathTest{
     public SubpathTest(String input, int begin, int end, String expected,
                                            Class<? extends Throwable> tclass) {
-      super(RealUnixPathTest.fs, input, begin, end, expected, tclass);
+      super(RealUnixPathOpsTest.fs, input, begin, end, expected, tclass);
     }
 
     @Parameters
