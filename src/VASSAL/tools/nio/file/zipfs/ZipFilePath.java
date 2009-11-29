@@ -276,10 +276,21 @@ public class ZipFilePath extends Path {
 
   @Override
   public ZipFilePath getParent() {
-    int count = getNameCount();
-    if (count == 0 || count == 1) {
+    final int count = getNameCount();
+
+    // a root has no parent
+    if (count == 0) {
       return null;
     }
+
+    // a single-name path
+    if (count == 1) {
+      // has the root as its parent if absolute, and no parent otherwise
+      return isAbsolute() ?
+        new ZipFilePath(this.fileSystem, new byte[]{path[0]}) : null;
+    }
+
+    // all other paths have a parent
     int position = offsets.get(count - 1);
     String parent = subString(0, position - 1);
     return new ZipFilePath(this.fileSystem, parent.getBytes());

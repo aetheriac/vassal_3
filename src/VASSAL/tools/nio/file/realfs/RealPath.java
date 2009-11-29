@@ -238,8 +238,17 @@ public abstract class RealPath extends AbstractPath {
     return seps.length > 0 ? seps.length-1 : 0;
   }
 
-  public Path getParent() {
-    if (seps.length == 0) return null;  // a root has no parent
+  public Path getParent() { 
+    // a root has no parent
+    if (seps.length == 0) return null;
+
+    if (seps.length <= 2) {
+      // a relative single-name path has no parent
+      // an absolute single-name path has the root as its parent
+      return seps[0] == -1 ? null : fs.getPath(path.substring(0, seps[0]+1));
+    }
+
+    // all other paths have a parent
     return fs.getPath(path.substring(0, seps[seps.length-2]));
   }
 
