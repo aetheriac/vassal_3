@@ -182,10 +182,10 @@ public class RealUnixPathTest {
     @Parameters
     public static List<String[]> cases() {
       return Arrays.asList(new String[][] {
-        // Left     Right      Expected
-        { "/a/b/c", "/a/b/c",  null         },
-        { "/a/b/c", "d/e",     "/a/b/c/d/e" },
-        { "/a/b/c", "../../x", "/a/x"       }
+        // Left     Right         Expected
+        { "/a/b/c", "/a/b/c",     null      },
+        { "/a/b/c", "/a/b/c/d/e", "d/e",    },
+        { "/a/b/c", "/a/x",       "../../x" }
       });
     }
   }
