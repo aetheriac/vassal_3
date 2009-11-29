@@ -6,13 +6,11 @@ import org.junit.Test;
 
 public abstract class PathGetNameTest extends AbstractPathMethodTest {
   protected final String input;
-  protected final String expected;
 
-  public PathGetNameTest(FileSystem fs, String input, String expected) {
-    super(fs);
+  public PathGetNameTest(FileSystem fs, String input, Object expected) {
+    super(fs, expected);
 
     this.input = input;
-    this.expected = expected;
   }
 
   protected void doTest() {

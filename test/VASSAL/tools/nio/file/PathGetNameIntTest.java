@@ -4,21 +4,16 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public abstract class PathGetNameIntTest
-                                       extends AbstractThrowingPathMethodTest {
+public abstract class PathGetNameIntTest extends AbstractPathMethodTest {
   protected final String input;
   protected final int index;
-  protected final String expected;
 
   public PathGetNameIntTest(
-    FileSystem fs, String input, int index,
-    String expected, Class<? extends Throwable> tclass)
-  {
-    super(fs, tclass);
+    FileSystem fs, String input, int index, Object expected) {
+    super(fs, expected);
 
     this.input = input;
     this.index = index;
-    this.expected = expected;
   }
 
   protected void doTest() {

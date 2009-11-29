@@ -4,21 +4,18 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public abstract class PathSubpathTest extends AbstractThrowingPathMethodTest {
+public abstract class PathSubpathTest extends AbstractPathMethodTest {
   protected final String input;
   protected final int begin;
   protected final int end;
-  protected final String expected;
 
   public PathSubpathTest(FileSystem fs, String input,
-                         int begin, int end, String expected,
-                         Class<? extends Throwable> tclass) {
-    super(fs, tclass);
+                         int begin, int end, Object expected) {
+    super(fs, expected);
 
     this.input = input;
     this.begin = begin;
     this.end = end;
-    this.expected = expected;
   }
 
   protected void doTest() {

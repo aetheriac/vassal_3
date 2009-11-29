@@ -189,21 +189,6 @@ public class ZipFilePathOldTest {
   }
 
   @Test
-  public void testEndsWithEndSelf() {
-    assertTrue(pathTestFileCreated.endsWith(pathTestFileCreated));
-  }
-
-  @Test
-  public void testEndsWithEndOther() {
-    assertTrue(pathTestFileCreated.endsWith(endPath));
-  }
-
-  @Test
-  public void testEndsWithFalse() {
-    assertFalse(pathTestFileOther.endsWith(endPath));
-  }
-
-  @Test
   public void testEqualsObject() {
     assertTrue(pathTestFileCreated.equals(new ZipFilePath(fs, pathTestFileCreated.toString().getBytes())));
   }
@@ -243,12 +228,6 @@ public class ZipFilePathOldTest {
     assertEquals(fs, pathTestFileCreated.getFileSystem());
   }
 
-  @Test
-  public void testGetName() {
-    assertEquals(testFileCreatedName, pathTestFileCreated.getName().toString());
-  }
-
-
 //  @Test
 //  public void testGetNameInt() {
 //    File f = testFileCreated;
@@ -266,38 +245,8 @@ public class ZipFilePathOldTest {
   }
 
   @Test
-  public void testGetRootAbsolute() {
-    assertEquals(pathRoot, pathRoot.getRoot());
-  }
-
-  @Test
-  public void testGetRootRelative() {
-    assertEquals(null, pathTestingDirectory.getRoot());
-  }
-
-  @Test
-  public void testIsAbsoluteTrue() {
-    assertTrue(fs.getPath("/").isAbsolute());
-  }
-
-  @Test
-  public void testIsAbsoluteFalse() {
-    assertFalse(fs.getPath("somedir/somefile").isAbsolute());
-  }
-
-  @Test
   public void testIsHidden() {
     assertFalse(pathTestFileCreated.isHidden());
-  }
-
-  @Test
-  public void testGetParentTrue() {
-    assertEquals(pathTestFileOther.getParent(), pathTestingDirectory);
-  }
-
-  @Test
-  public void testGetParentFalse() {
-    assertFalse(pathTestingDirectory.equals(pathTestingDirectory.getParent()));
   }
 
   @Test

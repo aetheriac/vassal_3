@@ -6,13 +6,11 @@ import org.junit.Test;
 
 public abstract class PathNormalizeTest extends AbstractPathMethodTest {
   protected final String input;
-  protected final String expected;
 
-  public PathNormalizeTest(FileSystem fs, String input, String expected) {
-    super(fs);
+  public PathNormalizeTest(FileSystem fs, String input, Object expected) {
+    super(fs, expected);
 
     this.input = input;
-    this.expected = expected;
   }
 
   protected void doTest() {

@@ -16,22 +16,35 @@ import static org.junit.Assume.assumeTrue;
 import VASSAL.Info;
 
 import VASSAL.tools.nio.file.FileSystem;
+import VASSAL.tools.nio.file.InvalidPathException;
+import VASSAL.tools.nio.file.PathCompareToTest;
+import VASSAL.tools.nio.file.PathConstructorTest;
 import VASSAL.tools.nio.file.PathEndsWithTest;
+import VASSAL.tools.nio.file.PathGetNameTest;
+import VASSAL.tools.nio.file.PathGetNameCountTest;
 import VASSAL.tools.nio.file.PathGetNameIntTest;
+import VASSAL.tools.nio.file.PathGetParentTest;
+import VASSAL.tools.nio.file.PathGetRootTest;
 import VASSAL.tools.nio.file.PathIsAbsoluteTest;
-import VASSAL.tools.nio.file.PathNormalizationTest;
 import VASSAL.tools.nio.file.PathNormalizeTest;
 import VASSAL.tools.nio.file.PathRelativizeTest;
 import VASSAL.tools.nio.file.PathResolveTest;
 import VASSAL.tools.nio.file.PathStartsWithTest;
 import VASSAL.tools.nio.file.PathSubpathTest;
 
+import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
+
 @RunWith(Suite.class)
 @SuiteClasses({
+  RealWindowsPathOpsTest.CompareToTest.class,
+  RealWindowsPathOpsTest.ConstructorTest.class,
   RealWindowsPathOpsTest.EndsWithTest.class,
+  RealWindowsPathOpsTest.GetNameTest.class,
+  RealWindowsPathOpsTest.GetNameCountTest.class,
   RealWindowsPathOpsTest.GetNameIntTest.class,
+  RealWindowsPathOpsTest.GetParentTest.class,
+  RealWindowsPathOpsTest.GetRootTest.class,
   RealWindowsPathOpsTest.IsAbsoluteTest.class,
-//  RealWindowsPathOpsTest.NormalizationTest.class,
   RealWindowsPathOpsTest.NormalizeTest.class,
   RealWindowsPathOpsTest.RelativizeTest.class,
   RealWindowsPathOpsTest.ResolveTest.class,
@@ -50,8 +63,55 @@ public class RealWindowsPathOpsTest {
   }
 
   @RunWith(Parameterized.class)
+  public static class CompareToTest extends PathCompareToTest{
+    public CompareToTest(String left, String right, Object expected) {
+      super(RealWindowsPathOpsTest.fs, left, right, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Left       Right       Expected
+        { "C:\\",     null,       t(NullPointerException.class) },
+        { "C:\\",     "C:\\",     0                             },
+        { "C:\\",     "C:\\foo", -1                             },
+        { "C:\\foo",  "C:\\",     1                             }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class ConstructorTest extends PathConstructorTest{
+    public ConstructorTest(String input, Object expected) {
+      super(RealWindowsPathOpsTest.fs, input, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Input                     Expected
+        { ":\\foo",                  t(InvalidPathException.class) }, 
+        { "C::",                     t(InvalidPathException.class) },
+        { "C:\\?",                   t(InvalidPathException.class) },
+        { "C:\\*",                   t(InvalidPathException.class) },
+        { "C:\\abc\u0001\\foo",      t(InvalidPathException.class) },
+        { "C:\\\u0019\\foo",         t(InvalidPathException.class) },
+        { "\\\\server",              t(InvalidPathException.class) },    
+        { "\\\\server\\",            t(InvalidPathException.class) },    
+        { "\\\\server\u0019\\share", t(InvalidPathException.class) },
+        { "\\\\server\\share\u0019", t(InvalidPathException.class) },
+        { "foo\u0000\\bar",          t(InvalidPathException.class) },
+        { "C:\\foo ",                t(InvalidPathException.class) },
+        { "C:\\foo \\bar",           t(InvalidPathException.class) },
+        { "C:/a/b/c",                "C:\\a\\b\\c"                 },
+        { "C://a//b//c",             "C:\\a\\b\\c"                 }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
   public static class EndsWithTest extends PathEndsWithTest {
-    public EndsWithTest(String left, String right, boolean expected) {
+    public EndsWithTest(String left, String right, Object expected) {
       super(RealWindowsPathOpsTest.fs, left, right, expected);
     }
 
@@ -59,6 +119,7 @@ public class RealWindowsPathOpsTest {
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
         // Left                Right                  Expected
+        { "C:\\",              null,                  t(NullPointerException.class) },
         { "C:\\",              "C:\\",                true  },
         { "C:\\",              "c:\\",                true  },
         { "C:\\",              "\\",                  false },
@@ -94,39 +155,128 @@ public class RealWindowsPathOpsTest {
   }
 
   @RunWith(Parameterized.class)
-  public static class GetNameIntTest extends PathGetNameIntTest{
-    public GetNameIntTest(String input, int index,
-                          String expected, Class<? extends Throwable> tclass) {
-      super(RealWindowsPathOpsTest.fs, input, index, expected, tclass);
+  public static class GetNameTest extends PathGetNameTest{
+    public GetNameTest(String input, Object expected) {
+      super(RealWindowsPathOpsTest.fs, input, expected);
     }
 
     @Parameters
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
-        // Input      Index  Expected Throws
-        { "a\\b\\c",     -1,  null,    IllegalArgumentException.class }, 
-        { "a\\b\\c",      0,  "a",     null                           },
-        { "a\\b\\c",      1,  "b",     null                           },
-        { "a\\b\\c",      2,  "c",     null                           },
-        { "a\\b\\c",      3,  null,    IllegalArgumentException.class },
-        { "C:\\a\\b\\c", -1,  null,    IllegalArgumentException.class }, 
-        { "C:\\a\\b\\c",  0,  "a",     null                           },
-        { "C:\\a\\b\\c",  1,  "b",     null                           },
-        { "C:\\a\\b\\c",  2,  "c",     null                           },
-        { "C:\\a\\b\\c",  3,  null,    IllegalArgumentException.class },
-        { "C:\\",         0,  null,    IllegalArgumentException.class },
-        { "\\\\server\\a\\b\\c", -1,  null, IllegalArgumentException.class }, 
-        { "\\\\server\\a\\b\\c",  0,  "a",  null                           },
-        { "\\\\server\\a\\b\\c",  1,  "b",  null                           },
-        { "\\\\server\\a\\b\\c",  2,  "c",  null                           },
-        { "\\\\server\\a\\b\\c",  3,  null, IllegalArgumentException.class }
+        // Input                  Expected
+        { "C:\\a\\b\\c",          "c"   },
+        { "C:a\\b\\c",            "c"   },
+        { "\\\\server\\share\\a", "a"   },
+        { "C:\\",                 null  },
+        { "C:",                   null  },
+        { "\\\\server\\share",    null  },
+        { "\\\\server\\share\\",  null  },
+        { "a\\b",                 "b"   },
+        { "foo",                  "foo" }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class GetNameCountTest extends PathGetNameCountTest{
+    public GetNameCountTest(String input, Object expected) {
+      super(RealWindowsPathOpsTest.fs, input, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Input    Expected
+        { "/a/b/c", 3 },
+        { "/a/b",   2 },
+        { "/a",     1 },
+        { "/",      0 },
+        { "a/b/c",  3 },
+        { "a/b",    2 },
+        { "a",      1 }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class GetNameIntTest extends PathGetNameIntTest{
+    public GetNameIntTest(String input, int index, Object expected) {
+      super(RealWindowsPathOpsTest.fs, input, index, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Input      Index  Expected
+        { "a\\b\\c",     -1,  t(IllegalArgumentException.class) }, 
+        { "a\\b\\c",      0,  "a"                               },
+        { "a\\b\\c",      1,  "b"                               },
+        { "a\\b\\c",      2,  "c"                               },
+        { "a\\b\\c",      3,  t(IllegalArgumentException.class) },
+        { "C:\\a\\b\\c", -1,  t(IllegalArgumentException.class) }, 
+        { "C:\\a\\b\\c",  0,  "a"                               },
+        { "C:\\a\\b\\c",  1,  "b"                               },
+        { "C:\\a\\b\\c",  2,  "c"                               },
+        { "C:\\a\\b\\c",  3,  t(IllegalArgumentException.class) },
+        { "C:\\",         0,  t(IllegalArgumentException.class) },
+        { "\\\\server\\a\\b\\c", -1, t(IllegalArgumentException.class) }, 
+        { "\\\\server\\a\\b\\c",  0, "a"                               },
+        { "\\\\server\\a\\b\\c",  1, "b"                               },
+        { "\\\\server\\a\\b\\c",  2, "c"                               },
+        { "\\\\server\\a\\b\\c",  3, t(IllegalArgumentException.class) }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class GetParentTest extends PathGetParentTest{
+    public GetParentTest(String input, Object expected) {
+      super(RealWindowsPathOpsTest.fs, input, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Input                  Expected
+        { "C:\\a\\b\\c",          "C:\\a\\b"            },
+        { "C:a\\b\\c",            "C:a\\b"              },
+        { "\\\\server\\share\\a", "\\\\server\\share\\" },
+        { "C:\\",                 null                  },
+        { "C:",                   null                  },
+        { "\\\\server\\share",    null                  },
+        { "\\\\server\\share\\",  null                  },
+        { "a\\b",                 "a"                   },
+        { "foo",                  null                  }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class GetRootTest extends PathGetRootTest {
+    public GetRootTest(String input, Object expected) {
+      super(RealWindowsPathOpsTest.fs, input, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Input                  Expected
+        { "C:\\a\\b\\c",          "C:\\"                },
+        { "C:a\\b\\c",            "C:"                  },
+        { "\\\\server\\share\\a", "\\\\server\\share\\" },
+        { "C:\\",                 "C:\\"                },
+        { "C:",                   "C:"                  },
+        { "\\\\server\\share",    "\\\\server\\share\\" },
+        { "\\\\server\\share\\",  "\\\\server\\share\\" },
+        { "a\\b",                 null                  },
+        { "foo",                  null                  }
       });
     }
   }
 
   @RunWith(Parameterized.class)
   public static class IsAbsoluteTest extends PathIsAbsoluteTest {
-    public IsAbsoluteTest(String input, boolean expected) {
+    public IsAbsoluteTest(String input, Object expected) {
       super(RealWindowsPathOpsTest.fs, input, expected);
     }
 
@@ -143,41 +293,15 @@ public class RealWindowsPathOpsTest {
     }
   }
 
-/*
-  @RunWith(Parameterized.class)
-  public static class NormalizationTest extends PathNormalizationTest{
-    public NormalizationTest(String input, String expected) {
-      super(RealWindowsPathOpsTest.fs, input, expected);
-    }
-
-    @Parameters
-    public static List<String[]> cases() {
-      return Arrays.asList(new String[][] {
-        // Input                Expected
-        { "/.",            "/"       },
-        { "//foo",         "/foo"    },
-        { "/foo//",        "/foo"    },
-        { "/foo/./",       "/foo"    },
-        { "/foo/./.././.", "/foo/.." },
-        { ".",             null      },
-        { "foo",           "foo"     },
-        { "foo//",         "foo"     },
-        { "foo/./",        "foo"     },
-        { "foo/./.././.",  "foo/.."  }
-      });
-    }
-  }
-*/
-
   @RunWith(Parameterized.class)
   public static class NormalizeTest extends PathNormalizeTest{
-    public NormalizeTest(String input, String expected) {
+    public NormalizeTest(String input, Object expected) {
       super(RealWindowsPathOpsTest.fs, input, expected);
     }
 
     @Parameters
-    public static List<String[]> cases() {
-      return Arrays.asList(new String[][] {
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
         // Input                               Expected
         { "C:\\",                              "C:\\"                   },
         { "C:\\.",                             "C:\\"                   },
@@ -228,44 +352,61 @@ public class RealWindowsPathOpsTest {
 
   @RunWith(Parameterized.class)
   public static class RelativizeTest extends PathRelativizeTest {
-    public RelativizeTest(String left, String right,
-                          String expected, Class<? extends Throwable> tclass) {
-      super(RealWindowsPathOpsTest.fs, left, right, expected, tclass);
+    public RelativizeTest(String left, String right, Object expected) {
+      super(RealWindowsPathOpsTest.fs, left, right, expected);
     }
 
     @Parameters
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
-        // Left                     Right                     Expected   Throws
-        { "foo\\bar",               "foo\\bar",               null,      null },
-        { "foo\\bar",               "foo",                    "..",      null },
-        { "C:\\a\\b\\c",            "C:\\a",                  "..\\..",  null },
-        { "\\\\server\\share\\foo", "\\\\server\\share\\bar", "..\\bar", null }
+        // Left                     Right                     Expected
+        { "foo\\bar",               null,                     t(NullPointerException.class) },
+        { "foo\\bar",               "foo\\bar",               null      },
+        { "foo\\bar",               "foo",                    ".."      },
+        { "C:\\a\\b\\c",            "C:\\a",                  "..\\.."  },
+        { "\\\\server\\share\\foo", "\\\\server\\share\\bar", "..\\bar" }
       });
     }
   }
 
   @RunWith(Parameterized.class)
   public static class ResolveTest extends PathResolveTest {
-    public ResolveTest(String left, String right, String expected) {
+    public ResolveTest(String left, String right, Object expected) {
       super(RealWindowsPathOpsTest.fs, left, right, expected);
     }
 
     @Parameters
-    public static List<String[]> cases() {
-      return Arrays.asList(new String[][] {
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
         // Left   Right   Expected
-        { "/tmp", "foo",  "/tmp/foo" },
-        { "/tmp", "/foo", "/foo"     },
-        { "tmp",  "foo",  "tmp/foo"  },
-        { "tmp",  "/foo", "/foo"     }
+        { "C:\\", null, t(NullPointerException.class) },
+        { "C:\\", "foo", "C:\\foo" },
+        { "C:\\", "\\\\server\\share\\bar", "\\\\server\\share\\bar" },
+        { "C:\\", "C:foo", "C:\\foo" },
+        { "C:\\", "D:foo", "D:foo" },
+        { "\\", "foo", "\\foo" },
+        { "\\", "D:bar", "D:bar" },
+        { "\\", "C:\\bar", "C:\\bar" },
+        { "\\", "\\\\server\\share\\bar",  "\\\\server\\share\\bar" },
+        { "\\", "\\bar", "\\bar" },
+        { "foo", "bar", "foo\\bar" },
+        { "foo", "D:\\bar", "D:\\bar" },
+        { "foo", "\\\\server\\share\\bar", "\\\\server\\share\\bar" },
+        { "foo", "C:bar", "C:bar" },
+        { "foo", "D:foo", "D:foo" },
+        { "C:", "foo", "C:foo" },
+        { "\\\\server\\share\\foo", "bar", "\\\\server\\share\\foo\\bar" },
+        { "\\\\server\\share\\foo", "\\bar", "\\\\server\\share\\bar" },
+        { "\\\\server\\share\\foo", "D:\\bar", "D:\\bar" },
+        { "\\\\server\\share\\foo", "\\other\\share\\bar", "\\\\other\\share\\bar" },
+        { "\\\\server\\share\\foo", "D:bar", "D:bar" }
       });
     }
   }
 
   @RunWith(Parameterized.class)
   public static class StartsWithTest extends PathStartsWithTest{
-    public StartsWithTest(String left, String right, boolean expected) {
+    public StartsWithTest(String left, String right, Object expected) {
       super(RealWindowsPathOpsTest.fs, left, right, expected);
     }
 
@@ -273,6 +414,7 @@ public class RealWindowsPathOpsTest {
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
         // Left                Right                  Expected
+        { "C:\\",              null,                  t(NullPointerException.class) },
         { "C:\\",              "C:\\",                true  },
         { "C:\\",              "c:\\",                true  },
         { "C:\\",              "C",                   false },
@@ -308,40 +450,39 @@ public class RealWindowsPathOpsTest {
 
   @RunWith(Parameterized.class)
   public static class SubpathTest extends PathSubpathTest{
-    public SubpathTest(String input, int begin, int end, String expected,
-                                           Class<? extends Throwable> tclass) {
-      super(RealWindowsPathOpsTest.fs, input, begin, end, expected, tclass);
+    public SubpathTest(String input, int begin, int end, Object expected) {
+      super(RealWindowsPathOpsTest.fs, input, begin, end, expected);
     }
 
     @Parameters
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
-        // Input            Begin End Expected   Throws 
-        { "C:\\",               0, 1, null, IllegalArgumentException.class },
-        { "C:\\foo\\bar\\baz", -1, 0, null, IllegalArgumentException.class },
-        { "C:\\foo\\bar\\baz",  0, 1, "foo", null                          },
-        { "C:\\foo\\bar\\baz",  0, 2, "foo\\bar", null                     },
-        { "C:\\foo\\bar\\baz",  0, 3, "foo\\bar\\baz", null                },
-        { "C:\\foo\\bar\\baz",  1, 2, "bar", null                          },
-        { "C:\\foo\\bar\\baz",  1, 3, "bar\\baz", null                     },
-        { "C:\\foo\\bar\\baz",  2, 3, "baz", null                          },
-        { "C:\\foo\\bar\\baz",  1, 0, null, IllegalArgumentException.class },
-        { "foo\\bar\\baz",     -1, 0, null, IllegalArgumentException.class },
-        { "foo\\bar\\baz",      0, 1, "foo", null                          },
-        { "foo\\bar\\baz",      0, 2, "foo\\bar", null                     },
-        { "foo\\bar\\baz",      0, 3, "foo\\bar\\baz", null                },
-        { "foo\\bar\\baz",      1, 2, "bar", null                          },
-        { "foo\\bar\\baz",      1, 3, "bar\\baz", null                     },
-        { "foo\\bar\\baz",      2, 3, "baz", null                          },
-        { "foo\\bar\\baz",      1, 0, null, IllegalArgumentException.class },
-        { "\\\\server\\share\\foo\\bar\\baz", -1, 0, null, IllegalArgumentException.class },
-        { "\\\\server\\share\\foo\\bar\\baz", 0, 1, "foo", null            },
-        { "\\\\server\\share\\foo\\bar\\baz", 0, 2, "foo\\bar", null       },
-        { "\\\\server\\share\\foo\\bar\\baz", 0, 3, "foo\\bar\\baz", null  },
-        { "\\\\server\\share\\foo\\bar\\baz", 1, 2, "bar", null            },
-        { "\\\\server\\share\\foo\\bar\\baz", 1, 3, "bar\\baz", null       },
-        { "\\\\server\\share\\foo\\bar\\baz", 2, 3, "baz", null            },
-        { "\\\\server\\share\\foo\\bar\\baz", 1, 0, null, IllegalArgumentException.class }
+        // Input            Begin End Expected
+        { "C:\\",               0, 1, t(IllegalArgumentException.class) },
+        { "C:\\foo\\bar\\baz", -1, 0, t(IllegalArgumentException.class) },
+        { "C:\\foo\\bar\\baz",  0, 1, "foo"                             },
+        { "C:\\foo\\bar\\baz",  0, 2, "foo\\bar"                        },
+        { "C:\\foo\\bar\\baz",  0, 3, "foo\\bar\\baz"                   },
+        { "C:\\foo\\bar\\baz",  1, 2, "bar"                             },
+        { "C:\\foo\\bar\\baz",  1, 3, "bar\\baz"                        },
+        { "C:\\foo\\bar\\baz",  2, 3, "baz"                             },
+        { "C:\\foo\\bar\\baz",  1, 0, t(IllegalArgumentException.class) },
+        { "foo\\bar\\baz",     -1, 0, t(IllegalArgumentException.class) },
+        { "foo\\bar\\baz",      0, 1, "foo"                             },
+        { "foo\\bar\\baz",      0, 2, "foo\\bar"                        },
+        { "foo\\bar\\baz",      0, 3, "foo\\bar\\baz"                   },
+        { "foo\\bar\\baz",      1, 2, "bar"                             },
+        { "foo\\bar\\baz",      1, 3, "bar\\baz"                        },
+        { "foo\\bar\\baz",      2, 3, "baz"                             },
+        { "foo\\bar\\baz",      1, 0, t(IllegalArgumentException.class) },
+        { "\\\\server\\share\\foo\\bar\\baz", -1, 0, t(IllegalArgumentException.class) },
+        { "\\\\server\\share\\foo\\bar\\baz", 0, 1, "foo"               },
+        { "\\\\server\\share\\foo\\bar\\baz", 0, 2, "foo\\bar"          },
+        { "\\\\server\\share\\foo\\bar\\baz", 0, 3, "foo\\bar\\baz"     },
+        { "\\\\server\\share\\foo\\bar\\baz", 1, 2, "bar"               },
+        { "\\\\server\\share\\foo\\bar\\baz", 1, 3, "bar\\baz"          },
+        { "\\\\server\\share\\foo\\bar\\baz", 2, 3, "baz"               },
+        { "\\\\server\\share\\foo\\bar\\baz", 1, 0, t(IllegalArgumentException.class) }
       });
     }
   }
