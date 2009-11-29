@@ -204,7 +204,7 @@ public class ZipFilePath extends Path {
       int root = index;
 
       while ((index = nextSeparator(path, index + 1)) < pathLen && (index + 1 != pathLen)) {
-        list.add(index + 1); // puls 1 for file separator
+        list.add(index + 1); // plus 1 for file separator
       }
 
       if (root + 1 < index) { // begin index
@@ -352,29 +352,30 @@ public class ZipFilePath extends Path {
     if (beginIndex < 0) {
       throw new IllegalArgumentException();
     }
+
     if (beginIndex >= (1 + offsets.size())) {
       throw new IllegalArgumentException();
     }
+
     if (endIndex > (1 + offsets.size())) {
       throw new IllegalArgumentException();
     }
+
     if (beginIndex >= endIndex) {
       throw new IllegalArgumentException();
     }
 
-    int elements = endIndex - beginIndex;
-    String result = null;
-    StringBuilder result1 = new StringBuilder("");
-    int index = beginIndex;
-    for (; elements-- != 0;) {
-      if (endIndex == offsets.size() && elements == 0) {
-        result1.append(subString(offsets.get(index), path.length));
-        break;
-      }
-      result1.append(subString(offsets.get(index), offsets.get(++index)));
+    if (offsets.size() == 0) {
+      throw new IllegalArgumentException();
     }
-    result = result1.toString();
-    result = (result.endsWith("/")) ? result.substring(0, result.length() - 1) : result;
+
+    String result = subString(
+      offsets.get(beginIndex),
+      endIndex < offsets.size() ? offsets.get(endIndex) : path.length
+    );
+
+    if (result.endsWith("/")) result = result.substring(0, result.length()-1);
+
     return new ZipFilePath(fileSystem, result.getBytes());
   }
 
