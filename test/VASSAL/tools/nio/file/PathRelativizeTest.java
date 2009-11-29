@@ -19,9 +19,8 @@ public abstract class PathRelativizeTest extends AbstractPathMethodTest {
   }
 
   protected void doTest() {
-    assertEquals(
-      expected,
-      fs.getPath(left).relativize(fs.getPath(right)).toString()
-    );
+    final Path path = fs.getPath(left).relativize(fs.getPath(right));
+    final String result = path == null ? null : path.toString();
+    assertEquals(expected, result);
   }
 }
