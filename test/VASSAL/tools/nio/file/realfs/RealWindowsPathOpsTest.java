@@ -28,6 +28,7 @@ import VASSAL.tools.nio.file.PathGetParentTest;
 import VASSAL.tools.nio.file.PathGetRootTest;
 import VASSAL.tools.nio.file.PathHashCodeTest;
 import VASSAL.tools.nio.file.PathIsAbsoluteTest;
+import VASSAL.tools.nio.file.PathIteratorTest;
 import VASSAL.tools.nio.file.PathNormalizeTest;
 import VASSAL.tools.nio.file.PathRelativizeTest;
 import VASSAL.tools.nio.file.PathResolveTest;
@@ -49,6 +50,7 @@ import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
   RealWindowsPathOpsTest.GetParentTest.class,
   RealWindowsPathOpsTest.GetRootTest.class,
   RealWindowsPathOpsTest.IsAbsoluteTest.class,
+  RealWindowsPathOpsTest.IteratorTest.class,
   RealWindowsPathOpsTest.NormalizeTest.class,
   RealWindowsPathOpsTest.RelativizeTest.class,
   RealWindowsPathOpsTest.ResolveTest.class,
@@ -329,6 +331,26 @@ public class RealWindowsPathOpsTest {
         { "C:\\",                true  },
         { "C:\\abc",             true  },
         { "\\\\server\\share\\", true  }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class IteratorTest extends PathIteratorTest {
+    public IteratorTest(String input, Object expected) {
+      super(RealWindowsPathOpsTest.fs, input, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Input    Expected
+        { "C:\\",                new String[0]                 },
+        { "C:",                  new String[0]                 },
+        { "\\\\server\\share\\", new String[0]                 },
+        { "C:\\a",               new String[] { "a" }          },
+        { "C:\\a\\b\\c",         new String[] { "a", "b", "c" }},
+        { "a\\b\\c",             new String[] { "a", "b", "c" }}
       });
     }
   }

@@ -29,6 +29,7 @@ import VASSAL.tools.nio.file.PathGetParentTest;
 import VASSAL.tools.nio.file.PathGetRootTest;
 import VASSAL.tools.nio.file.PathHashCodeTest;
 import VASSAL.tools.nio.file.PathIsAbsoluteTest;
+import VASSAL.tools.nio.file.PathIteratorTest;
 import VASSAL.tools.nio.file.PathNormalizeTest;
 import VASSAL.tools.nio.file.PathRelativizeTest;
 import VASSAL.tools.nio.file.PathResolveTest;
@@ -51,6 +52,7 @@ import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
   ZipFilePathOpsTest.GetRootTest.class,
   ZipFilePathOpsTest.HashCodeTest.class,
   ZipFilePathOpsTest.IsAbsoluteTest.class,
+  ZipFilePathOpsTest.IteratorTest.class,
   ZipFilePathOpsTest.NormalizeTest.class,
   ZipFilePathOpsTest.RelativizeTest.class,
   ZipFilePathOpsTest.ResolveTest.class,
@@ -293,6 +295,24 @@ public class ZipFilePathOpsTest {
         { "/",    true  },
         { "/tmp", true  },
         { "tmp",  false }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class IteratorTest extends PathIteratorTest {
+    public IteratorTest(String input, Object expected) {
+      super(ZipFilePathOpsTest.fs, input, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Input    Expected
+        { "/",      new String[0]                 },
+        { "/a",     new String[] { "a" }          },
+        { "/a/b/c", new String[] { "a", "b", "c" }},
+        { "a/b/c",  new String[] { "a", "b", "c" }}
       });
     }
   }

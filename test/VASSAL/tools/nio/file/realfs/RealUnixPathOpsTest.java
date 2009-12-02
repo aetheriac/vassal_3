@@ -28,6 +28,7 @@ import VASSAL.tools.nio.file.PathGetParentTest;
 import VASSAL.tools.nio.file.PathGetRootTest;
 import VASSAL.tools.nio.file.PathHashCodeTest;
 import VASSAL.tools.nio.file.PathIsAbsoluteTest;
+import VASSAL.tools.nio.file.PathIteratorTest;
 import VASSAL.tools.nio.file.PathNormalizeTest;
 import VASSAL.tools.nio.file.PathRelativizeTest;
 import VASSAL.tools.nio.file.PathResolveTest;
@@ -50,6 +51,7 @@ import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
   RealUnixPathOpsTest.GetRootTest.class,
   RealUnixPathOpsTest.HashCodeTest.class,
   RealUnixPathOpsTest.IsAbsoluteTest.class,
+  RealUnixPathOpsTest.IteratorTest.class,
   RealUnixPathOpsTest.NormalizeTest.class,
   RealUnixPathOpsTest.RelativizeTest.class,
   RealUnixPathOpsTest.ResolveTest.class,
@@ -273,8 +275,6 @@ public class RealUnixPathOpsTest {
     }
   }
 
-// FIXME: add iterator() test here
-
   @RunWith(Parameterized.class)
   public static class IsAbsoluteTest extends PathIsAbsoluteTest {
     public IsAbsoluteTest(String input, Object expected) {
@@ -288,6 +288,24 @@ public class RealUnixPathOpsTest {
         { "/",    true  },
         { "/tmp", true  },
         { "tmp",  false }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class IteratorTest extends PathIteratorTest {
+    public IteratorTest(String input, Object expected) {
+      super(RealUnixPathOpsTest.fs, input, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Input    Expected
+        { "/",      new String[0]                 },
+        { "/a",     new String[] { "a" }          },
+        { "/a/b/c", new String[] { "a", "b", "c" }},
+        { "a/b/c",  new String[] { "a", "b", "c" }}
       });
     }
   }
