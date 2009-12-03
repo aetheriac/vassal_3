@@ -215,11 +215,10 @@ public class ZipUtils {
       centralDirOff = centralDirOff + C_FILE_NAME_OFF +
           filenameLen + extraFieldLen + commentLen;
 
-      ZipFilePath entryPath = null;
-      entryPath = zipPath.resolve(new String(ze.filename));
-
+      String fn = new String(ze.filename);
+      ZipFilePath entryPath = zipPath.resolve(fn);
       ze.isArchiveFile = entryPath.isArchiveFile();
-      ze.isDirectory = (entryPath.toString().endsWith("/") ? true : false);
+      ze.isDirectory = (fn.endsWith("/") ? true : false);
       ze.isRegularFile = !ze.isDirectory;
       if (isJar) {
         jentry = new JarEntryInfo(ze);
