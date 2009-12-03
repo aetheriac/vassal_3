@@ -59,10 +59,6 @@ public class ZipFilePathOldTest {
   final String testDirOtherName = "/testDirOther";
   ZipFilePath pathTestDirOther;
   
-  String pathRootName;
-  ZipFilePath pathRoot;
-  ZipFilePath endPath;
-
   Path externalPath;
 
   @Before
@@ -73,17 +69,11 @@ public class ZipFilePathOldTest {
     fs = (ZipFileSystem) FileSystems.newFileSystem(
       URI.create("zip://" + testZipFilePath), null);
 
-    pathRoot = (ZipFilePath) fs.getRootDirectories().iterator().next();
-    pathRootName = pathRoot.toString();
-
     pathTestingDirectory = fs.getPath(testingDirectoryName);
     pathTestingDirectory2 = fs.getPath(testingDirectory2Name);
     pathTestDirOther = fs.getPath(testDirOtherName);
     pathTestFileCreated = fs.getPath(testFileCreatedName);
     pathTestFileOther = fs.getPath(testFileOtherName);
-    
-    int nc = pathTestFileCreated.getNameCount();
-    endPath = pathTestFileCreated.subpath(nc - 1, nc);
   }
 
   @After
@@ -184,16 +174,6 @@ public class ZipFilePathOldTest {
   }
 
   @Test
-  public void testExistsTrue() {
-    assertTrue(pathTestFileCreated.exists());
-  }
-
-  @Test
-  public void testExistsFalse() {
-    assertFalse(pathTestFileOther.exists());
-  }
-
-  @Test
   public void testGetFileStore() throws IOException {
 // FIXME: File stores not guaranteed to be identical, and FileStore
 // does not reimiplement equals().
@@ -202,38 +182,8 @@ public class ZipFilePathOldTest {
   }
 
   @Test
-  public void testGetFileSystem() {
-    assertEquals(fs, pathTestFileCreated.getFileSystem());
-  }
-
-//  @Test
-//  public void testGetNameInt() {
-//    File f = testFileCreated;
-//    for (int i = pathTestFileCreated.getNameCount()-1; i >= 0; --i) {
-//      assertEquals(f.getName(), pathTestFileCreated.getName(i).toString());
-//      f = f.getParentFile();
-//    }
-//  }
-
-  @Test
-  public void testIsHidden() {
-    assertFalse(pathTestFileCreated.isHidden());
-  }
-
-  @Test
   public void testIsSameFile() throws IOException {
     assertTrue(pathTestingDirectory.isSameFile(new ZipFilePath(fs,testingDirectoryName.getBytes())));
-  }
-
-  @Test
-  public void testIterator() {
-    String test = null;
-    Iterator<Path> iter = pathTestingDirectory.iterator();
-    while (iter.hasNext()) {
-      test = iter.next().toString();
-    }
-
-    assertEquals(testingDirectoryName, test);
   }
 
   // TODO add exception and replace testing
@@ -279,33 +229,7 @@ public class ZipFilePathOldTest {
   public void testNewDirectoryStreamString() throws IOException {
     pathTestingDirectory.newDirectoryStream("anyGlob");
   }
-
-  @Test
-  public void testNotExistsTrue() {
-    assertTrue(pathTestFileOther.notExists());
-  }
-
-  @Test
-  public void testNotExistsFalse() {
-    assertFalse(pathTestFileCreated.notExists());
-  }
-
-  @Test
-  public void testToAbsolutePathRelative() throws IOException {
-    assertEquals("/name", fs.getPath("name").toAbsolutePath().toString());
-  }
-
-  @Test
-  public void testToAbsolutePathAbsolute() throws IOException {
-    assertEquals("/name", fs.getPath("/name").toAbsolutePath().toString());
-  }
-
-  @Test
-  public void testToRealPath() throws IOException {
-    assertEquals("/" + testFileCreatedName,
-                 fs.getPath(testFileCreatedName).toRealPath(true).toString());
-  }
-
+ 
   @Test
   public void testToUri() {
     final URI expectedUri = 
@@ -482,6 +406,7 @@ public class ZipFilePathOldTest {
     pathTestFileOther.readSymbolicLink();
   }
 
+/*
   @Test(expected = UnsupportedOperationException.class)
   public void testRegisterWatchServiceKindOfQArray() throws IOException {
     pathTestFileOther.register(null);
@@ -491,4 +416,5 @@ public class ZipFilePathOldTest {
   public void testRegisterWatchServiceKindOfQArrayModifierArray() throws IOException {
     pathTestFileOther.register(null, (WatchEvent.Kind<?>[]) null);
   }
+*/
 }
