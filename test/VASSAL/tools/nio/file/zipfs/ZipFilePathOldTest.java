@@ -326,21 +326,6 @@ public class ZipFilePathOldTest {
     }
   }
 
-  @Test(expected = UnsupportedOperationException.class)
-  public void testCreateLink() throws IOException {
-    pathTestFileOther.createLink(pathTestFileCreated);
-  }
-
-  @Test(expected = UnsupportedOperationException.class)
-  public void testCreateSymbolicLink() throws IOException {
-    pathTestFileOther.createSymbolicLink(pathTestFileCreated);
-  }
-
-  @Test(expected = UnsupportedOperationException.class)
-  public void testReadSymbolicLink() throws IOException {
-    pathTestFileOther.readSymbolicLink();
-  }
-
 /*
   @Test(expected = UnsupportedOperationException.class)
   public void testRegisterWatchServiceKindOfQArray() throws IOException {
