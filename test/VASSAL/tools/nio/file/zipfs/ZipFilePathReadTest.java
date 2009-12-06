@@ -17,10 +17,13 @@ import org.junit.runners.Suite.SuiteClasses;
 
 import static org.junit.Assert.*;
 
+import VASSAL.tools.nio.file.AccessDeniedException;
+import VASSAL.tools.nio.file.AccessMode;
 import VASSAL.tools.nio.file.FileSystems;
 import VASSAL.tools.nio.file.NoSuchFileException;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.Paths;
+import VASSAL.tools.nio.file.PathCheckAccessTest;
 import VASSAL.tools.nio.file.PathExistsTest;
 import VASSAL.tools.nio.file.PathGetAttributeTest;
 import VASSAL.tools.nio.file.PathNotExistsTest;
@@ -29,10 +32,15 @@ import VASSAL.tools.nio.file.PathToRealPathTest;
 //import VASSAL.tools.nio.file.PathToUriTest;
 import VASSAL.tools.nio.file.attribute.FileTime;
 
+import static VASSAL.tools.nio.file.AccessMode.READ;
+import static VASSAL.tools.nio.file.AccessMode.WRITE;
+import static VASSAL.tools.nio.file.AccessMode.EXECUTE;
+
 import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
 
 @RunWith(Suite.class)
 @SuiteClasses({
+  ZipFilePathReadTest.CheckAccessTest.class,
   ZipFilePathReadTest.ExistsTest.class,
   ZipFilePathReadTest.GetAttributeTest.class,
   ZipFilePathReadTest.NotExistsTest.class,
@@ -57,6 +65,39 @@ public class ZipFilePathReadTest {
     zfURI = URI.create("zip://" + zfPath.toString());
 
     fs = (ZipFileSystem) FileSystems.newFileSystem(zfURI, null);
+  }
+
+  @RunWith(Parameterized.class)
+  public static class CheckAccessTest extends PathCheckAccessTest{
+    public CheckAccessTest(String input, int mode, Object expected) {
+      super(ZipFilePathReadTest.fs, input, mode, expected);
+    }
+
+// FIXME: once we are read-write, should check a file which can be written
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Input        Mode Expected
+        { "/fileInZip",    00,  null                           },
+        { "/fileInZip",    01,  t(AccessDeniedException.class) },
+        { "/fileInZip",    02,  t(AccessDeniedException.class) },
+        { "/fileInZip",    03,  t(AccessDeniedException.class) },
+        { "/fileInZip",    04,  null                           },
+        { "/fileInZip",    05,  t(AccessDeniedException.class) },
+        { "/fileInZip",    06,  t(AccessDeniedException.class) },
+        { "/fileInZip",    07,  t(AccessDeniedException.class) },
+        { "/fileNotInZip", 00,  t(NoSuchFileException.class)   },
+        { "fileInZip",     00,  null                           },
+        { "fileInZip",     01,  t(AccessDeniedException.class) },
+        { "fileInZip",     02,  t(AccessDeniedException.class) },
+        { "fileInZip",     03,  t(AccessDeniedException.class) },
+        { "fileInZip",     04,  null                           },
+        { "fileInZip",     05,  t(AccessDeniedException.class) },
+        { "fileInZip",     06,  t(AccessDeniedException.class) },
+        { "fileInZip",     07,  t(AccessDeniedException.class) },
+        { "fileNotInZip",  00,  t(NoSuchFileException.class)   }
+      });
+    }
   }
 
   @RunWith(Parameterized.class)

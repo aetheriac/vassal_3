@@ -84,32 +84,6 @@ public class ZipFilePathOldTest {
     // pathTestingDirectory.deleteIfExists();
   }
 
-// FIXME: need to also check a file which does exist!
-  @Test(expected = NoSuchFileException.class)
-  public void testCheckAccessExist() throws IOException {
-    pathTestFileOther.checkAccess();
-  }
-
-// FIXME: need to also check a file which has execute permission!
-  @Test(expected = AccessDeniedException.class)
-  public void testCheckAccessExecute() throws IOException {
-    pathTestFileCreated.checkAccess(AccessMode.EXECUTE);
-  }
-
-// FIXME: need to also check a file which cannot be read!
-  @Test
-  public void testCheckAccessRead() throws IOException {
-    pathTestFileCreated.checkAccess(AccessMode.READ);
-  }
-
-// FIXME: need to also check a file which does not have write access!
-// FIXME: need to also check a file which has write access!
-//  @Test
-  @Test(expected = AccessDeniedException.class)
-  public void testCheckAccessWrite() throws IOException {
-    pathTestFileCreated.checkAccess(AccessMode.WRITE);
-  }
-
 //  @Test
   @Test(expected = ReadOnlyFileSystemException.class)
   public void testCreateDirectory() throws IOException {
