@@ -26,6 +26,7 @@ import VASSAL.tools.nio.file.Paths;
 import VASSAL.tools.nio.file.PathCheckAccessTest;
 import VASSAL.tools.nio.file.PathExistsTest;
 import VASSAL.tools.nio.file.PathGetAttributeTest;
+import VASSAL.tools.nio.file.PathIsSameFileTest;
 import VASSAL.tools.nio.file.PathNotExistsTest;
 import VASSAL.tools.nio.file.PathToAbsolutePathTest;
 import VASSAL.tools.nio.file.PathToRealPathTest;
@@ -43,6 +44,7 @@ import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
   ZipFilePathReadTest.CheckAccessTest.class,
   ZipFilePathReadTest.ExistsTest.class,
   ZipFilePathReadTest.GetAttributeTest.class,
+  ZipFilePathReadTest.IsSameFileTest.class,
   ZipFilePathReadTest.NotExistsTest.class,
   ZipFilePathReadTest.ToAbsolutePathTest.class,
   ZipFilePathReadTest.ToRealPathTest.class
@@ -77,7 +79,7 @@ public class ZipFilePathReadTest {
     @Parameters
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
-        // Input        Mode Expected
+        // Input          Mode  Expected
         { "/fileInZip",    00,  null                           },
         { "/fileInZip",    01,  t(AccessDeniedException.class) },
         { "/fileInZip",    02,  t(AccessDeniedException.class) },
@@ -185,6 +187,34 @@ public class ZipFilePathReadTest {
         { "/dirInZip", "zip:isArchiveFile",    false },
         { "/dirInZip", "zip:versionMadeBy",    "UNIX" },
         { "/dirInZip", "zip:extAttrs",         0 }
+      });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class IsSameFileTest extends PathIsSameFileTest{
+    public IsSameFileTest(String left, String right, Object expected) {
+      super(ZipFilePathReadTest.fs, left, right, expected);
+    }
+
+// FIXME: test case where providers differ
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Left            Right            Expected
+        { "/fileInZip",    null,            false },
+        { "/fileInZip",    "/fileInZip",    true  },
+        { "/fileInZip",    "fileInZip",     true  },
+        { "/fileInZip",    "/fileNotInZip", false },
+        { "/fileInZip",    "fileNotInZip",  false },
+        { "fileInZip",     "fileInZip",     true  },
+        { "fileInZip",     "/fileInZip",    true  },
+        { "fileInZip",     "/fileNotInZip", false },
+        { "fileInZip",     "fileNotInZip",  false },
+        { "/fileNotInZip", "/fileNotInZip", true  },
+        { "/fileNotInZip", "fileNotInZip",  true  },
+        { "fileNotInZip",  "/fileNotInZip", true  },
+        { "fileNotInZip",  "fileNotInZip",  true  }
       });
     }
   }

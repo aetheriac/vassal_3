@@ -155,11 +155,6 @@ public class ZipFilePathOldTest {
                  pathTestingDirectory.getFileStore());
   }
 
-  @Test
-  public void testIsSameFile() throws IOException {
-    assertTrue(pathTestingDirectory.isSameFile(new ZipFilePath(fs,testingDirectoryName.getBytes())));
-  }
-
   // TODO add exception and replace testing
   @Test
   public void testMoveTo() {
