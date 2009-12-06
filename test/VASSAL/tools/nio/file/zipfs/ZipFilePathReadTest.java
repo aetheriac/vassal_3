@@ -21,6 +21,7 @@ import VASSAL.tools.nio.file.AccessDeniedException;
 import VASSAL.tools.nio.file.AccessMode;
 import VASSAL.tools.nio.file.FileSystems;
 import VASSAL.tools.nio.file.NoSuchFileException;
+import VASSAL.tools.nio.file.OpenOption;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.Paths;
 import VASSAL.tools.nio.file.PathCheckAccessTest;
@@ -34,9 +35,8 @@ import VASSAL.tools.nio.file.PathToRealPathTest;
 //import VASSAL.tools.nio.file.PathToUriTest;
 import VASSAL.tools.nio.file.attribute.FileTime;
 
-import static VASSAL.tools.nio.file.AccessMode.READ;
-import static VASSAL.tools.nio.file.AccessMode.WRITE;
-import static VASSAL.tools.nio.file.AccessMode.EXECUTE;
+import static VASSAL.tools.nio.file.StandardOpenOption.APPEND;
+import static VASSAL.tools.nio.file.StandardOpenOption.READ;
 
 import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
 
@@ -225,18 +225,20 @@ public class ZipFilePathReadTest {
 
   @RunWith(Parameterized.class)
   public static class NewInputStreamTest extends PathNewInputStreamTest {
-    public NewInputStreamTest(String input, Object expected) {
-      super(ZipFilePathReadTest.fs, input, expected);
+    public NewInputStreamTest(String input, OpenOption[] opts,
+                                                             Object expected) {
+      super(ZipFilePathReadTest.fs, input, opts, expected);
     }
 
     @Parameters
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
-        // Input        Expected
-        { "/fileInZip", testDir + "fileInZip" },
-        { "fileInZip",  testDir + "fileInZip" },
-        { "/foo",       testDir + "foo"       },
-        { "foo",        testDir + "foo"       },
+        // Input        Options                     Expected
+        { "/fileInZip", new OpenOption[0],          testDir + "fileInZip" },
+        { "/fileInZip", new OpenOption[]{ READ },   testDir + "fileInZip" },
+        { "/fileInZip", new OpenOption[]{ APPEND }, t(UnsupportedOperationException.class) },
+        { "/foo",       new OpenOption[0],          testDir + "foo"       },
+        { "foo",        new OpenOption[0],          testDir + "foo"       },
       });
     }
   }

@@ -11,11 +11,14 @@ import org.junit.Test;
 
 public abstract class PathNewInputStreamTest extends AbstractPathMethodTest {
   protected final String input;
+  protected final OpenOption[] opts;
 
-  public PathNewInputStreamTest(FileSystem fs, String input, Object expected) {
+  public PathNewInputStreamTest(FileSystem fs, String input,
+                                OpenOption[] opts, Object expected) {
     super(fs, expected);
 
     this.input = input;
+    this.opts = opts;
   }
 
   protected void doTest() throws IOException {
@@ -24,7 +27,7 @@ public abstract class PathNewInputStreamTest extends AbstractPathMethodTest {
 
     InputStream in = null;
     try {
-      in = fs.getPath(input).newInputStream();
+      in = fs.getPath(input).newInputStream(opts);
       actualBytes = IOUtils.toByteArray(in); 
       in.close();
     }
