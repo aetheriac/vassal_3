@@ -51,4 +51,47 @@ public class ZipFileAttributeView extends ZipFileBasicAttributeView {
   public ZipFileAttributes readAttributes() throws IOException {
     return new ZipFileAttributes(file);
   }
+
+  @Override
+  public Object getAttribute(String attribute) throws IOException {
+    final ZipFileAttributes zfa = readAttributes();
+
+    if (attribute.equals("comment")) {
+      return zfa.comment();
+    }
+
+    if (attribute.equals("compressedSize")) {
+      return zfa.compressedSize();
+    }
+
+    if (attribute.equals("crc")) {
+      return zfa.crc();
+    }
+
+    if (attribute.equals("extra")) {
+      return zfa.extra();
+    }
+
+    if (attribute.equals("method")) {
+      return zfa.method();
+    }
+
+    if (attribute.equals("name")) {
+      return zfa.name();    
+    }
+  
+    if (attribute.equals("isArchiveFile")) {
+      return zfa.isArchiveFile();
+    }
+
+    if (attribute.equals("versionMadeBy")) {
+      return zfa.versionMadeBy();
+    }
+
+    if (attribute.equals("extAttrs")) {
+      return zfa.externalAttrs();
+    }
+
+    return null;
+  }
 }

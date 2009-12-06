@@ -42,7 +42,7 @@ public class ZipFileAttributes extends ZipFileBasicAttributes {
     "FAT file system (DOS, OS/2, NT)",
     "Amiga",
     "VMS (VAX or Alpha AXP)",
-    "Unix",
+    "UNIX",
     "VM/CMS",
     "Atari",
     "HPFS file system (OS/2, NT 3.x)",
@@ -101,7 +101,7 @@ public class ZipFileAttributes extends ZipFileBasicAttributes {
     }
   }
 
-  public int getExternalAttrs() {
+  public int externalAttrs() {
     return ze.extAttrs;
   }
 }

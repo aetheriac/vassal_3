@@ -80,19 +80,19 @@ public class ZipFileBasicAttributes implements BasicFileAttributes {
   }
 
   public FileTime lastModifiedTime() {
-    long time = ze.lastModifiedTime;
-    Calendar cal = dosTimeToJavaTime(time);
+    final Calendar cal = dosTimeToJavaTime(ze.lastModifiedTime);
     return FileTime.fromMillis(cal.getTimeInMillis());
   }
 
   private Calendar dosTimeToJavaTime(long time) {
-    Calendar cal = Calendar.getInstance();
+    final Calendar cal = Calendar.getInstance();
+    cal.clear();  // to set the milliseconds 0
     cal.set((int) (((time >> 25) & 0x7f) + 1980),
-        (int) (((time >> 21) & 0x0f) - 1),
-        (int) ((time >> 16) & 0x1f),
-        (int) ((time >> 11) & 0x1f),
-        (int) ((time >> 5) & 0x3f),
-        (int) ((time << 1) & 0x3e));
+            (int) (((time >> 21) & 0x0f) - 1),
+            (int) ( (time >> 16) & 0x1f),
+            (int) ( (time >> 11) & 0x1f),
+            (int) ( (time >>  5) & 0x3f),
+            (int) ( (time <<  1) & 0x3e));
     return cal;
   }
 
