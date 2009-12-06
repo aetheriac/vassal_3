@@ -198,7 +198,8 @@ public class ZipFilePathOldTest {
   public void testNewDirectoryStreamString() throws IOException {
     pathTestingDirectory.newDirectoryStream("anyGlob");
   }
- 
+
+/* 
   @Test
   public void testGetFileAttributeViewBasicFileAttributeView() {
     assertNotNull(pathTestFileCreated.getFileAttributeView(BasicFileAttributeView.class));
@@ -213,6 +214,7 @@ public class ZipFilePathOldTest {
   public void testGetFileAttributeViewLinkOptions() {
     assertNotNull(pathTestFileCreated.getFileAttributeView(BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS));
   }
+*/
 
   @Test(expected = UnsupportedOperationException.class)
   public void testNewByteChannelOpenOptionArray() throws Exception {
@@ -237,19 +239,6 @@ public class ZipFilePathOldTest {
 //    StandardOpenOption[] opts = new StandardOpenOption[] { StandardOpenOption.READ };
 //    final Set<StandardOpenOption> opt = pathTestFileCreated.standardOpenOptionSet(opts);
 //    FileChannelAdapter fca = pathTestFileCreated.newByteChannel(opt);
-  }
-
-  @Test
-  public void testNewInputStream() throws IOException {
-// FIXME: do a read test
-    InputStream in = null;
-    try {
-      in = pathTestFileCreated.newInputStream();
-      assertTrue(in != null);
-    }
-    finally {
-      IOUtils.closeQuietly(in);
-    }
   }
 
   @Test
