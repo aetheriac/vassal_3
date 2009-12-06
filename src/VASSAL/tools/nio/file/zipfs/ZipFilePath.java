@@ -45,8 +45,6 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 //import java.nio.file.attribute.Attributes;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -78,7 +76,6 @@ public class ZipFilePath extends Path {
   // resolved path for locating zip inside zip file
   // resloved path does not contain ./ and .. components
   private final byte[] pathForZip;
-  private final ReadLock readLock = new ReentrantReadWriteLock().readLock();
   private ZipFilePath pathToZip;
   private final byte[] pathForPrint;
 
@@ -150,7 +147,7 @@ public class ZipFilePath extends Path {
    */
   public boolean isDirectory() {
     try {
-      begin();
+      fileSystem.begin();
       try {
         ZipFilePath resolved = getResolvedPathForZip();
         return Attributes.readBasicFileAttributes(resolved, LinkOption.NOFOLLOW_LINKS).isDirectory();
@@ -160,7 +157,7 @@ public class ZipFilePath extends Path {
       }
     }
     finally {
-      end();
+      fileSystem.end();
     }
   }
 
@@ -172,17 +169,6 @@ public class ZipFilePath extends Path {
       index++;
     }
     return index;
-  }
-
-  final void begin() {
-    readLock.lock();
-    if (!fileSystem.isOpen()) {
-      throw new ClosedFileSystemException();
-    }
-  }
-
-  final void end() {
-    readLock.unlock();
   }
 
   static int nextNonSeparator(byte[] path, int index) {
@@ -763,7 +749,7 @@ public class ZipFilePath extends Path {
 
 // FIXME: why is this under a lock?
     try {
-      begin();
+      fileSystem.begin();
 
       ZipFilePath realPath = getResolvedPathForZip();
       if (realPath.getNameCount() == 0) {
@@ -773,7 +759,7 @@ public class ZipFilePath extends Path {
       return ZipIO.in(this, options);
     }
     finally {
-      end();
+      fileSystem.end();
     }
   }
 
@@ -782,11 +768,11 @@ public class ZipFilePath extends Path {
       Filter<? super Path> filter) throws IOException
   {
     try {
-      begin();
+      fileSystem.begin();
       return new ZipFileStream(getResolvedPathForZip(), filter);
     }
     finally {
-      end();
+      fileSystem.end();
     }
   }
 
@@ -899,7 +885,7 @@ public class ZipFilePath extends Path {
   @Override
   public FileStore getFileStore() throws IOException {
     try {
-      begin();
+      fileSystem.begin();
       if (isAbsolute()) {
         return ZipFileStore.create(getRoot());
       }
@@ -908,7 +894,7 @@ public class ZipFilePath extends Path {
       }
     }
     finally {
-      end();
+      fileSystem.end();
     }
   }
 
@@ -1009,7 +995,7 @@ public class ZipFilePath extends Path {
     }
 
     try {
-      begin();
+      fileSystem.begin();
 
       ZipFilePath realPath = getResolvedPathForZip();
       if (realPath.getNameCount() == 0) {
@@ -1019,7 +1005,7 @@ public class ZipFilePath extends Path {
       return ZipIO.channel(this, options);
     }
     finally {
-      end();
+      fileSystem.end();
     }
   }
 
@@ -1072,7 +1058,7 @@ public class ZipFilePath extends Path {
     }
 
     try {
-      begin();
+      fileSystem.begin();
       ZipFilePath resolvedZipPath = getResolvedPathForZip();
       int nameCount = resolvedZipPath.getNameCount();
       if (nameCount == 0) {
@@ -1101,7 +1087,7 @@ public class ZipFilePath extends Path {
       }
     }
     finally {
-      end();
+      fileSystem.end();
     }
   }
 
