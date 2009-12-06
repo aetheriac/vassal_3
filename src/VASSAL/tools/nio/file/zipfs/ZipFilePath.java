@@ -900,26 +900,28 @@ public class ZipFilePath extends Path {
 
   @Override
   public boolean isSameFile(Path other) throws IOException {
-    if ((other != null) && (other instanceof ZipFilePath)) {
-
-      // check both file systems are same.
-
-      ZipFilePath other1 = (ZipFilePath) other;
-      String fileSystem1 = this.getFileSystem().getZipFileSystemFile();
-      String fileSystem2 = other1.getFileSystem().getZipFileSystemFile();
-      boolean isSameFileSystem = fileSystem1.equals(fileSystem2);
-      if (!isSameFileSystem) {
-        return false;
-      }
-
-      // if file systems are same then do they exist
-      // finally compare the paths
-      // compare the real paths
-      ZipFilePath thisZip = this.toRealPath(false);
-      ZipFilePath otherZip = other1.toRealPath(false);
-      return (thisZip.startsWith(otherZip) && thisZip.endsWith(otherZip));
+    if (this.equals(other)) {
+      return true;
     }
-    return false;
+
+    if (other == null || (!(other instanceof ZipFilePath))) {
+      return false;
+    }
+  
+    final ZipFilePath other1 = (ZipFilePath) other;
+
+    // check whether we have a common file system
+    if (!this.getFileSystem().getZipFileSystemFile().equals(
+          other1.getFileSystem().getZipFileSystemFile())) {
+      return false;
+    }
+
+    // check whether both (or neither) exist
+    if (this.exists() != other1.exists()) {
+      return false;
+    }
+
+    return this.toAbsolutePath().equals(other1.toAbsolutePath());
   }
 
   public WatchKey register(
