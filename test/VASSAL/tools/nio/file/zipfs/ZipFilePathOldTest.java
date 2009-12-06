@@ -231,13 +231,6 @@ public class ZipFilePathOldTest {
   }
  
   @Test
-  public void testToUri() {
-    final URI expectedUri = 
-      URI.create("zip://" + testZipFilePath + "#/" + testFileCreatedName);
-    assertEquals(expectedUri, pathTestFileCreated.toUri());
-  }
-
-  @Test
   public void testGetFileAttributeViewBasicFileAttributeView() {
     assertNotNull(pathTestFileCreated.getFileAttributeView(BasicFileAttributeView.class));
   }
@@ -250,22 +243,6 @@ public class ZipFilePathOldTest {
   @Test
   public void testGetFileAttributeViewLinkOptions() {
     assertNotNull(pathTestFileCreated.getFileAttributeView(BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS));
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void testGetAttributeNull() throws IOException {
-    pathTestingDirectory.getAttribute(null);
-  }
-
-  @Test
-  public void testGetAttributeUnknown() throws Exception {
-    assertNull(pathTestingDirectory.getAttribute("whatever"));
-  }
-
-  @Test
-  public void testGetAttributeBasic() throws IOException {
-    assertTrue(
-      (Boolean) pathTestingDirectory.getAttribute("basic:isDirectory"));
   }
 
   @Test(expected = UnsupportedOperationException.class)
