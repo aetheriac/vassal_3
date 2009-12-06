@@ -65,7 +65,8 @@ public class ZipFileBasicAttributeView implements BasicFileAttributeView, Readab
   }
 
   public Object getAttribute(String attribute) throws IOException {
-    BasicFileAttributes bfa = readAttributes();
+    final BasicFileAttributes bfa = readAttributes();
+
     if (attribute.equals("lastModifiedTime")) {
       return bfa.lastModifiedTime();
     }
