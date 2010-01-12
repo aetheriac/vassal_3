@@ -25,6 +25,7 @@ import VASSAL.tools.nio.file.OpenOption;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.Paths;
 import VASSAL.tools.nio.file.PathCheckAccessTest;
+import VASSAL.tools.nio.file.PathCreateDirectoryTest;
 import VASSAL.tools.nio.file.PathExistsTest;
 import VASSAL.tools.nio.file.PathGetAttributeTest;
 import VASSAL.tools.nio.file.PathIsSameFileTest;
@@ -42,17 +43,17 @@ import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-  ZipFilePathRWTest.CheckAccessTest.class,
-  ZipFilePathRWTest.ExistsTest.class,
-  ZipFilePathRWTest.GetAttributeTest.class,
-  ZipFilePathRWTest.IsSameFileTest.class,
-  ZipFilePathRWTest.NewInputStreamTest.class,
-  ZipFilePathRWTest.NotExistsTest.class,
-  ZipFilePathRWTest.ToAbsolutePathTest.class,
-  ZipFilePathRWTest.ToRealPathTest.class
-//  ZipFilePathRWTest.ToUriTest.class
+  ZipFilePathReadTest.CheckAccessTest.class,
+  ZipFilePathReadTest.ExistsTest.class,
+  ZipFilePathReadTest.GetAttributeTest.class,
+  ZipFilePathReadTest.IsSameFileTest.class,
+  ZipFilePathReadTest.NewInputStreamTest.class,
+  ZipFilePathReadTest.NotExistsTest.class,
+  ZipFilePathReadTest.ToAbsolutePathTest.class,
+  ZipFilePathReadTest.ToRealPathTest.class
+//  ZipFilePathReadTest.ToUriTest.class
 })
-public class ZipFilePathRWTest {
+public class ZipFilePathReadTest {
 
   protected static ZipFileSystem fs;
 
@@ -76,7 +77,7 @@ public class ZipFilePathRWTest {
   @RunWith(Parameterized.class)
   public static class CheckAccessTest extends PathCheckAccessTest {
     public CheckAccessTest(String input, int mode, Object expected) {
-      super(ZipFilePathRWTest.fs, input, mode, expected);
+      super(ZipFilePathReadTest.fs, input, mode, expected);
     }
 
 // FIXME: once we are read-write, should check a file which can be written
@@ -109,7 +110,7 @@ public class ZipFilePathRWTest {
   @RunWith(Parameterized.class)
   public static class ExistsTest extends PathExistsTest {
     public ExistsTest(String input, Object expected) {
-      super(ZipFilePathRWTest.fs, input, expected);
+      super(ZipFilePathReadTest.fs, input, expected);
     }
 
     @Parameters
@@ -127,7 +128,7 @@ public class ZipFilePathRWTest {
   @RunWith(Parameterized.class)
   public static class NotExistsTest extends PathNotExistsTest {
     public NotExistsTest(String input, Object expected) {
-      super(ZipFilePathRWTest.fs, input, expected);
+      super(ZipFilePathReadTest.fs, input, expected);
     }
 
     @Parameters
@@ -145,7 +146,7 @@ public class ZipFilePathRWTest {
   @RunWith(Parameterized.class)
   public static class GetAttributeTest extends PathGetAttributeTest {
     public GetAttributeTest(String path, String attrib, Object expected) {
-      super(ZipFilePathRWTest.fs, path, attrib, expected);
+      super(ZipFilePathReadTest.fs, path, attrib, expected);
     }
 
     @Parameters
@@ -155,9 +156,18 @@ public class ZipFilePathRWTest {
         { "/fileNotInZip", "basic:size", t(NoSuchFileException.class) },
         { "/fileInZip", null,            t(NullPointerException.class) },
         { "/fileInZip", "whatever",      null                          },
+        { "/fileInZip", "lastModifiedTime", FileTime.from(1259794214L, TimeUnit.SECONDS) },
+        { "/fileInZip", "lastAccessTime",   FileTime.fromMillis(-1L) },
+        { "/fileInZip", "creationTime",     FileTime.fromMillis(-1L) },
+        { "/fileInZip", "size",           0L },
+        { "/fileInZip", "isRegularFile",  true  },
+        { "/fileInZip", "isDirectory",    false },
+        { "/fileInZip", "isSymbolicLink", false },
+        { "/fileInZip", "isOther",        false },
+        { "/fileInZip", "fileKey",        null  },
         { "/fileInZip", "basic:lastModifiedTime", FileTime.from(1259794214L, TimeUnit.SECONDS) },
-        { "/fileInZip", "basic:lastAccessTime",   FileTime.from(0, TimeUnit.SECONDS) },
-        { "/fileInZip", "basic:creationTime",     FileTime.from(0, TimeUnit.SECONDS) },
+        { "/fileInZip", "basic:lastAccessTime",   FileTime.fromMillis(-1L) },
+        { "/fileInZip", "basic:creationTime",     FileTime.fromMillis(-1L) },
         { "/fileInZip", "basic:size",           0L },
         { "/fileInZip", "basic:isRegularFile",  true  },
         { "/fileInZip", "basic:isDirectory",    false },
@@ -175,8 +185,8 @@ public class ZipFilePathRWTest {
         { "/dirInZip", null,                    t(NullPointerException.class) },
         { "/dirInZip", "whatever",              null },
         { "/dirInZip", "basic:lastModifiedTime", FileTime.from(1259917468L, TimeUnit.SECONDS) },
-        { "/dirInZip", "basic:lastAccessTime", FileTime.from(-1L, TimeUnit.SECONDS) },
-        { "/dirInZip", "basic:creationTime",   FileTime.from(-1L, TimeUnit.SECONDS) },
+        { "/dirInZip", "basic:lastAccessTime", FileTime.fromMillis(-1L) },
+        { "/dirInZip", "basic:creationTime",   FileTime.fromMillis(-1L) },
         { "/dirInZip", "basic:size",           0L },
         { "/dirInZip", "basic:isRegularFile",  false  },
         { "/dirInZip", "basic:isDirectory",    true },
@@ -198,7 +208,7 @@ public class ZipFilePathRWTest {
   @RunWith(Parameterized.class)
   public static class IsSameFileTest extends PathIsSameFileTest {
     public IsSameFileTest(String left, String right, Object expected) {
-      super(ZipFilePathRWTest.fs, left, right, expected);
+      super(ZipFilePathReadTest.fs, left, right, expected);
     }
 
 // FIXME: test case where providers differ
@@ -227,7 +237,7 @@ public class ZipFilePathRWTest {
   public static class NewInputStreamTest extends PathNewInputStreamTest {
     public NewInputStreamTest(String input, OpenOption[] opts,
                                                              Object expected) {
-      super(ZipFilePathRWTest.fs, input, opts, expected);
+      super(ZipFilePathReadTest.fs, input, opts, expected);
     }
 
     @Parameters
@@ -246,7 +256,7 @@ public class ZipFilePathRWTest {
   @RunWith(Parameterized.class)
   public static class ToAbsolutePathTest extends PathToAbsolutePathTest {
     public ToAbsolutePathTest(String input, Object expected) {
-      super(ZipFilePathRWTest.fs, input, expected);
+      super(ZipFilePathReadTest.fs, input, expected);
     }
 
     @Parameters
@@ -262,7 +272,7 @@ public class ZipFilePathRWTest {
   @RunWith(Parameterized.class)
   public static class ToRealPathTest extends PathToRealPathTest {
     public ToRealPathTest(String input, boolean resLinks, Object expected) {
-      super(ZipFilePathRWTest.fs, input, resLinks, expected);
+      super(ZipFilePathReadTest.fs, input, resLinks, expected);
     }
 
     @Parameters

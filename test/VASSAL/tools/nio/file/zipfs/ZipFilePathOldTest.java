@@ -84,69 +84,6 @@ public class ZipFilePathOldTest {
     // pathTestingDirectory.deleteIfExists();
   }
 
-//  @Test
-  @Test(expected = ReadOnlyFileSystemException.class)
-  public void testCreateDirectory() throws IOException {
-    try {
-      pathTestDirOther.createDirectory();
-      assertTrue("Test directory was not created.",
-                 pathTestDirOther.isDirectory());
-    }
-    finally {
-      pathTestDirOther.deleteIfExists();
-    }
-  }
-
-//  @Test
-  @Test(expected = ReadOnlyFileSystemException.class)
-  public void testCreateFile() throws IOException {
-    try {
-      pathTestFileOther.createFile();
-      assertTrue("Test file was not created.", pathTestFileOther.exists());
-    }
-    finally {
-      pathTestFileOther.delete();
-    }
-  }
-
-//  @Test
-  @Test(expected = ReadOnlyFileSystemException.class)
-  public void testDelete() throws IOException {
-    try {
-      pathTestFileOther.createFile();
-      pathTestFileOther.delete();
-      assertFalse(pathTestFileOther.exists());
-    }
-    finally {
-      pathTestFileOther.delete();
-    }
-  }
-
-//  @Test
-  @Test(expected = ReadOnlyFileSystemException.class)
-  public void testDeleteIfExistsDoesExist() throws IOException {
-    try {
-      pathTestFileOther.createFile();
-      pathTestFileOther.deleteIfExists();
-      assertFalse(pathTestFileOther.exists());
-    }
-    finally {
-      pathTestFileOther.delete();
-    }
-  }
-
-//  @Test
-  @Test(expected = ReadOnlyFileSystemException.class)
-  public void testDeleteIfExistsDoesNotExist() throws IOException {
-    try {
-      pathTestFileOther.deleteIfExists();
-      assertFalse(pathTestFileOther.exists());
-    }
-    finally {
-      pathTestFileOther.delete();
-    }
-  }
-
   @Test
   public void testGetFileStore() throws IOException {
 // FIXME: File stores not guaranteed to be identical, and FileStore
