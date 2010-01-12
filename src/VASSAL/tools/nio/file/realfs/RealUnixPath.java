@@ -14,7 +14,7 @@ public class RealUnixPath extends RealPath {
   }
 
   /** {@inheritDoc} */
-  protected int findRootSep(String s) {
-    return s.startsWith("/") ? 0 : -1;
+  protected int findRootSep(byte[] s) {
+    return s[0] == '/' ? 0 : -1;
   }
 }

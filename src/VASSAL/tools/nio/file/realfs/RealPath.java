@@ -10,17 +10,20 @@ import static VASSAL.tools.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import VASSAL.tools.StringUtils;
+import VASSAL.tools.io.IOUtils;
+
 import VASSAL.tools.nio.channels.FileChannelAdapter;
+import VASSAL.tools.nio.file.AbstractPath;
 import VASSAL.tools.nio.file.AccessDeniedException;
 import VASSAL.tools.nio.file.AccessMode;
 import VASSAL.tools.nio.file.AtomicMoveNotSupportedException;
@@ -37,6 +40,10 @@ import VASSAL.tools.nio.file.NotDirectoryException;
 import VASSAL.tools.nio.file.OpenOption;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.StandardOpenOption;
+import VASSAL.tools.nio.file.StandardCopyOption;
+import VASSAL.tools.nio.file.WatchEvent;
+import VASSAL.tools.nio.file.WatchKey;
+import VASSAL.tools.nio.file.WatchService;
 import VASSAL.tools.nio.file.attribute.BasicFileAttributeView;
 import VASSAL.tools.nio.file.attribute.FileAttribute;
 import VASSAL.tools.nio.file.attribute.FileAttributeView;
@@ -45,19 +52,15 @@ import VASSAL.tools.nio.file.attribute.FileTime;
 public abstract class RealPath extends AbstractPath {
   protected final File file;
   protected final RealFileSystem fs;
- 
-  protected final String path; 
-  protected final int[] seps;
 
   public RealPath(String path, RealFileSystem fs) {
+    super(new File(path).toString().getBytes());
+
     this.file = new File(path);
     this.fs = fs;
-
-    this.path = file.toString();
-    seps = splitPath(this.path);
   }
 
-  protected int[] splitPath(String path) {
+  protected int[] splitPath(byte[] rawpath) {
     // File ctor removes duplicate separators. Hence, each
     // instance of separator splits two names.
 
@@ -65,17 +68,22 @@ public abstract class RealPath extends AbstractPath {
     int i = 0;
 
     // find end of root, if present
-    i = findRootSep(path);
+    i = findRootSep(rawpath);
     sl.add(i++);
 
     // if at end, then we are just a root
-    if (i >= path.length()) return new int[0];
+    if (i >= rawpath.length) return new int[0];
 
     // record positions of all separators
-    while ((i = path.indexOf(File.separator, i)) >= 0) sl.add(i++);
+    final byte[] sep = getFileSystem().getSeparator().getBytes();
+
+// FIXME: note that this fails for multibyte seps
+    for ( ; i < rawpath.length; ++i) {
+      if (rawpath[i] == sep[0]) sl.add(i);
+    }
 
     // record end of path
-    sl.add(path.length());
+    sl.add(rawpath.length);
 
 // FIXME: replace with a method in ArrayUtils or something from Apache Commons
     // convert from List<Integer> to int[]
@@ -96,7 +104,7 @@ public abstract class RealPath extends AbstractPath {
    * @return the position of the separator following the root element, or
    * -1 if the path is relative
    */
-  protected abstract int findRootSep(String s);
+  protected abstract int findRootSep(byte[] s);
   
   public void checkAccess(AccessMode... modes) throws IOException {
     if (!file.exists()) throw new NoSuchFileException(file.toString());
@@ -143,17 +151,6 @@ public abstract class RealPath extends AbstractPath {
 
   public void deleteIfExists() throws IOException {
     if (exists()) delete();
-  }
-
-  public boolean endsWith(Path other) {
-    if (other.isAbsolute()) {
-      return this.isAbsolute() ? this.equals(other) : false;
-    }
-    else {
-      final int oc = other.getNameCount();
-      final int tc = this.getNameCount();
-      return oc <= tc ? other.equals(this.subpath(tc-oc, tc)) : false;
-    }
   }
 
   @Override
@@ -226,45 +223,9 @@ public abstract class RealPath extends AbstractPath {
     return fs;
   }
 
-  public Path getName() {
-    return seps.length == 0 ? null : subpath(seps.length-2, seps.length-1);
-  }
-
-  public Path getName(int index) {
-    return subpath(index, index+1);
-  }
-
-  public int getNameCount() {
-    return seps.length > 0 ? seps.length-1 : 0;
-  }
-
-  public Path getParent() { 
-    // a root has no parent
-    if (seps.length == 0) return null;
-
-    if (seps.length <= 2) {
-      // a relative single-name path has no parent
-      // an absolute single-name path has the root as its parent
-      return seps[0] == -1 ? null : fs.getPath(path.substring(0, seps[0]+1));
-    }
-
-    // all other paths have a parent
-    return fs.getPath(path.substring(0, seps[seps.length-2]));
-  }
-
-  public Path getRoot() {
-    if (seps.length == 0) return this;  // we are a root
-    if (seps[0] == -1) return null;     // we are relative
-    return fs.getPath(path.substring(0, seps[0]+1));
-  }
-
   @Override
   public int hashCode() {
     return file.hashCode();
-  }
-
-  public boolean isAbsolute() {
-    return seps.length == 0 || seps[0] != -1;
   }
 
   public boolean isHidden() throws IOException {
@@ -273,24 +234,6 @@ public abstract class RealPath extends AbstractPath {
 
   public boolean isSameFile(Path other) {
     return this.equals(other);
-  }
-
-  public Iterator<Path> iterator() {
-    return new Iterator<Path>() {
-      private int i = 0;
-
-      public boolean hasNext() {
-        return i < seps.length-1;
-      }
-
-      public Path next() {
-        return fs.getPath(path.substring(seps[i]+1, seps[++i]));
-      }
-
-      public void remove() {
-        throw new UnsupportedOperationException();
-      }
-    };
   }
 
   public Path moveTo(Path target, CopyOption... options) throws IOException {
@@ -410,54 +353,6 @@ public abstract class RealPath extends AbstractPath {
     return new FileOutputStream(file, append);
   }
 
-  public Path normalize() {
-    if (seps.length == 0) return this;   // root is already normalized
-    
-    int previousDirsAtBeginning = 0;
-
-    final ArrayList<String> outputParts = new ArrayList<String>(seps.length);
-
-    // Remove redundant parts.
-    for (int i = 0; i < seps.length-1; ++i) {
-      final String currentInputPart = path.substring(seps[i]+1, seps[i+1]);
-
-      // ".": Skip.
-      if (currentInputPart.equals(".")) continue;
-
-      // "..": Scratch this and the previous name, if any.
-      if (currentInputPart.equals("..")) {
-        final int s = outputParts.size();
-        if (s > previousDirsAtBeginning) {
-          outputParts.remove(s-1);
-        }
-        else if (!this.isAbsolute()){
-          outputParts.add(currentInputPart);
-          previousDirsAtBeginning++;
-        }
-        continue;
-      }
-
-      // Otherwise add this name to the list.
-      outputParts.add(currentInputPart);
-    }
-
-    final String prefix = seps[0] == -1 ? null : path.substring(0, seps[0]+1);
-
-    String norm;
-
-    if (outputParts.size() > 0) {
-      // Rebuild the normalized path.
-      norm = (seps[0] == -1 ? "" : path.substring(0, seps[0]+1)) +
-             StringUtils.join(File.separator, outputParts);
-    }
-    else {
-      // Whole path is just the prefix, if any.
-      norm = prefix;
-    }
-
-    return norm == null ? null : fs.getPath(norm);
-  }
-
   public boolean notExists() {
     return !file.exists();
   }
@@ -480,46 +375,6 @@ public abstract class RealPath extends AbstractPath {
     }
 
     return map;
-  }
-
-  public Path relativize(Path other) {
-    // FIXME: Implementing this will require some thought...
-
-    if (other.equals(this)) return null;
-
-    if (this.isAbsolute() != other.isAbsolute()) {
-      throw new IllegalArgumentException();
-    }
-    
-    int i = 0;
-    final int ti = this.getNameCount();
-    final int oi = other.getNameCount();
-
-    // find first name mismatch
-    for ( ; i < ti && i < oi; i++) {
-      if (!this.getName(i).equals(other.getName(i))) break;
-    }
-
-    final StringBuilder sb = new StringBuilder();
-
-    // backup to the mismatch
-    final int nc = ti - i;
-    for (int j = 0; j < nc; ++j) sb.append("../");
-
-    // append the rest of the other path, if any
-    if (i < oi) sb.append(other.subpath(i, oi).toString());
-
-    return fs.getPath(sb.toString());
-  }
-
-  public Path resolve(Path other) {
-    if (other == null) return this;
-    if (other.isAbsolute()) return other;
-    return fs.getPath(new File(file, other.toString()).toString());     
-  }
-
-  public Path resolve(String other) {
-    return resolve(fs.getPath(other));
   }
 
   public void setAttribute(String attribute,
@@ -547,25 +402,6 @@ public abstract class RealPath extends AbstractPath {
     }   
   }
 
-  public boolean startsWith(Path other) {
-    if (this.isAbsolute() != other.isAbsolute()) return false;
-
-    final int oc = other.getNameCount();
-    final int tc = this.getNameCount();
-
-    return oc == 0 ? true : 
-           oc <= tc ? other.subpath(0,oc).equals(this.subpath(0, oc)) : false;
-  }
-
-  public Path subpath(int start, int end) {
-    if (start < 0) throw new IllegalArgumentException();
-    if (start >= seps.length-1) throw new IllegalArgumentException();
-    if (end <= start) throw new IllegalArgumentException();
-    if (end > seps.length-1) throw new IllegalArgumentException();
-
-    return fs.getPath(path.substring(seps[start]+1, seps[end]));
-  }
-
   public Path toAbsolutePath() {
     return fs.getPath(file.getAbsolutePath());
   }
@@ -574,12 +410,69 @@ public abstract class RealPath extends AbstractPath {
     return fs.getPath(file.getCanonicalPath());
   }
 
-  @Override
-  public String toString() {
-    return file.toString();
-  }
-
   public URI toUri() {
     return file.toURI();
+  }
+
+  public int compareTo(Path owner) {
+    return toString().compareTo(owner.toString());
+  }
+
+  public Path copyTo(Path target, CopyOption... options) throws IOException {
+    if (!target.isSameFile(this)) {
+      boolean replace = false;
+
+      for (CopyOption c : options) {
+        if (c == StandardCopyOption.REPLACE_EXISTING) replace = true;
+        else throw new UnsupportedOperationException(c.toString());
+      }
+
+      if (!replace && target.exists()) {
+        throw new FileAlreadyExistsException(
+          this.toString(), target.toString(), ""
+        );
+      }
+
+      InputStream in = null;
+      OutputStream out = null;
+      try {
+        in = this.newInputStream();
+        out = target.newOutputStream();
+        IOUtils.copy(in, out);
+        in.close();
+        out.close();
+      }
+      finally {
+        IOUtils.closeQuietly(in);
+        IOUtils.closeQuietly(out);
+      }
+    }
+
+    return target;
+  }
+
+  public Path createLink(Path existing) throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  public Path createSymbolicLink(Path target, FileAttribute<?>... attrs)
+                                                           throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  public Path readSymbolicLink() throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  public WatchKey register(WatchService watcher, WatchEvent.Kind<?>... events)
+                                                           throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  public WatchKey register(WatchService watcher,
+                           WatchEvent.Kind<?>[] events,
+                           WatchEvent.Modifier... modifiers)
+                                                           throws IOException {
+    throw new UnsupportedOperationException();
   }
 }
