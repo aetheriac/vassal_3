@@ -13,16 +13,14 @@ import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
-import VASSAL.tools.nio.file.DirectoryNotEmptyException;
-import VASSAL.tools.nio.file.FileAlreadyExistsException;
 import VASSAL.tools.nio.file.FileSystems;
-import VASSAL.tools.nio.file.NoSuchFileException;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.Paths;
 import VASSAL.tools.nio.file.PathCreateDirectoryTest;
 import VASSAL.tools.nio.file.PathCreateFileTest;
 import VASSAL.tools.nio.file.PathDeleteTest;
 import VASSAL.tools.nio.file.PathDeleteIfExistsTest;
+import VASSAL.tools.nio.file.ReadOnlyFileSystemException;
 import VASSAL.tools.nio.file.StandardCopyOption;
 
 import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
@@ -69,11 +67,8 @@ public class ZipFilePathWriteTest {
     @Parameters
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
-        // Input           Expected
-        { "/dirInZip",     t(FileAlreadyExistsException.class) },
-        { "/foodir",       null                                },
-        { "dirInZip",      t(FileAlreadyExistsException.class) },
-        { "bardir",        null                                }
+        // Input  Expected
+        { "/foo", t(ReadOnlyFileSystemException.class) }
       });
     }
   }
@@ -88,11 +83,8 @@ public class ZipFilePathWriteTest {
     @Parameters
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
-        // Input           Expected
-        { "/fileInZip",    t(FileAlreadyExistsException.class) },
-        { "/foo",          null                                },
-        { "fileInZip",     t(FileAlreadyExistsException.class) },
-        { "bar",           null                                }
+        // Input  Expected
+        { "/foo", t(ReadOnlyFileSystemException.class) }
       });
     }
   }
@@ -106,11 +98,8 @@ public class ZipFilePathWriteTest {
     @Parameters
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
-        // Input           Expected
-        { "/notAFile",     t(NoSuchFileException.class) },
-        { "/foo",          null                                },
-        { "/dirInZip",     t(DirectoryNotEmptyException.class) },
-        { "bar",           null                                }
+        // Input  Expected
+        { "/foo", t(ReadOnlyFileSystemException.class) }
       });
     }
   }
@@ -124,14 +113,9 @@ public class ZipFilePathWriteTest {
     @Parameters
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
-        // Input
-        { "/notAFile", null                                },
-        { "/foo",      null                                },
-        { "/dirInZip", t(DirectoryNotEmptyException.class) },
-        { "bar",       null                                }
+        // Input  Expected
+        { "/foo", t(ReadOnlyFileSystemException.class) }
       });
     }
   }
-
-
 }
