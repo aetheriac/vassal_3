@@ -5,7 +5,7 @@ import java.io.InputStream;
 
 import VASSAL.tools.io.IOUtils;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -22,29 +22,24 @@ public abstract class PathNewInputStreamTest extends AbstractPathMethodTest {
   }
 
   protected void doTest() throws IOException {
-    byte[] actualBytes = null;
-    byte[] expectedBytes = null;
-
-    InputStream in = null;
+    InputStream actual_in = null;
     try {
-      in = fs.getPath(input).newInputStream(opts);
-      actualBytes = IOUtils.toByteArray(in); 
-      in.close();
+      actual_in = fs.getPath(input).newInputStream(opts);
+      
+      InputStream expected_in = null;
+      try {
+        expected_in = Paths.get((String) expected).newInputStream();
+        assertTrue(IOUtils.contentEquals(actual_in, expected_in));
+        expected_in.close();
+      }
+      finally {
+        IOUtils.closeQuietly(expected_in);
+      }
+
+      actual_in.close();
     }
     finally {
-      IOUtils.closeQuietly(in);
+      IOUtils.closeQuietly(actual_in);
     }
-
-    in = null;
-    try {
-      in = Paths.get((String) expected).newInputStream();
-      expectedBytes = IOUtils.toByteArray(in); 
-      in.close();
-    }
-    finally {
-      IOUtils.closeQuietly(in);
-    }
- 
-    assertArrayEquals(expectedBytes, actualBytes);
   }
 }
