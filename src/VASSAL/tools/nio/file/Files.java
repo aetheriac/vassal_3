@@ -5,6 +5,10 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import VASSAL.tools.io.IOUtils;
+
+import VASSAL.tools.nio.file.attribute.Attributes;
+import VASSAL.tools.nio.file.attribute.BasicFileAttributes;
 import VASSAL.tools.nio.file.attribute.FileAttribute;
 
 public final class Files {
@@ -46,6 +50,69 @@ public final class Files {
     int maxDepth,
     FileVisitor<? super Path> visitor)
   {
-    // FIMXE: should implement
+    // We don't support any options.
+    if (!options.isEmpty()) throw new UnsupportedOperationException();
+
+    if (maxDepth < 0) throw new IllegalArgumentException();
+
+    walk(start, 0, maxDepth, visitor);
+  }
+
+  private static FileVisitResult walk(Path path, int depth, int maxDepth,
+                                      FileVisitor<? super Path> visitor) {
+    if (depth > maxDepth) return FileVisitResult.CONTINUE;
+
+    IOException ex = null;
+    BasicFileAttributes attrs = null;
+
+    try {
+      attrs = Attributes.readBasicFileAttributes(path);
+    }
+    catch (IOException e) {
+      ex = e;
+    }
+
+    if (attrs == null) return visitor.visitFileFailed(path, ex);
+  
+    if (attrs.isDirectory()) {
+      try {
+        DirectoryStream<Path> ds = null;
+        FileVisitResult res;
+
+        try {
+          ds = path.newDirectoryStream();
+        }
+        catch (IOException e) {
+          visitor.preVisitDirectoryFailed(path, e);
+        }
+
+        try {
+          res = visitor.preVisitDirectory(path);
+          if (res != FileVisitResult.CONTINUE) return res;
+      
+          for (Path child : ds) {
+            switch (walk(child, depth+1, maxDepth, visitor)) {
+            case TERMINATE:     return res;
+            case SKIP_SIBLINGS: break;
+            default:
+            }
+          }
+
+          ds.close();
+        }
+        finally {
+          IOUtils.closeQuietly(ds);
+        }
+
+      }
+      catch (IOException e) {
+        ex = e;
+      }  
+
+      return visitor.postVisitDirectory(path, ex); 
+    }
+    else {
+      return visitor.visitFile(path, attrs);
+    }
   }
 }

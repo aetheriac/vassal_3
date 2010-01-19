@@ -27,7 +27,11 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import VASSAL.tools.nio.file.Files;
+import VASSAL.tools.nio.file.FileVisitResult;
 import VASSAL.tools.nio.file.Path;
+import VASSAL.tools.nio.file.SimpleFileVisitor;
+import VASSAL.tools.nio.file.attribute.BasicFileAttributes;
 
 /**
  * Some general purpose file manipulation utilities.
@@ -37,6 +41,60 @@ import VASSAL.tools.nio.file.Path;
  */ 
 public class FileUtils {
   private FileUtils() {}
+
+  /**
+   * Delete the subtree rooted at a given path.
+   *
+   * @param path the root to delete
+   *
+   * @throws IOException if any file or directory in the subtree of
+   *    <code>path</code> cannot be deleted
+   */
+  public static void delete(Path path) throws IOException {
+    final RecursiveDeleteVisitor visitor = new RecursiveDeleteVisitor();
+    Files.walkFileTree(path, visitor);
+    final IOException e = visitor.getException();
+    if (e != null) throw (IOException) (new IOException().initCause(e));
+  }
+
+  private static class RecursiveDeleteVisitor extends SimpleFileVisitor<Path> {
+    private IOException fail = null;
+
+    public IOException getException() {
+      return fail;
+    }
+
+    @Override
+    public FileVisitResult visitFile(Path file,  BasicFileAttributes attrs) {
+      try {
+        file.delete();
+      }
+      catch (IOException e) {
+        fail = e;
+      }
+
+      // Chug on, regardless of failure to delete.
+      return FileVisitResult.CONTINUE;
+    }
+
+    @Override
+    public FileVisitResult postVisitDirectory(Path dir, IOException e) {
+      if (e == null) {
+        try {
+          dir.delete();
+        }
+        catch (IOException ex) {
+          fail = ex; 
+        }
+      }
+      else {
+        fail = e; 
+      }
+
+      // Chug on, regardless of failure to delete.
+      return FileVisitResult.CONTINUE;
+    }
+  }
 
 // FIXME: deprecate
   /**
