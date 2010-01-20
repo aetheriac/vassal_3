@@ -84,34 +84,6 @@ public class ZipFilePathOldTest {
                  pathTestingDirectory.getFileStore());
   }
 
-  // TODO add exception and replace testing
-  @Test
-  public void testMoveTo() {
-    fail("read only so far");
-/*
-    File sourceFile = new File(testingDirectory.getAbsolutePath() + separator + "fileCopySource");
-    Path pathSourceFile = Paths.get(sourceFile.getAbsolutePath());
-
-    try {
-      testFileInZipPath.copyTo(pathSourceFile);
-    }
-    catch (IOException e1) {
-      fail(e1.getMessage());
-    }
-
-    try {
-      pathSourceFile.moveTo(pathTestFileOther);
-      assertTrue("Source file not moved correctly", testFileOther.exists() && !sourceFile.exists());
-    }
-    catch (IOException e) {
-      fail(e.getMessage());
-    }
-
-    sourceFile.delete();
-    testFileOther.delete();
-*/
-  }
-
   // FIXME can check success only with lack of exception. 
   @Test
   public void testNewDirectoryStream() throws IOException {
