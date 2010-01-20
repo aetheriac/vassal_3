@@ -242,4 +242,24 @@ public class FileUtils {
 
     return result;
   }
+
+  /**
+   * Reads the contents of a file into a byte array.
+   *
+   * @param path the file to read
+   * @return the file contents
+   * @throws IOException if one happens during reading
+   */
+  public static byte[] readFileToByteArray(Path path) {
+    InputStream in = null;
+    try {
+      in = path.newInputStream();
+      final byte[] buf = IOUtils.toByteArray(in);
+      in.close();
+      return buf;
+    }
+    finally {
+      IOUtils.closeQuietly(in);
+    }
+  }
 }
