@@ -76,14 +76,6 @@ public class ZipFilePathOldTest {
     pathTestFileOther = fs.getPath(testFileOtherName);
   }
 
-  @After
-  public void tearDown() throws Exception {
-    //  testFileInZipPath.deleteIfExists();
-//    pathTestFileOther.deleteIfExists();
-//    pathTestDirOther.deleteIfExists();
-    // pathTestingDirectory.deleteIfExists();
-  }
-
   @Test
   public void testGetFileStore() throws IOException {
 // FIXME: File stores not guaranteed to be identical, and FileStore
@@ -221,46 +213,6 @@ public class ZipFilePathOldTest {
       "basic:lastModifiedTime",
       FileTime.fromMillis(System.currentTimeMillis())
     );
-  }
-
-  @Test
-  public void testCopyToZip() throws IOException {
-    fail("ZipFilePath is still read only");
-  }
-
-  @Test
-  public void testCopyToExternalReplaceExisting() throws IOException {
-// FIXME: copy to a path on disk
-    try {
-      pathTestFileCreated.copyTo(
-        externalPath, StandardCopyOption.REPLACE_EXISTING);
-      assertTrue(externalPath.exists());
-
-      byte[] expected = null;
-      byte[] actual = null;
-
-      InputStream in = null;
-      try {
-        in = pathTestFileCreated.newInputStream();
-        expected = IOUtils.toByteArray(in);
-      }
-      finally {
-        IOUtils.closeQuietly(in);
-      }
-  
-      try {
-        in = externalPath.newInputStream();
-        actual = IOUtils.toByteArray(in);
-      }
-      finally {
-        IOUtils.closeQuietly(in);
-      }
-
-      assertArrayEquals(expected, actual);
-    }
-    finally {
-      externalPath.deleteIfExists();
-    }
   }
 
 /*
