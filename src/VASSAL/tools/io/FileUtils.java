@@ -250,7 +250,7 @@ public class FileUtils {
    * @return the file contents
    * @throws IOException if one happens during reading
    */
-  public static byte[] readFileToByteArray(Path path) {
+  public static byte[] readFileToByteArray(Path path) throws IOException {
     InputStream in = null;
     try {
       in = path.newInputStream();
