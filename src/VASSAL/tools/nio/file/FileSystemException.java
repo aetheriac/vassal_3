@@ -31,4 +31,15 @@ public class FileSystemException extends IOException {
   public String getReason() {
     return reason;
   }
+
+  @Override
+  public String getMessage() {
+    if (file == null && other == null) return getReason();
+
+    final StringBuilder sb = new StringBuilder();
+    if (file != null)        sb.append(file);
+    if (other != null)       sb.append(" -> ").append(other);
+    if (getReason() != null) sb.append(": ").append(getReason());
+    return sb.toString();
+  }
 }
