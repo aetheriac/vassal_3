@@ -10,7 +10,7 @@ public class FileSystemException extends IOException {
   private final String reason;
 
   public FileSystemException(String file) {
-    this(file, "", "");
+    this(file, null, null);
   }
   
   public FileSystemException(String file, String other, String reason) {
