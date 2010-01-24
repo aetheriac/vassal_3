@@ -9,8 +9,8 @@ import org.junit.Test;
 public abstract class PathCreateDirectoryTest extends AbstractPathMethodTest {
   protected final String input;
 
-  public PathCreateDirectoryTest(FileSystem fs, String input, Object expected) {
-    super(fs, expected);
+  public PathCreateDirectoryTest(FSHandler fac, String input, Object expected) {
+    super(fac, expected);
 
     this.input = input;
   }

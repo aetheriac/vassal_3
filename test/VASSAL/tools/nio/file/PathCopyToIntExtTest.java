@@ -5,9 +5,9 @@ import java.io.IOException;
 import org.junit.Test;
 
 public abstract class PathCopyToIntExtTest extends PathCopyToTest {
-  public PathCopyToIntExtTest(FileSystem fs, String src, String dst,
+  public PathCopyToIntExtTest(FSHandler fac, String src, String dst,
                               CopyOption[] opts, Object expected) {
-    super(fs, src, dst, opts, expected);
+    super(fac, src, dst, opts, expected);
   }
 
   protected Path getSrc() throws IOException {

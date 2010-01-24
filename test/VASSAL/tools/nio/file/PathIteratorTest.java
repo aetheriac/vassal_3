@@ -7,8 +7,8 @@ import org.junit.Test;
 public abstract class PathIteratorTest extends AbstractPathMethodTest {
   protected final String input;
 
-  public PathIteratorTest(FileSystem fs, String input, Object expected) {
-    super(fs, expected);
+  public PathIteratorTest(FSHandler fac, String input, Object expected) {
+    super(fac, expected);
 
     this.input = input;
   }

@@ -12,9 +12,9 @@ public abstract class PathCheckAccessTest extends AbstractPathMethodTest {
   protected final String input;
   protected final int mode;
 
-  public PathCheckAccessTest(FileSystem fs, String input,
+  public PathCheckAccessTest(FSHandler fac, String input,
                              int mode, Object expected) {
-    super(fs, expected);
+    super(fac, expected);
 
     this.input = input;
     this.mode = mode;

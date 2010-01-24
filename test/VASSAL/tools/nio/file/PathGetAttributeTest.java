@@ -11,9 +11,9 @@ public abstract class PathGetAttributeTest extends AbstractPathMethodTest {
   protected final String input;
   protected final String attrib;
 
-  public PathGetAttributeTest(FileSystem fs, String input,
+  public PathGetAttributeTest(FSHandler fac, String input,
                               String attrib, Object expected) {
-    super(fs, expected);
+    super(fac, expected);
 
     this.input = input;
     this.attrib = attrib;

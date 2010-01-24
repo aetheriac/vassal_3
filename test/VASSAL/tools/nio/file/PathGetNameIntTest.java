@@ -8,9 +8,9 @@ public abstract class PathGetNameIntTest extends AbstractPathMethodTest {
   protected final String input;
   protected final int index;
 
-  public PathGetNameIntTest(
-    FileSystem fs, String input, int index, Object expected) {
-    super(fs, expected);
+  public PathGetNameIntTest(FSHandler fac, String input,
+                            int index, Object expected) {
+    super(fac, expected);
 
     this.input = input;
     this.index = index;

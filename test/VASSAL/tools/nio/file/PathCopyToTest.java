@@ -14,9 +14,9 @@ public abstract class PathCopyToTest extends AbstractPathMethodTest {
   protected final String dst;
   protected final CopyOption[] opts;
 
-  public PathCopyToTest(FileSystem fs, String src, String dst,
+  public PathCopyToTest(FSHandler fac, String src, String dst,
                         CopyOption[] opts, Object expected) {
-    super(fs, expected);
+    super(fac, expected);
 
     this.src = src;
     this.dst = dst;

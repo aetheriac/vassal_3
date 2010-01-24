@@ -7,8 +7,8 @@ import org.junit.Test;
 public abstract class PathGetNameTest extends AbstractPathMethodTest {
   protected final String input;
 
-  public PathGetNameTest(FileSystem fs, String input, Object expected) {
-    super(fs, expected);
+  public PathGetNameTest(FSHandler fac, String input, Object expected) {
+    super(fac, expected);
 
     this.input = input;
   }

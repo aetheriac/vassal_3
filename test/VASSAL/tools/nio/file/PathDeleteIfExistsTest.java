@@ -9,8 +9,8 @@ import org.junit.Test;
 public abstract class PathDeleteIfExistsTest extends AbstractPathMethodTest {
   protected final String input;
 
-  public PathDeleteIfExistsTest(FileSystem fs, String input, Object expected) {
-    super(fs, expected);
+  public PathDeleteIfExistsTest(FSHandler fac, String input, Object expected) {
+    super(fac, expected);
 
     this.input = input;
   }

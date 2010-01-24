@@ -10,9 +10,9 @@ public abstract class PathToRealPathTest extends AbstractPathMethodTest {
   protected final String input;
   protected final boolean resLinks;
 
-  public PathToRealPathTest(FileSystem fs, String input,
+  public PathToRealPathTest(FSHandler fac, String input,
                             boolean resLinks, Object expected) {
-    super(fs, expected);
+    super(fac, expected);
 
     this.input = input;
     this.resLinks = resLinks;

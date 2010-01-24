@@ -13,9 +13,9 @@ public abstract class PathNewInputStreamTest extends AbstractPathMethodTest {
   protected final String input;
   protected final OpenOption[] opts;
 
-  public PathNewInputStreamTest(FileSystem fs, String input,
+  public PathNewInputStreamTest(FSHandler fac, String input,
                                 OpenOption[] opts, Object expected) {
-    super(fs, expected);
+    super(fac, expected);
 
     this.input = input;
     this.opts = opts;

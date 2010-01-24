@@ -15,6 +15,7 @@ public class RealUnixPathOldTest extends RealPathTest {
     assumeTrue(!Info.isWindows());
   }
 
+/*
   @Test
   public void testFindRootSepUnixRoot() {
     assertEquals(0, pathTestingDirectory.findRootSep("/TestServer/testDir"));
@@ -23,6 +24,7 @@ public class RealUnixPathOldTest extends RealPathTest {
   public void testFindRootSepNonRoot() {
     assertEquals(-1, pathTestingDirectory.findRootSep("somethingelse"));
   }
+*/
 
   @Test
   public void testRealPathStringRealFileSystem() {

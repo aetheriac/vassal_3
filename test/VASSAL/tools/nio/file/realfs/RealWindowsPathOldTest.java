@@ -15,7 +15,8 @@ public class RealWindowsPathOldTest extends RealPathTest {
     super.setUp();
     assumeTrue(Info.isWindows());
   }
-  
+ 
+/* 
   @Test
   public void testFindRootSepWindowsDriveRoot() {
     assertEquals(2, pathTestingDirectory.findRootSep("D:\\TestDir\\TestDir2"));
@@ -30,6 +31,7 @@ public class RealWindowsPathOldTest extends RealPathTest {
   public void testFindRootSepNonRoot() {
     assertEquals(-1, pathTestingDirectory.findRootSep("somethingelse"));
   }
+*/
 
   @Test
   public void testRealPathStringRealFileSystem() {

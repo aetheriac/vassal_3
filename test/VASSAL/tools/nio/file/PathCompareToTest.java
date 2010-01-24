@@ -8,9 +8,9 @@ public abstract class PathCompareToTest extends AbstractPathMethodTest {
   protected final String left;
   protected final String right;
 
-  public PathCompareToTest(FileSystem fs, String left,
-                            String right, Object expected) {
-    super(fs, expected);
+  public PathCompareToTest(FSHandler fac, String left,
+                           String right, Object expected) {
+    super(fac, expected);
 
     this.left = left;
     this.right = right;

@@ -16,6 +16,7 @@ import static org.junit.Assume.assumeTrue;
 import VASSAL.Info;
 
 import VASSAL.tools.nio.file.FileSystem;
+import VASSAL.tools.nio.file.FSHandler;
 import VASSAL.tools.nio.file.InvalidPathException;
 import VASSAL.tools.nio.file.PathCompareToTest;
 import VASSAL.tools.nio.file.PathConstructorTest;
@@ -61,6 +62,12 @@ import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
 public class RealWindowsPathOpsTest {
   protected static FileSystem fs;
 
+  protected static final FSHandler fac = new FSHandler() {
+    public FileSystem setup() { return fs; }
+      
+    public void teardown(FileSystem fs) {}
+  };
+
   @BeforeClass
   public static void setupFS() throws IOException {
     assumeTrue(Info.isWindows());
@@ -72,7 +79,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class CompareToTest extends PathCompareToTest{
     public CompareToTest(String left, String right, Object expected) {
-      super(RealWindowsPathOpsTest.fs, left, right, expected);
+      super(RealWindowsPathOpsTest.fac, left, right, expected);
     }
 
     @Parameters
@@ -90,7 +97,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class ConstructorTest extends PathConstructorTest{
     public ConstructorTest(String input, Object expected) {
-      super(RealWindowsPathOpsTest.fs, input, expected);
+      super(RealWindowsPathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -119,7 +126,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class EndsWithTest extends PathEndsWithTest {
     public EndsWithTest(String left, String right, Object expected) {
-      super(RealWindowsPathOpsTest.fs, left, right, expected);
+      super(RealWindowsPathOpsTest.fac, left, right, expected);
     }
 
     @Parameters
@@ -164,7 +171,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class EqualsTest extends PathEqualsTest {
     public EqualsTest(String left, Object right, Object expected) {
-      super(RealWindowsPathOpsTest.fs, left, right, expected);
+      super(RealWindowsPathOpsTest.fac, left, right, expected);
     }
 
     @Parameters
@@ -183,7 +190,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class GetNameTest extends PathGetNameTest{
     public GetNameTest(String input, Object expected) {
-      super(RealWindowsPathOpsTest.fs, input, expected);
+      super(RealWindowsPathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -206,7 +213,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class GetNameCountTest extends PathGetNameCountTest{
     public GetNameCountTest(String input, Object expected) {
-      super(RealWindowsPathOpsTest.fs, input, expected);
+      super(RealWindowsPathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -227,7 +234,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class GetNameIntTest extends PathGetNameIntTest{
     public GetNameIntTest(String input, int index, Object expected) {
-      super(RealWindowsPathOpsTest.fs, input, index, expected);
+      super(RealWindowsPathOpsTest.fac, input, index, expected);
     }
 
     @Parameters
@@ -257,7 +264,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class GetParentTest extends PathGetParentTest{
     public GetParentTest(String input, Object expected) {
-      super(RealWindowsPathOpsTest.fs, input, expected);
+      super(RealWindowsPathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -280,7 +287,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class GetRootTest extends PathGetRootTest {
     public GetRootTest(String input, Object expected) {
-      super(RealWindowsPathOpsTest.fs, input, expected);
+      super(RealWindowsPathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -303,7 +310,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class HashCodeTest extends PathHashCodeTest {
     public HashCodeTest(String left, String right, Object expected) {
-      super(RealWindowsPathOpsTest.fs, left, right, expected);
+      super(RealWindowsPathOpsTest.fac, left, right, expected);
     }
 
     @Parameters
@@ -319,7 +326,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class IsAbsoluteTest extends PathIsAbsoluteTest {
     public IsAbsoluteTest(String input, Object expected) {
-      super(RealWindowsPathOpsTest.fs, input, expected);
+      super(RealWindowsPathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -338,7 +345,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class IteratorTest extends PathIteratorTest {
     public IteratorTest(String input, Object expected) {
-      super(RealWindowsPathOpsTest.fs, input, expected);
+      super(RealWindowsPathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -358,7 +365,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class NormalizeTest extends PathNormalizeTest{
     public NormalizeTest(String input, Object expected) {
-      super(RealWindowsPathOpsTest.fs, input, expected);
+      super(RealWindowsPathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -415,7 +422,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class RelativizeTest extends PathRelativizeTest {
     public RelativizeTest(String left, String right, Object expected) {
-      super(RealWindowsPathOpsTest.fs, left, right, expected);
+      super(RealWindowsPathOpsTest.fac, left, right, expected);
     }
 
     @Parameters
@@ -434,7 +441,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class ResolveTest extends PathResolveTest {
     public ResolveTest(String left, String right, Object expected) {
-      super(RealWindowsPathOpsTest.fs, left, right, expected);
+      super(RealWindowsPathOpsTest.fac, left, right, expected);
     }
 
     @Parameters
@@ -469,7 +476,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class StartsWithTest extends PathStartsWithTest{
     public StartsWithTest(String left, String right, Object expected) {
-      super(RealWindowsPathOpsTest.fs, left, right, expected);
+      super(RealWindowsPathOpsTest.fac, left, right, expected);
     }
 
     @Parameters
@@ -513,7 +520,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class SubpathTest extends PathSubpathTest{
     public SubpathTest(String input, int begin, int end, Object expected) {
-      super(RealWindowsPathOpsTest.fs, input, begin, end, expected);
+      super(RealWindowsPathOpsTest.fac, input, begin, end, expected);
     }
 
     @Parameters
@@ -552,7 +559,7 @@ public class RealWindowsPathOpsTest {
   @RunWith(Parameterized.class)
   public static class ToStringTest extends PathToStringTest {
     public ToStringTest(String input, Object expected) {
-      super(RealWindowsPathOpsTest.fs, input, expected);
+      super(RealWindowsPathOpsTest.fac, input, expected);
     }
 
     @Parameters

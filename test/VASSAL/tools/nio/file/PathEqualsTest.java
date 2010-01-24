@@ -8,9 +8,9 @@ public abstract class PathEqualsTest extends AbstractPathMethodTest {
   protected final String left;
   protected final Object right;
 
-  public PathEqualsTest(FileSystem fs, String left,
+  public PathEqualsTest(FSHandler fac, String left,
                         Object right, Object expected) {
-    super(fs, expected);
+    super(fac, expected);
 
     this.left = left;
     this.right = right;

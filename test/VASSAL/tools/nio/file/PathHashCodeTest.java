@@ -8,9 +8,9 @@ public abstract class PathHashCodeTest extends AbstractPathMethodTest {
   protected final String left;
   protected final String right;
 
-  public PathHashCodeTest(FileSystem fs, String left,
+  public PathHashCodeTest(FSHandler fac, String left,
                           String right, Object expected) {
-    super(fs, expected);
+    super(fac, expected);
 
     this.left = left;
     this.right = right;

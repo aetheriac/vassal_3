@@ -2,15 +2,18 @@ package VASSAL.tools.nio.file;
 
 import static org.junit.Assert.fail;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public abstract class AbstractPathMethodTest {
-  protected final FileSystem fs;
+  protected FileSystem fs;
   protected final Object expected;
   protected final Class<? extends Throwable> tclass;
+  protected final FSHandler fac;
 
-  public AbstractPathMethodTest(FileSystem fs, Object expected) {
-    this.fs =  fs;
+  public AbstractPathMethodTest(FSHandler fac, Object expected) {
+    this.fac =  fac;
 
     if (expected instanceof Throws) {
       this.expected = null;
@@ -20,6 +23,16 @@ public abstract class AbstractPathMethodTest {
       this.expected = expected;
       this.tclass = null;
     }
+  }
+
+  @Before
+  public void setupFS() throws Throwable {
+    fs = fac.setup();
+  }
+
+  @After
+  public void teardownFS() throws Throwable {
+    fac.teardown(fs);
   }
  
   protected abstract void doTest() throws Throwable;

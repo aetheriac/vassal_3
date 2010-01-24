@@ -9,9 +9,9 @@ public abstract class PathSubpathTest extends AbstractPathMethodTest {
   protected final int begin;
   protected final int end;
 
-  public PathSubpathTest(FileSystem fs, String input,
+  public PathSubpathTest(FSHandler fac, String input,
                          int begin, int end, Object expected) {
-    super(fs, expected);
+    super(fac, expected);
 
     this.input = input;
     this.begin = begin;

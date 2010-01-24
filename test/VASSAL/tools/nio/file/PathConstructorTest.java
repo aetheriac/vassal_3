@@ -7,8 +7,8 @@ import org.junit.Test;
 public abstract class PathConstructorTest extends AbstractPathMethodTest {
   protected final String input;
 
-  public PathConstructorTest(FileSystem fs, String input, Object expected) {
-    super(fs, expected);
+  public PathConstructorTest(FSHandler fac, String input, Object expected) {
+    super(fac, expected);
 
     this.input = input;
   }

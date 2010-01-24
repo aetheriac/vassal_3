@@ -7,8 +7,8 @@ import org.junit.Test;
 public abstract class PathNormalizeTest extends AbstractPathMethodTest {
   protected final String input;
 
-  public PathNormalizeTest(FileSystem fs, String input, Object expected) {
-    super(fs, expected);
+  public PathNormalizeTest(FSHandler fac, String input, Object expected) {
+    super(fac, expected);
 
     this.input = input;
   }

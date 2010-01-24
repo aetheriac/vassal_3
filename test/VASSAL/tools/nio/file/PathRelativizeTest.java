@@ -8,9 +8,9 @@ public abstract class PathRelativizeTest extends AbstractPathMethodTest {
   protected final String left;
   protected final String right;
 
-  public PathRelativizeTest(FileSystem fs, String left,
+  public PathRelativizeTest(FSHandler fac, String left,
                             String right, Object expected) {
-    super(fs, expected);
+    super(fac, expected);
 
     this.left = left;
     this.right = right;
