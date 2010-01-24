@@ -57,6 +57,18 @@ public class FileUtils {
     if (e != null) throw (IOException) (new IOException().initCause(e));
   }
 
+  /**
+   * Delete the subtree rooted at a given path, if it exists.
+   *
+   * @param path the root to delete
+   *
+   * @throws IOException if any file or directory in the subtree of
+   *    <code>path</code> cannot be deleted
+   */
+  public static void deleteIfExists(Path path) throws IOException {
+    if (path.exists()) delete(path);
+  }
+
   private static class RecursiveDeleteVisitor extends SimpleFileVisitor<Path> {
     private IOException fail = null;
 
