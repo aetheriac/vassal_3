@@ -13,7 +13,11 @@ import org.junit.runners.Parameterized.Parameters;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
+import VASSAL.tools.io.FileUtils;
+
+import VASSAL.tools.nio.file.FileSystem;
 import VASSAL.tools.nio.file.FileSystems;
+import VASSAL.tools.nio.file.FSHandler;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.Paths;
 import VASSAL.tools.nio.file.PathCreateDirectoryTest;
@@ -25,6 +29,8 @@ import VASSAL.tools.nio.file.StandardCopyOption;
 
 import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
 
+import static VASSAL.tools.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 @RunWith(Suite.class)
 @SuiteClasses({
   ZipFilePathWriteTest.CreateDirectoryTest.class,
@@ -34,34 +40,46 @@ import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
 })
 public class ZipFilePathWriteTest {
 
-  protected static ZipFileSystem fs;
-
-  protected static final String testDir =
+  protected static final String thisDir =
     "test/VASSAL/tools/nio/file/zipfs/".replace("/", File.separator);
 
+  protected static final String td =
+    thisDir + ("test/".replace("/", File.separator));
+
   protected static final String zfName = "write.zip";
-  protected static final String zfPathName = testDir + zfName;
+  protected static final String zfPathName = td + zfName;
 
-  protected static Path zfPath;
+  protected static final FSHandler fac = new FSHandler() {
+    public FileSystem setup() throws IOException {
+      // clear and create our test directory
+      final Path tdPath = Paths.get(td);
+      FileUtils.deleteIfExists(tdPath);
+      tdPath.createDirectory();
+      tdPath.resolve("yea").createFile();
 
-  @BeforeClass
-  public static void setupFS() throws IOException {
-    zfPath = Paths.get(testDir + "write.zip").toAbsolutePath();
+      // work in a copy of write.zip
+      final Path zfWrite = Paths.get(zfPathName).toAbsolutePath();
+      final Path zfRead = Paths.get(thisDir + "write.zip").toAbsolutePath();
+      zfRead.copyTo(zfWrite, REPLACE_EXISTING);
 
-    // work in a copy of test.zip
-    final Path zfRead = Paths.get(testDir + "test.zip");
-    zfRead.copyTo(Paths.get(testDir + "write.zip"),
-                  StandardCopyOption.REPLACE_EXISTING);
+      final URI zfURI = URI.create("zip://" + zfWrite.toString());
+      return FileSystems.newFileSystem(zfURI, null);
+    }
+      
+    public void teardown(FileSystem fs) throws IOException {
+      fs.close();
 
-    final URI zfURI = URI.create("zip://" + zfPath.toString());
-    fs = (ZipFileSystem) FileSystems.newFileSystem(zfURI, null);
-  }
-
+      // tear down our test directory
+      final Path tdPath = Paths.get(td);
+      FileUtils.deleteIfExists(tdPath);
+    }
+  };
+ 
   // FIXME: need to test with file attributes
   @RunWith(Parameterized.class)
   public static class CreateDirectoryTest extends PathCreateDirectoryTest {
     public CreateDirectoryTest(String input, Object expected) {
-      super(ZipFilePathWriteTest.fs, input, expected);
+      super(ZipFilePathWriteTest.fac, input, expected);
     }
 
     @Parameters
@@ -77,7 +95,7 @@ public class ZipFilePathWriteTest {
   @RunWith(Parameterized.class)
   public static class CreateFileTest extends PathCreateFileTest {
     public CreateFileTest(String input, Object expected) {
-      super(ZipFilePathWriteTest.fs, input, expected);
+      super(ZipFilePathWriteTest.fac, input, expected);
     }
 
     @Parameters
@@ -92,7 +110,7 @@ public class ZipFilePathWriteTest {
   @RunWith(Parameterized.class)
   public static class DeleteTest extends PathDeleteTest {
     public DeleteTest(String input, Object expected) {
-      super(ZipFilePathWriteTest.fs, input, expected);
+      super(ZipFilePathWriteTest.fac, input, expected);
     }
 
     @Parameters
@@ -107,7 +125,7 @@ public class ZipFilePathWriteTest {
   @RunWith(Parameterized.class)
   public static class DeleteIfExistsTest extends PathDeleteIfExistsTest {
     public DeleteIfExistsTest(String input, Object expected) {
-      super(ZipFilePathWriteTest.fs, input, expected);
+      super(ZipFilePathWriteTest.fac, input, expected);
     }
 
     @Parameters

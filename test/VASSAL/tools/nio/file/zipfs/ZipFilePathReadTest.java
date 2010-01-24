@@ -19,7 +19,9 @@ import static org.junit.Assert.*;
 
 import VASSAL.tools.nio.file.AccessDeniedException;
 import VASSAL.tools.nio.file.AccessMode;
+import VASSAL.tools.nio.file.FileSystem;
 import VASSAL.tools.nio.file.FileSystems;
+import VASSAL.tools.nio.file.FSHandler;
 import VASSAL.tools.nio.file.NoSuchFileException;
 import VASSAL.tools.nio.file.OpenOption;
 import VASSAL.tools.nio.file.Path;
@@ -57,6 +59,12 @@ public class ZipFilePathReadTest {
 
   protected static ZipFileSystem fs;
 
+  protected static final FSHandler fac = new FSHandler() {
+    public FileSystem setup() { return fs; }
+      
+    public void teardown(FileSystem fs) {}
+  };
+
   protected static final String testDir =
     "test/VASSAL/tools/nio/file/zipfs/".replace("/", File.separator);
 
@@ -77,7 +85,7 @@ public class ZipFilePathReadTest {
   @RunWith(Parameterized.class)
   public static class CheckAccessTest extends PathCheckAccessTest {
     public CheckAccessTest(String input, int mode, Object expected) {
-      super(ZipFilePathReadTest.fs, input, mode, expected);
+      super(ZipFilePathReadTest.fac, input, mode, expected);
     }
 
 // FIXME: once we are read-write, should check a file which can be written
@@ -110,7 +118,7 @@ public class ZipFilePathReadTest {
   @RunWith(Parameterized.class)
   public static class ExistsTest extends PathExistsTest {
     public ExistsTest(String input, Object expected) {
-      super(ZipFilePathReadTest.fs, input, expected);
+      super(ZipFilePathReadTest.fac, input, expected);
     }
 
     @Parameters
@@ -128,7 +136,7 @@ public class ZipFilePathReadTest {
   @RunWith(Parameterized.class)
   public static class NotExistsTest extends PathNotExistsTest {
     public NotExistsTest(String input, Object expected) {
-      super(ZipFilePathReadTest.fs, input, expected);
+      super(ZipFilePathReadTest.fac, input, expected);
     }
 
     @Parameters
@@ -146,7 +154,7 @@ public class ZipFilePathReadTest {
   @RunWith(Parameterized.class)
   public static class GetAttributeTest extends PathGetAttributeTest {
     public GetAttributeTest(String path, String attrib, Object expected) {
-      super(ZipFilePathReadTest.fs, path, attrib, expected);
+      super(ZipFilePathReadTest.fac, path, attrib, expected);
     }
 
     @Parameters
@@ -208,7 +216,7 @@ public class ZipFilePathReadTest {
   @RunWith(Parameterized.class)
   public static class IsSameFileTest extends PathIsSameFileTest {
     public IsSameFileTest(String left, String right, Object expected) {
-      super(ZipFilePathReadTest.fs, left, right, expected);
+      super(ZipFilePathReadTest.fac, left, right, expected);
     }
 
 // FIXME: test case where providers differ
@@ -237,7 +245,7 @@ public class ZipFilePathReadTest {
   public static class NewInputStreamTest extends PathNewInputStreamTest {
     public NewInputStreamTest(String input, OpenOption[] opts,
                                                              Object expected) {
-      super(ZipFilePathReadTest.fs, input, opts, expected);
+      super(ZipFilePathReadTest.fac, input, opts, expected);
     }
 
     @Parameters
@@ -256,7 +264,7 @@ public class ZipFilePathReadTest {
   @RunWith(Parameterized.class)
   public static class ToAbsolutePathTest extends PathToAbsolutePathTest {
     public ToAbsolutePathTest(String input, Object expected) {
-      super(ZipFilePathReadTest.fs, input, expected);
+      super(ZipFilePathReadTest.fac, input, expected);
     }
 
     @Parameters
@@ -272,7 +280,7 @@ public class ZipFilePathReadTest {
   @RunWith(Parameterized.class)
   public static class ToRealPathTest extends PathToRealPathTest {
     public ToRealPathTest(String input, boolean resLinks, Object expected) {
-      super(ZipFilePathReadTest.fs, input, resLinks, expected);
+      super(ZipFilePathReadTest.fac, input, resLinks, expected);
     }
 
     @Parameters

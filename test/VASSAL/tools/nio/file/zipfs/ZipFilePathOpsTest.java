@@ -15,6 +15,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
 import VASSAL.tools.nio.file.FileSystem;
 import VASSAL.tools.nio.file.FileSystems;
+import VASSAL.tools.nio.file.FSHandler;
 import VASSAL.tools.nio.file.InvalidPathException;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.Paths;
@@ -63,7 +64,13 @@ import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
 public class ZipFilePathOpsTest {
   protected static FileSystem fs;
 
-  protected static final String zfName = "testZipFile.zip";
+  protected static final FSHandler fac = new FSHandler() {
+    public FileSystem setup() { return fs; }
+      
+    public void teardown(FileSystem fs) {}
+  };
+
+  protected static final String zfName = "test.zip";
   protected static final String zfPathName =
     "test/VASSAL/tools/nio/file/zipfs/".replace("/", File.separator) + zfName;
 
@@ -80,7 +87,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class CompareToTest extends PathCompareToTest{
     public CompareToTest(String left, String right, Object expected) {
-      super(ZipFilePathOpsTest.fs, left, right, expected);
+      super(ZipFilePathOpsTest.fac, left, right, expected);
     }
 
     @Parameters
@@ -98,7 +105,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class ConstructorTest extends PathConstructorTest{
     public ConstructorTest(String input, Object expected) {
-      super(ZipFilePathOpsTest.fs, input, expected);
+      super(ZipFilePathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -122,7 +129,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class EndsWithTest extends PathEndsWithTest {
     public EndsWithTest(String left, String right, Object expected) {
-      super(ZipFilePathOpsTest.fs, left, right, expected);
+      super(ZipFilePathOpsTest.fac, left, right, expected);
     }
 
     @Parameters
@@ -150,7 +157,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class EqualsTest extends PathEqualsTest {
     public EqualsTest(String left, Object right, Object expected) {
-      super(ZipFilePathOpsTest.fs, left, right, expected);
+      super(ZipFilePathOpsTest.fac, left, right, expected);
     }
 
     @Parameters
@@ -169,7 +176,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class GetNameTest extends PathGetNameTest{
     public GetNameTest(String input, Object expected) {
-      super(ZipFilePathOpsTest.fs, input, expected);
+      super(ZipFilePathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -187,7 +194,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class GetNameCountTest extends PathGetNameCountTest{
     public GetNameCountTest(String input, Object expected) {
-      super(ZipFilePathOpsTest.fs, input, expected);
+      super(ZipFilePathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -208,7 +215,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class GetNameIntTest extends PathGetNameIntTest{
     public GetNameIntTest(String input, int index, Object expected) {
-      super(ZipFilePathOpsTest.fs, input, index, expected);
+      super(ZipFilePathOpsTest.fac, input, index, expected);
     }
 
     @Parameters
@@ -233,7 +240,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class GetParentTest extends PathGetParentTest{
     public GetParentTest(String input, Object expected) {
-      super(ZipFilePathOpsTest.fs, input, expected);
+      super(ZipFilePathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -252,7 +259,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class GetRootTest extends PathGetRootTest {
     public GetRootTest(String input, Object expected) {
-      super(ZipFilePathOpsTest.fs, input, expected);
+      super(ZipFilePathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -270,7 +277,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class HashCodeTest extends PathHashCodeTest {
     public HashCodeTest(String left, String right, Object expected) {
-      super(ZipFilePathOpsTest.fs, left, right, expected);
+      super(ZipFilePathOpsTest.fac, left, right, expected);
     }
 
     @Parameters
@@ -285,7 +292,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class IsAbsoluteTest extends PathIsAbsoluteTest {
     public IsAbsoluteTest(String input, Object expected) {
-      super(ZipFilePathOpsTest.fs, input, expected);
+      super(ZipFilePathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -302,7 +309,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class IteratorTest extends PathIteratorTest {
     public IteratorTest(String input, Object expected) {
-      super(ZipFilePathOpsTest.fs, input, expected);
+      super(ZipFilePathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -320,7 +327,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class NormalizeTest extends PathNormalizeTest{
     public NormalizeTest(String input, Object expected) {
-      super(ZipFilePathOpsTest.fs, input, expected);
+      super(ZipFilePathOpsTest.fac, input, expected);
     }
 
     @Parameters
@@ -348,7 +355,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class RelativizeTest extends PathRelativizeTest {
     public RelativizeTest(String left, String right, Object expected) {
-      super(ZipFilePathOpsTest.fs, left, right, expected);
+      super(ZipFilePathOpsTest.fac, left, right, expected);
     }
 
     @Parameters
@@ -375,7 +382,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class ResolveTest extends PathResolveTest {
     public ResolveTest(String left, String right, Object expected) {
-      super(ZipFilePathOpsTest.fs, left, right, expected);
+      super(ZipFilePathOpsTest.fac, left, right, expected);
     }
 
     @Parameters
@@ -394,7 +401,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class StartsWithTest extends PathStartsWithTest{
     public StartsWithTest(String left, String right, Object expected) {
-      super(ZipFilePathOpsTest.fs, left, right, expected);
+      super(ZipFilePathOpsTest.fac, left, right, expected);
     }
 
     @Parameters
@@ -427,7 +434,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class SubpathTest extends PathSubpathTest{
     public SubpathTest(String input, int begin, int end, Object expected) {
-      super(ZipFilePathOpsTest.fs, input, begin, end, expected);
+      super(ZipFilePathOpsTest.fac, input, begin, end, expected);
     }
 
     @Parameters
@@ -458,7 +465,7 @@ public class ZipFilePathOpsTest {
   @RunWith(Parameterized.class)
   public static class ToStringTest extends PathToStringTest {
     public ToStringTest(String input, Object expected) {
-      super(ZipFilePathOpsTest.fs, input, expected);
+      super(ZipFilePathOpsTest.fac, input, expected);
     }
 
     @Parameters
