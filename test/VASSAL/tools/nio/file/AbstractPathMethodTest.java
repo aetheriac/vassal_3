@@ -42,7 +42,7 @@ public abstract class AbstractPathMethodTest {
       }
 
       // We didn't see the expected exception.
-      fail();
+      fail("Did not throw " + tclass.getSimpleName() + "!");
     }
   }
 
