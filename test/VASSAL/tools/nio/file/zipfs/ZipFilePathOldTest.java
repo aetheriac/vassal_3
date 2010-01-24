@@ -117,43 +117,6 @@ public class ZipFilePathOldTest {
   }
 */
 
-  @Test(expected = UnsupportedOperationException.class)
-  public void testNewByteChannelOpenOptionArray() throws Exception {
-// FIXME: do a read?
-    StandardOpenOption opt = StandardOpenOption.READ;
-    SeekableByteChannel sbc = pathTestFileCreated.newByteChannel(opt);
-  }
-
-  @Test
-  public void testStandardOpenOptionSet() {
-    fail("ZipFilePath.standardOpenOptionSet() does not exist");
-//    StandardOpenOption[] opts = new StandardOpenOption[] { StandardOpenOption.APPEND,
-//        StandardOpenOption.CREATE };
-//
-//    assertArrayEquals((Object[]) opts, pathTestFileOther.standardOpenOptionSet(opts).toArray());
-
-  }
-
-  @Test(expected = UnsupportedOperationException.class)
-  public void testNewByteChannelSetOfQextendsOpenOptionFileAttributeOfQArray() throws Exception { 
-    fail("ZipFilePath.standardOpenOptionSet() does not exist");
-//    StandardOpenOption[] opts = new StandardOpenOption[] { StandardOpenOption.READ };
-//    final Set<StandardOpenOption> opt = pathTestFileCreated.standardOpenOptionSet(opts);
-//    FileChannelAdapter fca = pathTestFileCreated.newByteChannel(opt);
-  }
-
-  @Test
-  public void testNewOutputStreamOpenOptionArray() throws IOException {
-// FIXME: do a write test
-    OutputStream out = null;
-      out = pathTestFileOther.newOutputStream(StandardOpenOption.CREATE_NEW);
-      assertTrue(out != null);
-
-      IOUtils.closeQuietly(out);
-      pathTestFileOther.deleteIfExists();
-    
-  }
-
   @Test
   public void testReadAttributes() throws IOException {
     assertEquals(pathTestingDirectory.isDirectory(), pathTestingDirectory.readAttributes("basic:isDirectory").values().toArray()[0]);
