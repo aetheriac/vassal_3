@@ -76,6 +76,7 @@ public class ZipFilePathOldTest {
     pathTestFileOther = fs.getPath(testFileOtherName);
   }
 
+/*
   @Test
   public void testGetFileStore() throws IOException {
 // FIXME: File stores not guaranteed to be identical, and FileStore
@@ -83,6 +84,7 @@ public class ZipFilePathOldTest {
     assertEquals(fs.getFileStores().iterator().next(),
                  pathTestingDirectory.getFileStore());
   }
+*/
 
   // FIXME can check success only with lack of exception. 
   @Test
@@ -116,16 +118,6 @@ public class ZipFilePathOldTest {
     assertNotNull(pathTestFileCreated.getFileAttributeView(BasicFileAttributeView.class, LinkOption.NOFOLLOW_LINKS));
   }
 */
-
-  @Test
-  public void testReadAttributes() throws IOException {
-    assertEquals(pathTestingDirectory.isDirectory(), pathTestingDirectory.readAttributes("basic:isDirectory").values().toArray()[0]);
-  }
-
-  @Test(expected = UnsupportedOperationException.class)
-  public void testReadAttributesFailOptions() throws IOException {
-    pathTestingDirectory.readAttributes("basic:isDirectory", LinkOption.NOFOLLOW_LINKS);
-  }
 
   @Test (expected = UnsupportedOperationException.class)
   public void testSetAttributeUnsupportedOption() throws IOException {

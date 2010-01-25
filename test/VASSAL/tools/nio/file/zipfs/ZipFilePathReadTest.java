@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.BeforeClass;
@@ -33,6 +35,7 @@ import VASSAL.tools.nio.file.PathGetAttributeTest;
 import VASSAL.tools.nio.file.PathIsSameFileTest;
 import VASSAL.tools.nio.file.PathNewInputStreamTest;
 import VASSAL.tools.nio.file.PathNotExistsTest;
+import VASSAL.tools.nio.file.PathReadAttributesTest;
 import VASSAL.tools.nio.file.PathToAbsolutePathTest;
 import VASSAL.tools.nio.file.PathToRealPathTest;
 //import VASSAL.tools.nio.file.PathToUriTest;
@@ -51,6 +54,7 @@ import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
   ZipFilePathReadTest.IsSameFileTest.class,
   ZipFilePathReadTest.NewInputStreamTest.class,
   ZipFilePathReadTest.NotExistsTest.class,
+  ZipFilePathReadTest.ReadAttributesTest.class,
   ZipFilePathReadTest.ToAbsolutePathTest.class,
   ZipFilePathReadTest.ToRealPathTest.class
 //  ZipFilePathReadTest.ToUriTest.class
@@ -258,6 +262,43 @@ public class ZipFilePathReadTest {
         { "/foo",       new OpenOption[0],          testDir + "foo"       },
         { "foo",        new OpenOption[0],          testDir + "foo"       },
       });
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class ReadAttributesTest extends PathReadAttributesTest {
+    public ReadAttributesTest(String path, String attrs, Object expected) {
+      super(ZipFilePathReadTest.fac, path, attrs, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Path         Attributes     Expected
+        { "/fileInZip", "*",     map(
+            "basic:lastModifiedTime", FileTime.from(1259794214L, TimeUnit.SECONDS),
+            "basic:lastAccessTime",   FileTime.fromMillis(-1L), 
+            "basic:creationTime",     FileTime.fromMillis(-1L),
+            "basic:size",             0L,
+            "basic:isRegularFile",    true,
+            "basic:isDirectory",      false,
+            "basic:isSymbolicLink",   false,
+            "basic:isOther",          false,
+            "basic:fileKey",          null)
+        },
+        { "/fileNotInZip", "*", t(NoSuchFileException.class) },
+        { "/fileInZip", "foo:bar", map() }
+      });
+    }
+
+    protected static Map<String,?> map(Object... kv) {
+      final Map<String,Object> m = new HashMap<String,Object>();
+
+      for (int i = 0; i < kv.length; i += 2) {
+        m.put((String) kv[i], kv[i+1]);
+      }
+
+      return m;
     }
   }
 
