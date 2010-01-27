@@ -69,13 +69,15 @@ public class RWZipFileSystem extends ZipFileSystem {
 
   @Override
   public void close() throws IOException {
+    final RWZipFilePath root = getPath("/");
+
     try {
-      writeLock();
+      writeLock(root);
       flush();
       super.close();
     }
     finally {
-      writeUnlock();
+      writeUnlock(root);
     }
   }
 
@@ -153,8 +155,10 @@ public class RWZipFileSystem extends ZipFileSystem {
   }
 
   public void flush() throws IOException {
+    final RWZipFilePath root = getPath("/");
+
     try {
-      writeLock();
+      writeLock(root);
 
       // no modifications, nothing to do
       if (real.isEmpty()) return;
@@ -253,23 +257,23 @@ public class RWZipFileSystem extends ZipFileSystem {
       real.clear();
     }
     finally {
-      writeUnlock();
+      writeUnlock(root);
     }
   }
 
-  void readLock() {
+  void readLock(RWZipFilePath path) {
     lock.readLock().lock();
   }
 
-  void readUnlock() {
+  void readUnlock(RWZipFilePath path) {
     lock.readLock().unlock();
   }
 
-  void writeLock() {
+  void writeLock(RWZipFilePath path) {
     lock.writeLock().lock();
   }
 
-  void writeUnlock() {
+  void writeUnlock(RWZipFilePath path) {
     lock.writeLock().unlock();
   }
 
@@ -293,10 +297,12 @@ public class RWZipFileSystem extends ZipFileSystem {
 
   private class LockedInputStream extends ZipIO.RegisteredInputStream {
     protected boolean closed = false;
+    protected RWZipFilePath path;
 
     public LockedInputStream(RWZipFilePath path, InputStream in) {
       super(path.getFileSystem(), in);
-      readLock();
+      this.path = path;
+      readLock(path);
     }
 
     @Override
@@ -308,17 +314,19 @@ public class RWZipFileSystem extends ZipFileSystem {
         closed = true;
       }
       finally {
-        readUnlock();
+        readUnlock(path);
       }
     }
   }
 
   private class LockedOutputStream extends ZipIO.RegisteredOutputStream {
     protected boolean closed = false;
+    protected RWZipFilePath path;
 
     public LockedOutputStream(RWZipFilePath path, OutputStream out) {
       super(path.getFileSystem(), out);
-      writeLock();
+      this.path = path;
+      writeLock(path);
     }
 
     @Override
@@ -330,17 +338,19 @@ public class RWZipFileSystem extends ZipFileSystem {
         closed = true;
       }
       finally {
-        writeUnlock();
+        writeUnlock(path);
       }
     }
   }
 
   private class ReadLockedChannel extends ZipIO.RegisteredChannel {
     protected boolean closed = false;
+    protected RWZipFilePath path;
 
     public ReadLockedChannel(RWZipFilePath path, SeekableByteChannel ch) {
       super(path.getFileSystem(), ch);
-      readLock();
+      this.path = path;
+      readLock(path);
     }
 
     @Override
@@ -352,17 +362,19 @@ public class RWZipFileSystem extends ZipFileSystem {
         closed = true;
       }
       finally {
-        readUnlock();
+        readUnlock(path);
       }
     }
   }
 
   private class WriteLockedChannel extends ZipIO.RegisteredChannel {
     protected boolean closed = false;
+    protected RWZipFilePath path;
 
     public WriteLockedChannel(RWZipFilePath path, SeekableByteChannel ch) {
       super(path.getFileSystem(), ch);
-      writeLock();
+      this.path = path;
+      writeLock(path);
     }
 
     @Override
@@ -374,7 +386,7 @@ public class RWZipFileSystem extends ZipFileSystem {
         closed = true;
       }
       finally {
-        writeUnlock();
+        writeUnlock(path);
       }
     }
   }

@@ -63,35 +63,35 @@ class RWZipFilePath extends ZipFilePath {
   @Override
   public Path createDirectory(FileAttribute<?>... attrs) throws IOException {
     try {
-      fs.writeLock();
+      fs.writeLock(this);
 
       if (exists()) throw new FileAlreadyExistsException(toString());
       fs.real.put(this, fs.createTempDirectory(attrs));
       return this;
     }
     finally {
-      fs.writeUnlock();
+      fs.writeUnlock(this);
     }
   }
 
   @Override
   public Path createFile(FileAttribute<?>... attrs) throws IOException {
     try {
-      fs.writeLock();
+      fs.writeLock(this);
 
       if (exists()) throw new FileAlreadyExistsException(toString());
       fs.real.put(this, fs.createTempFile(attrs));
       return this;
     }
     finally {
-      fs.writeUnlock();
+      fs.writeUnlock(this);
     }
   }
 
   @Override
   public InputStream newInputStream(OpenOption... options) throws IOException {
     try {
-      fs.readLock();
+      fs.readLock(this);
 
       final Path rpath = fs.real.get(this);
       if (rpath != null) {
@@ -103,7 +103,7 @@ class RWZipFilePath extends ZipFilePath {
       }      
     }
     finally {
-      fs.readUnlock();
+      fs.readUnlock(this);
     }
   }
 
@@ -111,19 +111,19 @@ class RWZipFilePath extends ZipFilePath {
   public DirectoryStream<Path> newDirectoryStream(
               DirectoryStream.Filter<? super Path> filter) throws IOException {
     try {
-      fs.readLock();
+      fs.readLock(this);
       return new RWZipFileStream(
         (RWZipFilePath) getResolvedPathForZip(), filter);
     }
     finally {
-      fs.readUnlock();
+      fs.readUnlock(this);
     } 
   }
  
   @Override
   public void delete() throws IOException {
     try {
-      fs.writeLock();
+      fs.writeLock(this);
 
       if (!exists()) throw new NoSuchFileException(toString());
 
@@ -146,18 +146,18 @@ class RWZipFilePath extends ZipFilePath {
       if (old != null) old.delete();
     }
     finally {
-      fs.writeUnlock();
+      fs.writeUnlock(this);
     }
   }
 
   @Override
   public void deleteIfExists() throws IOException {
     try {
-      fs.writeLock();
+      fs.writeLock(this);
       if (exists()) delete();
     }
     finally {
-      fs.writeLock();
+      fs.writeLock(this);
     }
   }
 
@@ -168,7 +168,7 @@ class RWZipFilePath extends ZipFilePath {
     if (options.contains(StandardOpenOption.WRITE) ||
         options.contains(StandardOpenOption.APPEND)) {
       try {
-        fs.writeLock();
+        fs.writeLock(this);
 
         Path rpath = fs.real.get(this);
         if (rpath == null || rpath == DELETED) {
@@ -179,12 +179,12 @@ class RWZipFilePath extends ZipFilePath {
         return fs.wrapWriteLocked(this, rpath.newByteChannel(options, attrs));
       }
       finally {
-        fs.writeUnlock();
+        fs.writeUnlock(this);
       }
     }
     else {
       try {
-        fs.readLock();
+        fs.readLock(this);
 
         final Path rpath = fs.real.get(this);
         if (rpath != null) {
@@ -196,7 +196,7 @@ class RWZipFilePath extends ZipFilePath {
         }  
       }
       finally {
-        fs.readUnlock();
+        fs.readUnlock(this);
       }
     }
   }
@@ -231,7 +231,7 @@ class RWZipFilePath extends ZipFilePath {
       }
 
       try {
-        fs.readLock();
+        fs.readLock(this);
 
         final Path rpath = fs.real.get(this);
         if (rpath != null) {
@@ -268,7 +268,7 @@ class RWZipFilePath extends ZipFilePath {
         }
       }
       finally {
-        fs.readUnlock();
+        fs.readUnlock(this);
       }
     }
     finally {
@@ -280,7 +280,7 @@ class RWZipFilePath extends ZipFilePath {
   public OutputStream newOutputStream(OpenOption... options)
                                                            throws IOException {
     try {
-      fs.writeLock();
+      fs.writeLock(this);
 
       Path rpath = fs.real.get(this);
       if (rpath == null || rpath == DELETED) {
@@ -291,14 +291,14 @@ class RWZipFilePath extends ZipFilePath {
       return fs.wrapWriteLocked(this, rpath.newOutputStream(options));
     }
     finally {
-      fs.writeUnlock();
+      fs.writeUnlock(this);
     }
   }
 
   @Override
   public Path moveTo(Path target, CopyOption... options) throws IOException {
     try {
-      fs.writeLock();
+      fs.writeLock(this);
 
       if (target.getFileSystem().provider() != fs.provider()) {
         // destination is not local
@@ -306,25 +306,32 @@ class RWZipFilePath extends ZipFilePath {
         delete();
       }
       else {
-        // destination is local
-        final Path src = fs.real.remove(this);
-        if (src != null) {
-          // file is modified, just remap
-          if (src == DELETED) throw new NoSuchFileException(toString());
-          fs.real.put((RWZipFilePath) target, src);
+        try {
+          // destination is local
+          fs.writeLock((RWZipFilePath) target);
+
+          final Path src = fs.real.remove(this);
+          if (src != null) {
+            // file is modified, just remap
+            if (src == DELETED) throw new NoSuchFileException(toString());
+            fs.real.put((RWZipFilePath) target, src);
+          }
+          else {
+            // file is unmodified, copy out to temp
+            final Path dst = fs.createTempFile();
+            super.copyTo(dst, options);
+            fs.real.put((RWZipFilePath) target, dst);
+          }
         }
-        else {
-          // file is unmodified, copy out to temp
-          final Path dst = fs.createTempFile();
-          super.copyTo(dst, options);
-          fs.real.put((RWZipFilePath) target, dst);
+        finally {
+          fs.writeUnlock((RWZipFilePath) target);
         }
       }
       
       return target;
     }
     finally {
-      fs.writeUnlock();
+      fs.writeUnlock(this);
     }
   }
 
@@ -333,7 +340,7 @@ class RWZipFilePath extends ZipFilePath {
     if (target.getFileSystem().provider() != fs.provider()) {
       // destination is not local
       try {
-        fs.readLock();
+        fs.readLock(this);
 
         final Path src = fs.real.get(this);
         if (src != null) {
@@ -347,30 +354,37 @@ class RWZipFilePath extends ZipFilePath {
         }
       }
       finally {
-        fs.readUnlock();
+        fs.readUnlock(this);
       }
     }
     else {
       // destination is local
       try {
-        fs.writeLock();
+        fs.readLock(this);
+        
+        try {
+          fs.writeLock((RWZipFilePath) target);
 
-        final Path dst = fs.createTempFile();
-        final Path src = fs.real.get(this);
-        if (src != null) {
-          // file is modified
-          if (src == DELETED) throw new NoSuchFileException(toString());
-          src.copyTo(dst, options);
-        }
-        else {
-          // file is unmodified
-          super.copyTo(dst, options);
-        }
+          final Path dst = fs.createTempFile();
+          final Path src = fs.real.get(this);
+          if (src != null) {
+            // file is modified
+            if (src == DELETED) throw new NoSuchFileException(toString());
+            src.copyTo(dst, options);
+          }
+          else {
+            // file is unmodified
+            super.copyTo(dst, options);
+          }
 
-        fs.real.put((RWZipFilePath) target, dst);
+          fs.real.put((RWZipFilePath) target, dst);
+        }
+        finally {
+          fs.writeUnlock((RWZipFilePath) target);
+        }
       }
       finally {
-        fs.writeUnlock();
+        fs.readUnlock(this);
       }
     }
 
@@ -381,7 +395,7 @@ class RWZipFilePath extends ZipFilePath {
   public Object getAttribute(String attribute, LinkOption... options)
                                                            throws IOException {
     try {
-      fs.readLock();
+      fs.readLock(this);
 
       final Path rpath = fs.real.get(this);
       if (rpath != null) {
@@ -393,7 +407,7 @@ class RWZipFilePath extends ZipFilePath {
       }
     }
     finally {
-      fs.readUnlock();
+      fs.readUnlock(this);
     }
   }
 
