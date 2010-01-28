@@ -32,8 +32,6 @@ public class RWZipFileSystem extends ZipFileSystem {
   // dummy value for real map
   static final Path DELETED = new RWZipFilePath(null, null, null);
 
-  protected final ReadWriteLock lock = new ReentrantReadWriteLock();
-
   RWZipFileSystem(ZipFileSystemProvider provider, FileRef fref)
                                                            throws IOException {
     this(provider, fref.toString(), "/");
@@ -261,20 +259,57 @@ public class RWZipFileSystem extends ZipFileSystem {
     }
   }
 
-  void readLock(RWZipFilePath path) {
-    lock.readLock().lock();
+  protected final ReadWriteLock rootLock = new ReentrantReadWriteLock();
+
+  protected final ConcurrentMap<Path,ReadWriteLock> locks =
+    new ConcurrentHashMap<Path,ReadWriteLock>();
+
+  void readLock(Path path) {
+    // acquire read lock on root
+    rootLock.readLock().lock();
+
+    // acquire read lock on path
+    path = path.toAbsolutePath();
+
+    final ReadWriteLock nl = new ReentrantReadWriteLock();
+    ReadWriteLock l = locks.putIfAbsent(path, nl);
+    if (l == null) l = nl;
+
+    l.readLock().lock();
   }
 
-  void readUnlock(RWZipFilePath path) {
-    lock.readLock().unlock();
+  void readUnlock(Path path) {
+    path = path.toAbsolutePath();
+
+    // release read lock on path
+    locks.get(path).readLock().unlock();
+
+    // release read lock on root
+    rootLock.readLock().unlock();
   }
 
-  void writeLock(RWZipFilePath path) {
-    lock.writeLock().lock();
+  void writeLock(Path path) {
+    // acquire read lock on root
+    rootLock.readLock().lock();
+
+    path = path.toAbsolutePath();
+
+    // acquire write lock on path
+    final ReadWriteLock nl = new ReentrantReadWriteLock();
+    ReadWriteLock l = locks.putIfAbsent(path, nl);
+    if (l == null) l = nl;
+
+    l.writeLock().lock();
   }
 
-  void writeUnlock(RWZipFilePath path) {
-    lock.writeLock().unlock();
+  void writeUnlock(Path path) {
+    path = path.toAbsolutePath();
+
+    // release write lock on path
+    locks.get(path).writeLock().unlock();
+
+    // release read lock on root
+    rootLock.readLock().unlock();
   }
 
   final InputStream wrapReadLocked(RWZipFilePath path, InputStream in) {
