@@ -10,20 +10,20 @@ import java.util.Set;
 
 import VASSAL.tools.nio.file.ClosedDirectoryStreamException;
 import VASSAL.tools.nio.file.DirectoryStream;
+import VASSAL.tools.nio.file.DirectoryStream.Filter;
 import VASSAL.tools.nio.file.NoSuchFileException;
 import VASSAL.tools.nio.file.NotDirectoryException;
 import VASSAL.tools.nio.file.Path;
 
-public class RWZipFileStream implements DirectoryStream<Path> {
+public class ZipFileStream implements DirectoryStream<Path> {
 
-  protected final RWZipFilePath dir; 
-  protected final DirectoryStream.Filter<? super Path> filter;  
+  protected final ZipFilePath dir; 
+  protected final Filter<? super Path> filter;  
 
   protected Iterator<Path> iterator;
   protected volatile boolean closed = false;
 
-  public RWZipFileStream(RWZipFilePath dir,
-                         DirectoryStream.Filter<? super Path> filter)
+  public ZipFileStream(ZipFilePath dir, Filter<? super Path> filter)
                                                            throws IOException {
     if (!dir.exists()) {
       throw new NoSuchFileException(dir.toString());
@@ -64,16 +64,16 @@ public class RWZipFileStream implements DirectoryStream<Path> {
     }
   }
 
-  protected class RWZipFileStreamIterator implements Iterator<Path> {
+  protected class ZipFileStreamIterator implements Iterator<Path> {
 
     protected Iterator<Path> it;
 
     protected Path next;
     protected Path prev;
 
-    public RWZipFileStreamIterator() throws IOException {
+    public ZipFileStreamIterator() throws IOException {
 
-      final RWZipFileSystem fs = dir.getFileSystem(); 
+      final ZipFileSystem fs = dir.getFileSystem(); 
       final int nameCount = dir.getNameCount();
 
       final Set<Path> s = new HashSet<Path>();
@@ -89,8 +89,8 @@ public class RWZipFileStream implements DirectoryStream<Path> {
       }
 
       // find all modified children of this directory
-      for (Map.Entry<RWZipFilePath,Path> e : fs.real.entrySet()) {
-        final RWZipFilePath f = e.getKey();
+      for (Map.Entry<ZipFilePath,Path> e : fs.real.entrySet()) {
+        final ZipFilePath f = e.getKey();
 
         if (nameCount + 1 > f.getNameCount() || !f.startsWith(dir)) {
           // skip files which are not in this directory
