@@ -43,19 +43,18 @@ import java.util.ConcurrentModificationException;
 
 public class ZipFileStream implements DirectoryStream<Path> {
 
-  private final ZipFilePath zipPath;
-  private final DirectoryStream.Filter<? super Path> filter;
-  private volatile boolean isOpen;
-  private final Object closeLock;
-  private Iterator<Path> iterator;
+  protected final ZipFilePath zipPath;
+  protected final DirectoryStream.Filter<? super Path> filter;
+  protected volatile boolean closed = false;
+  protected final Object closeLock = new Object();
+  protected Iterator<Path> iterator;
 
-  private class ZipFilePathIterator implements
-      Iterator<Path> {
+  protected class ZipFilePathIterator implements Iterator<Path> {
 
-    private boolean atEof;
-    private Path nextEntry;
-    private Path prevEntry;
-    private Iterator<Path> entryIterator;
+    protected boolean atEof;
+    protected Path nextEntry;
+    protected Path prevEntry;
+    protected Iterator<Path> entryIterator;
 
     ZipFilePathIterator() throws IOException {
       atEof = false;
@@ -82,7 +81,7 @@ public class ZipFileStream implements DirectoryStream<Path> {
     }
 
     @SuppressWarnings("unchecked")
-    private boolean accept(Path entry) {
+    protected boolean accept(Path entry) {
       try {
         return filter.accept(entry);
       }
@@ -94,7 +93,7 @@ public class ZipFileStream implements DirectoryStream<Path> {
       }
     }
 
-    private Path readNextEntry() {
+    protected Path readNextEntry() {
       Path entry = entryIterator.next();
       if ((filter == null) || accept(entry)) {
         return entry;
@@ -133,6 +132,8 @@ public class ZipFileStream implements DirectoryStream<Path> {
   }
 
   public Iterator<Path> iterator() {
+    if (closed) throw new IllegalStateException("stream is closed");
+
     synchronized (this) {
       if (iterator != null) {
         throw new IllegalStateException();
@@ -141,9 +142,7 @@ public class ZipFileStream implements DirectoryStream<Path> {
         iterator = new ZipFilePathIterator();
       }
       catch (IOException e) {
-        IllegalStateException ie = new IllegalStateException();
-        ie.initCause(e);
-        throw ie;
+        throw new IllegalStateException(e);
       }
       return iterator;
     }
@@ -167,7 +166,5 @@ public class ZipFileStream implements DirectoryStream<Path> {
     }
     this.zipPath = zipPath;
     this.filter = filter;
-    this.isOpen = true;
-    this.closeLock = new Object();
   }
 }
