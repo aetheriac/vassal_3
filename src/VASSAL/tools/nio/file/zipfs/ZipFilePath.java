@@ -875,11 +875,71 @@ public class ZipFilePath extends Path {
     return fileView.getAttribute(attr);
   }
 
-// FIXME: read lock
-  public Map<String,?> readAttributes(String attribute, LinkOption... options)
-    throws IOException
-  {
-    throw new RuntimeException("not implemented");
+  public Map<String,?> readAttributes(String attributes, LinkOption... options)
+                                                           throws IOException {
+    return readAttributes(attributes.split(","), options);
+  }
+
+  protected Map<String,?> readAttributes(String[] attributes,
+                                        LinkOption... options)
+                                                           throws IOException {
+    final Map<String,Object> map = new HashMap<String,Object>();
+
+    for (String attr : attributes) {
+      final int colon = attr.indexOf(':');
+
+      final String view;
+      final String name;
+
+      if (colon == -1) {
+        view = "basic";
+        name = attr;
+      }
+      else {
+        view = attr.substring(0, colon);
+        name = attr.substring(colon+1, attr.length());
+      }
+
+      if ("*".equals(name)) {
+        if ("basic".equals(view)) {
+          map.putAll(readAttributes(new String[] {
+            "basic:lastModifiedTime",
+            "basic:lastAccessTime",
+            "basic:creationTime",
+            "basic:size",
+            "basic:isRegularFile",
+            "basic:isDirectory",
+            "basic:isSymbolicLink",
+            "basic:isOther",
+            "basic:fileKey"
+          }));
+        }
+        else if ("zip".equals(view)) {
+          map.putAll(readAttributes(new String[] {
+            "zip:comment",
+            "zip:compressedSize",
+            "zip:crc",
+            "zip:extra",
+            "zip:method",
+            "zip:name",
+            "zip:isArchiveFile",
+            "zip:versionMadeBy",
+            "zip:extAttrs"
+          }));
+        }
+        else if ("jar".equals(view)) {
+          map.putAll(readAttributes(new String[] {
+            "jar:manifestAttributes",
+            "jar:entryAttributes"
+          }));
+        }
+      }
+      else {
+        map.put(attr, getAttribute(attr));
+      }
+    }
+    
+    return map;
   }
 
   @Override
@@ -1214,8 +1274,8 @@ public class ZipFilePath extends Path {
         .getFileAttributeView(BasicFileAttributeView.class);
       try {
         view.setTimes(attrs.lastModifiedTime(),
-                attrs.lastAccessTime(),
-                attrs.creationTime());
+                      attrs.lastAccessTime(),
+                      attrs.creationTime());
       }
       catch (IOException x) {
         // rollback
@@ -1227,7 +1287,7 @@ public class ZipFilePath extends Path {
       }
     }
 
-    return this;
+    return target;
   }
 
   private void copyToTarget(Path target) throws IOException {
