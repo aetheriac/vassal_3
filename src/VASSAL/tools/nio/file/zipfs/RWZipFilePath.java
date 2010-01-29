@@ -297,13 +297,14 @@ class RWZipFilePath extends ZipFilePath {
 
   @Override
   public Path moveTo(Path target, CopyOption... options) throws IOException {
+    if (this.isSameFile(target)) return target;
+
     try {
       fs.writeLock(this);
 
       if (target.getFileSystem().provider() != fs.provider()) {
         // destination is not local
         super.copyTo(target, options);
-        delete();
       }
       else {
         try {
@@ -328,6 +329,7 @@ class RWZipFilePath extends ZipFilePath {
         }
       }
       
+      delete();
       return target;
     }
     finally {
@@ -337,6 +339,8 @@ class RWZipFilePath extends ZipFilePath {
 
   @Override
   public Path copyTo(Path target, CopyOption... options) throws IOException {
+    if (this.isSameFile(target)) return target;
+
     if (target.getFileSystem().provider() != fs.provider()) {
       // destination is not local
       try {
