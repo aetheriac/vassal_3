@@ -70,6 +70,9 @@ public class ZipFilePathWriteTest {
       FileUtils.deleteIfExists(tdPath);
       tdPath.createDirectory();
       tdPath.resolve("yea").createFile();
+      
+      Paths.get(thisDir + "foo").copyTo(tdPath.resolve("foo"));
+      tdPath.resolve("dir").createDirectory(); 
 
       // work in a copy of write.zip
       final Path zfWrite = Paths.get(zfPathName).toAbsolutePath();
@@ -100,21 +103,19 @@ public class ZipFilePathWriteTest {
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
         // Source Destination Opts  Expected
-/*
-        { "foo",  null,       null, t(NullPointerException.class)             },
-        { "bar",  td + "nay", null, t(NoSuchFileException.class)              },
-        { "/bar", td + "nay", null, t(NoSuchFileException.class)              },
-        { "foo",  td + "nay", null, null                                      },
-        { "foo",  td + "yea", null, t(FileAlreadyExistsException.class)       },
-        { "/foo", td + "nay", null, null                                      },
-        { "/foo", td + "yea", null, t(FileAlreadyExistsException.class)       },
-        { "foo",  td + "yea", new CopyOption[]{ REPLACE_EXISTING }, null      },
-        { "/foo", td + "yea", new CopyOption[]{ REPLACE_EXISTING }, null      },
-        { "dirInZip", td + "yea", null, t(FileAlreadyExistsException.class)   },
-        { "dirInZip", td + "yea", new CopyOption[]{ REPLACE_EXISTING }, null  },
-        { "/dirInZip", td + "yea", null, t(FileAlreadyExistsException.class)  },
-        { "/dirInZip", td + "yea", new CopyOption[]{ REPLACE_EXISTING }, null }
-*/
+        { "foo",  null,  null, t(NullPointerException.class)             },
+        { "bar",  "nay", null, t(NoSuchFileException.class)              },
+        { "/bar", "nay", null, t(NoSuchFileException.class)              },
+        { "foo",  "nay", null, null                                      },
+        { "foo",  "yea", null, t(FileAlreadyExistsException.class)       },
+        { "/foo", "nay", null, null                                      },
+        { "/foo", "yea", null, t(FileAlreadyExistsException.class)       },
+        { "foo",  "yea", new CopyOption[]{ REPLACE_EXISTING }, null      },
+        { "/foo", "yea", new CopyOption[]{ REPLACE_EXISTING }, null      },
+        { "dirInZip", "yea", null, t(FileAlreadyExistsException.class)   },
+        { "dirInZip", "yea", new CopyOption[]{ REPLACE_EXISTING }, null  },
+        { "/dirInZip", "yea", null, t(FileAlreadyExistsException.class)  },
+        { "/dirInZip", "yea", new CopyOption[]{ REPLACE_EXISTING }, null }
       });
     }
   }
@@ -158,21 +159,19 @@ public class ZipFilePathWriteTest {
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
         // Source Destination Opts  Expected
-/*
-        { "foo",  null,       null, t(NullPointerException.class)             },
-        { "bar",  td + "nay", null, t(NoSuchFileException.class)              },
-        { "/bar", td + "nay", null, t(NoSuchFileException.class)              },
-        { "foo",  td + "nay", null, null                                      },
-        { "foo",  td + "yea", null, t(FileAlreadyExistsException.class)       },
-        { "/foo", td + "nay", null, null                                      },
-        { "/foo", td + "yea", null, t(FileAlreadyExistsException.class)       },
-        { "foo",  td + "yea", new CopyOption[]{ REPLACE_EXISTING }, null      },
-        { "/foo", td + "yea", new CopyOption[]{ REPLACE_EXISTING }, null      },
-        { "dirInZip", td + "yea", null, t(FileAlreadyExistsException.class)   },
-        { "dirInZip", td + "yea", new CopyOption[]{ REPLACE_EXISTING }, null  },
-        { "/dirInZip", td + "yea", null, t(FileAlreadyExistsException.class)  },
-        { "/dirInZip", td + "yea", new CopyOption[]{ REPLACE_EXISTING }, null }
-*/
+        { td + "foo", null,   null, t(NullPointerException.class)        },
+        { td + "bar", "nay",  null, t(NoSuchFileException.class)         },
+        { td + "bar", "/nay", null, t(NoSuchFileException.class)         },
+        { td + "foo", "nay",  null, null                                 },
+        { td + "foo", "yea",  null, t(FileAlreadyExistsException.class)  },
+        { td + "foo", "/nay", null, null                                 },
+        { td + "foo", "/yea", null, t(FileAlreadyExistsException.class)  },
+        { td + "foo", "yea",  new CopyOption[]{ REPLACE_EXISTING }, null },
+        { td + "foo", "/yea", new CopyOption[]{ REPLACE_EXISTING }, null },
+        { td + "dir", "yea",  null, t(FileAlreadyExistsException.class)  },
+        { td + "dir", "yea",  new CopyOption[]{ REPLACE_EXISTING }, null },
+        { td + "dir", "/yea", null, t(FileAlreadyExistsException.class)  },
+        { td + "dir", "/yea", new CopyOption[]{ REPLACE_EXISTING }, null }
       });
     }
   }
