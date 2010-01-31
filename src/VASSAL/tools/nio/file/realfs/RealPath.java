@@ -9,6 +9,7 @@ import static VASSAL.tools.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
@@ -330,7 +331,12 @@ public abstract class RealPath extends AbstractPath {
       }
     }
 
-    return new FileInputStream(file);
+    try {
+      return new FileInputStream(file);
+    }
+    catch (FileNotFoundException e) {
+      throw (IOException) new NoSuchFileException(toString()).initCause(e);
+    }
   }
 
   public FileOutputStream newOutputStream(OpenOption... options)
@@ -433,18 +439,24 @@ public abstract class RealPath extends AbstractPath {
         );
       }
 
-      InputStream in = null;
-      OutputStream out = null;
-      try {
-        in = this.newInputStream();
-        out = target.newOutputStream();
-        IOUtils.copy(in, out);
-        in.close();
-        out.close();
+      if (Boolean.TRUE.equals(getAttribute("isDirectory"))) {
+        target.deleteIfExists();
+        target.createDirectory();
       }
-      finally {
-        IOUtils.closeQuietly(in);
-        IOUtils.closeQuietly(out);
+      else {
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+          in = this.newInputStream();
+          out = target.newOutputStream();
+          IOUtils.copy(in, out);
+          in.close();
+          out.close();
+        }
+        finally {
+          IOUtils.closeQuietly(in);
+          IOUtils.closeQuietly(out);
+        }
       }
     }
 
