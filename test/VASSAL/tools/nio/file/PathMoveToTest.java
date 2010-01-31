@@ -5,6 +5,7 @@ import java.io.IOException;
 import VASSAL.tools.io.FileUtils;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -33,19 +34,21 @@ public abstract class PathMoveToTest extends AbstractPathMethodTest {
     try {
       if (Boolean.TRUE.equals(sp.getAttribute("isDirectory"))) {
 
-        sp.moveTo(dp, opts);
+        final Path ret = sp.moveTo(dp, opts);
 
         assertTrue(!sp.exists());
         assertTrue(dp.exists());
+        assertEquals(dp, ret); 
         assertTrue(Boolean.TRUE.equals(dp.getAttribute("isDirectory")));
       }
       else {
         final byte[] expectedBytes = FileUtils.readFileToByteArray(sp);
       
-        sp.moveTo(dp, opts);
+        final Path ret = sp.moveTo(dp, opts);
 
         assertTrue(!sp.exists());
         assertTrue(dp.exists());
+        assertEquals(dp, ret); 
   
         final byte[] actualBytes = FileUtils.readFileToByteArray(dp);
 
