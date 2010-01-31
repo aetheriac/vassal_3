@@ -52,15 +52,15 @@ public class ZipFileBasicAttributeView implements BasicFileAttributeView, Readab
     return "basic";
   }
 
-  public BasicFileAttributes readAttributes()
-      throws IOException {
+  public BasicFileAttributes readAttributes() throws IOException {
     return new ZipFileBasicAttributes(file);
   }
 
   public void setTimes(FileTime lastModifiedTime,
-             FileTime lastAccessTime,
-             FileTime createTimethrows)
+                       FileTime lastAccessTime,
+                       FileTime createTimethrows)
   {
+// FIXME: implement this
     throw new ReadOnlyFileSystemException();
   }
 

@@ -1,170 +1,159 @@
-/*
- * Copyright 2007-2009 Sun Microsystems, Inc.  All Rights Reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   - Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- *
- *   - Neither the name of Sun Microsystems nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 package VASSAL.tools.nio.file.zipfs;
 
-import VASSAL.tools.nio.file.*;
-
-//import java.nio.file.*;
+import java.io.IOException;
+import java.util.ConcurrentModificationException;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.Map;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.ConcurrentModificationException;
+
+import VASSAL.tools.nio.file.ClosedDirectoryStreamException;
+import VASSAL.tools.nio.file.DirectoryStream;
+import VASSAL.tools.nio.file.DirectoryStream.Filter;
+import VASSAL.tools.nio.file.NoSuchFileException;
+import VASSAL.tools.nio.file.NotDirectoryException;
+import VASSAL.tools.nio.file.Path;
 
 public class ZipFileStream implements DirectoryStream<Path> {
 
-  protected final ZipFilePath zipPath;
-  protected final DirectoryStream.Filter<? super Path> filter;
-  protected volatile boolean closed = false;
-  protected final Object closeLock = new Object();
+  protected final ZipFilePath dir; 
+  protected final Filter<? super Path> filter;  
+
   protected Iterator<Path> iterator;
+  protected volatile boolean closed = false;
 
-  protected class ZipFilePathIterator implements Iterator<Path> {
-
-    protected boolean atEof;
-    protected Path nextEntry;
-    protected Path prevEntry;
-    protected Iterator<Path> entryIterator;
-
-    ZipFilePathIterator() throws IOException {
-      atEof = false;
-      Map<ZipFilePath, ZipEntryInfo> entries = null;
-      int nameCount = zipPath.getNameCount();
-      entries = ZipUtils.getEntries(zipPath);
-      Set<ZipFilePath> s = entries.keySet();
-      Set<Path> s1 = new HashSet<Path>();
-      for (ZipFilePath f : s) {
-
-        boolean b = f.startsWith(zipPath);
-        if ((nameCount + 1) > f.getNameCount() || !b) {
-          continue;
-        }
-        ZipFilePath entry = zipPath.resolve(f.getName(nameCount));
-        if (filter == null || filter.accept(entry)) {
-          s1.add(entry);
-        }
-      }
-      if (s1.isEmpty()) {
-      // if there is no file keep quiet
-      }
-      entryIterator = s1.iterator();
+  public ZipFileStream(ZipFilePath dir, Filter<? super Path> filter)
+                                                           throws IOException {
+    if (!dir.exists()) {
+      throw new NoSuchFileException(dir.toString());
     }
 
-    @SuppressWarnings("unchecked")
-    protected boolean accept(Path entry) {
-      try {
-        return filter.accept(entry);
-      }
-      catch (IOException ioe) {
-        ConcurrentModificationException cme =
-          new ConcurrentModificationException();
-        cme.initCause(ioe);
-        throw cme;
-      }
+    if (!Boolean.TRUE.equals(dir.getAttribute("isDirectory"))) {
+      throw new NotDirectoryException(dir.toString());
     }
 
-    protected Path readNextEntry() {
-      Path entry = entryIterator.next();
-      if ((filter == null) || accept(entry)) {
-        return entry;
-      }
-      return null;
-    }
+    this.dir = dir;
+    this.filter = filter;
+  }
 
-    public synchronized boolean hasNext() {
-      boolean isThereNext = entryIterator.hasNext();
-      if (!isThereNext) {
-        atEof = true;
-      }
-      return isThereNext;
-    }
-
-    public synchronized Path next() {
-      if (nextEntry == null) {
-        if (!atEof) {
-          nextEntry = readNextEntry();
-        }
-        if (nextEntry == null) {
-          atEof = true;
-          throw new NoSuchElementException();
-        }
-      }
-      prevEntry = nextEntry;
-      nextEntry = null;
-      return prevEntry;
-    }
-
-    public void remove() {
-      UnsupportedOperationException e = new UnsupportedOperationException();
-      e.initCause(new ReadOnlyFileSystemException());
-      throw e;
-    }
+  public void close() throws IOException {
+    closed = true;
+  }
+ 
+  protected ConcurrentModificationException wrap(Throwable cause) {
+    return (ConcurrentModificationException)
+      new ConcurrentModificationException().initCause(cause);
   }
 
   public Iterator<Path> iterator() {
     if (closed) throw new IllegalStateException("stream is closed");
 
     synchronized (this) {
-      if (iterator != null) {
-        throw new IllegalStateException();
-      }
+      if (iterator != null)
+        throw new IllegalStateException("iterator has already been fecthed");
+
       try {
-        iterator = new ZipFilePathIterator();
+        iterator = new ZipFileStreamIterator();
       }
       catch (IOException e) {
         throw new IllegalStateException(e);
       }
+
       return iterator;
     }
   }
 
-  public void close() throws IOException {
-  // no impl
-  }
+  protected class ZipFileStreamIterator implements Iterator<Path> {
 
-  /** Creates a new instance of ZipFileStream */
-  public ZipFileStream(ZipFilePath zipPath,
-      DirectoryStream.Filter<? super Path> filter)
-      throws IOException {
+    protected Iterator<Path> it;
 
-    if (zipPath.getNameCount() != 0) { // if path is '/' no need for check existence
-      zipPath.checkAccess();
+    protected Path next;
+    protected Path prev;
+
+    public ZipFileStreamIterator() throws IOException {
+
+      final ZipFileSystem fs = dir.getFileSystem(); 
+      final int nameCount = dir.getNameCount();
+
+      final Set<Path> s = new HashSet<Path>();
+
+      // find all original children of this directory
+      for (ZipFilePath f : ZipUtils.getEntries(dir).keySet()) {
+        // skip files which are not in this directory
+        if (nameCount + 1 > f.getNameCount() || !f.startsWith(dir)) {
+          continue;
+        }
+
+        s.add(dir.resolve(f.getName(nameCount)));
+      }
+
+      // find all modified children of this directory
+      for (Map.Entry<ZipFilePath,Path> e : fs.real.entrySet()) {
+        final ZipFilePath f = e.getKey();
+
+        if (nameCount + 1 > f.getNameCount() || !f.startsWith(dir)) {
+          // skip files which are not in this directory
+          continue;
+        }
+       
+        if (e.getValue() == null) {
+          // remove files which have been deleted
+          s.remove(f);
+        }
+        else {
+          // add files which are new
+          s.add(f);
+        }
+      }
+
+      it = s.iterator();
     }
 
-    if (!zipPath.isArchiveFile() && !zipPath.isDirectory()) {
-      throw new NotDirectoryException("Not a Directory " + zipPath.toString());
+    protected boolean accept(Path p) {
+      try {
+        return filter == null || filter.accept(p);
+      }
+      catch (IOException e) {
+        throw wrap(e);
+      }
     }
-    this.zipPath = zipPath;
-    this.filter = filter;
+
+    public synchronized boolean hasNext() {
+      if (closed) throw wrap(new ClosedDirectoryStreamException());
+
+      if (next != null) return true;
+
+      while (it.hasNext()) {
+        next = it.next();
+        if (accept(next)) return true;
+      }
+
+      next = null; 
+      return false;
+    }
+
+    public synchronized Path next() {
+      if (closed) throw wrap(new ClosedDirectoryStreamException());
+      if (next == null) throw new NoSuchElementException();
+
+      prev = next;
+      next = null;
+      return prev;
+    }
+
+    public synchronized void remove() {
+      if (closed) throw wrap(new ClosedDirectoryStreamException());
+      if (prev == null) throw new IllegalStateException();
+      
+      try {
+        prev.delete();
+      }
+      catch (IOException e) {
+        throw wrap(e);
+      }
+
+      prev = null;
+    }
   }
-}
+} 

@@ -77,7 +77,7 @@ public class ZipFilePathWriteTest {
       zfRead.copyTo(zfWrite, REPLACE_EXISTING);
 
       final URI zfURI = URI.create("zip://" + zfWrite.toString());
-      fs = (ZipFileSystem) FileSystems.newFileSystem(zfURI, null);
+      return FileSystems.newFileSystem(zfURI, null);
     }
       
     public void teardown(FileSystem fs) throws IOException {

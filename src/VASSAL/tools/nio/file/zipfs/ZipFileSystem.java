@@ -35,15 +35,32 @@ import VASSAL.tools.nio.file.attribute.*;
 import VASSAL.tools.nio.file.spi.*;
 
 import java.io.Closeable;
+import java.io.File;
 //import java.nio.file.*;
 //import java.nio.file.attribute.*;
 //import java.nio.file.spi.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
+
+import VASSAL.tools.io.IOUtils;
 
 public class ZipFileSystem extends FileSystem {
 
@@ -53,12 +70,21 @@ public class ZipFileSystem extends FileSystem {
   // this contains real path following the links (change it, if no need to follow links)
   private final String zipFile;
   private final String defaultdir;
-  private final ReadWriteLock closeLock = new ReentrantReadWriteLock();
+  private final ReentrantReadWriteLock closeLock = new ReentrantReadWriteLock();
   private boolean open = true;
 
   private final Set<Closeable> closeables =
     Collections.synchronizedSet(new HashSet<Closeable>());
 
+  protected final ConcurrentMap<ZipFilePath,Path> real =
+    new ConcurrentHashMap<ZipFilePath,Path>();
+
+  // dummy value for real map
+  static final Path DELETED = new ZipFilePath(null, null, null);
+
+  protected final ConcurrentMap<ZipFilePath,ZipEntryInfo> info =
+    new ConcurrentHashMap<ZipFilePath,ZipEntryInfo>();
+ 
   ZipFileSystem(ZipFileSystemProvider provider, FileRef fref) {
     this(provider, fref.toString(), "/");
   }
@@ -84,38 +110,245 @@ public class ZipFileSystem extends FileSystem {
     return open;
   }
 
-// FIXME
   @Override
   public boolean isReadOnly() {
-    return true;
+    return false;
   }
 
   @Override
   public void close() throws IOException {
-    closeLock.writeLock().lock();
-    URI root = null;
     try {
-      if (!open) {
-        return;
-      }
-      root = getPath("/").toUri();
+      closeLock.writeLock().lock();
+
+      if (!open) return;
+      
+      final URI root = getPath("/").toUri();
+      implClose(root);
+
+      flush();
+
       open = false;
-    } 
+    }
     finally {
       closeLock.writeLock().unlock();
     }
-    implClose(root);
   }
 
-  final void begin() {
+  Path createTempFile(FileAttribute<?>... attrs) throws IOException {
+    final Path tmp =
+      Paths.get(File.createTempFile("zipfs", "tmp").toString());
+
+    tmp.deleteIfExists();
+    tmp.createFile(attrs);
+
+    return tmp;
+  }
+
+  Path createTempDirectory(FileAttribute<?>... attrs) throws IOException {
+    final Path tmp =
+      Paths.get(File.createTempFile("zipfs", "tmp").toString());
+
+    tmp.deleteIfExists();
+    tmp.createDirectory(attrs);
+
+    return tmp;
+  }
+
+  public void flush() throws IOException {
+    try {
+      closeLock.writeLock().lock();
+
+      // no modifications, nothing to do
+      if (real.isEmpty()) return;
+
+      info.clear();
+
+      // create a temp file into which to write the new ZIP archive
+      final Path nzip =
+        Paths.get(File.createTempFile("rwzipfs", "zip").toString());
+
+      ZipOutputStream out = null;
+      try {
+        out = new ZipOutputStream(nzip.newOutputStream());
+
+        ZipFile zf = null;
+        try {
+          zf = new ZipFile(getZipFileSystemFile());
+        
+          // copy all unchanged files from old archive to new archive
+          final Enumeration<? extends ZipEntry> en = zf.entries();
+          while (en.hasMoreElements()) {
+            final ZipEntry e = en.nextElement();
+            final ZipFilePath path = getPath(e.toString());
+     
+            if (real.containsKey(path)) continue;
+
+            if (Boolean.TRUE.equals(path.getAttribute("isDirectory"))) {
+              out.putNextEntry(e);
+            }
+            else {
+              InputStream in = null;
+              try {
+                in = zf.getInputStream(e);
+         
+                // We can't reuse entries for compressed files because
+                // there's no way to reset the fields to acceptable values. 
+                final ZipEntry ze = new ZipEntry(e.getName());
+                ze.setMethod(ZipEntry.DEFLATED);
+
+// FIXME: preserve attribs?
+                out.putNextEntry(ze);
+                IOUtils.copy(in, out);
+                out.closeEntry();
+                in.close();
+              }
+              finally {
+                IOUtils.closeQuietly(in);
+              }
+            }
+          }
+        
+          zf.close();
+        }
+        finally {
+          IOUtils.closeQuietly(zf);
+        }
+
+        // copy all new files to new archive
+        for (Map.Entry<ZipFilePath,Path> e : real.entrySet()) {
+          final Path rpath = e.getValue();
+          if (rpath == DELETED) continue;  // path was deleted, skip
+
+// FIXME: preserve attribs?
+          final ZipEntry ze = new ZipEntry(rpath.toString());
+          if (Boolean.TRUE.equals(rpath.getAttribute("isDirectory"))) {
+            out.putNextEntry(ze);
+          }
+          else {
+            ze.setMethod(ZipEntry.DEFLATED);
+
+            InputStream in = null;
+            try {
+              in = rpath.newInputStream();
+              out.putNextEntry(ze);
+              IOUtils.copy(in, out);
+              out.closeEntry();
+              in.close();
+            }
+            finally {
+              IOUtils.closeQuietly(in);
+            }
+          }
+        }
+  
+        out.close();
+      }
+      finally {
+        IOUtils.closeQuietly(out);
+      }
+
+      final Path ozip = Paths.get(getZipFileSystemFile());
+
+      // replace the old archive with the new one
+      nzip.moveTo(ozip, StandardCopyOption.REPLACE_EXISTING);
+
+      // delete external versions of new files
+      for (Path rpath : real.values()) {
+        if (rpath != DELETED) rpath.delete();
+      }
+      real.clear();
+    }
+    finally {
+      closeLock.writeLock().unlock();
+    }
+  }
+
+  protected final ConcurrentMap<Path,ReentrantReadWriteLock> locks =
+    new ConcurrentHashMap<Path,ReentrantReadWriteLock>();
+
+  void readLock(Path path) {
+    // acquire read lock on root
+    begin();
+
+    // acquire read lock on path
+    path = path.toAbsolutePath();
+
+    final ReentrantReadWriteLock nl = new ReentrantReadWriteLock();
+    ReentrantReadWriteLock l = locks.putIfAbsent(path, nl);
+    if (l == null) l = nl;
+
+    l.readLock().lock();
+  }
+
+  void readUnlock(Path path) {
+    path = path.toAbsolutePath();
+
+    // release read lock on path
+    locks.get(path).readLock().unlock();
+
+    // release read lock on root
+    end(); 
+  }
+
+  void writeLock(Path path) {
+    // acquire read lock on root
+    begin(); 
+
+    path = path.toAbsolutePath();
+
+    // acquire write lock on path
+    final ReentrantReadWriteLock nl = new ReentrantReadWriteLock();
+    ReentrantReadWriteLock l = locks.putIfAbsent(path, nl);
+    if (l == null) l = nl;
+
+    l.writeLock().lock();
+  }
+
+  void writeUnlock(Path path) {
+    path = path.toAbsolutePath();
+
+    // release write lock on path
+    locks.get(path).writeLock().unlock();
+
+    // release read lock on root
+    end(); 
+  }
+
+  void begin() {
     closeLock.readLock().lock();
     if (!isOpen()) {
       throw new ClosedFileSystemException();
     }
   }
 
-  final void end() {
+  void end() {
     closeLock.readLock().unlock();
+  }
+
+  Path getReal(Object zpath) {
+    return real.get(zpath);
+  }
+
+  Path putReal(ZipFilePath zpath, Path rpath) {
+    removeInfo(zpath);
+    return real.put(zpath, rpath);
+  }
+
+  Path removeReal(ZipFilePath zpath) {
+    removeInfo(zpath);
+    return real.remove(zpath);
+  }
+
+  ZipEntryInfo getInfo(Object zpath) {
+    return info.get(zpath);
+  }
+
+  ZipEntryInfo putInfo(ZipFilePath zpath, ZipEntryInfo zinfo) {
+    return info.put(zpath, zinfo);
+  }
+
+  ZipEntryInfo removeInfo(ZipFilePath zpath) {
+    return info.remove(zpath);
   }
 
 // FIXME
@@ -123,15 +356,11 @@ public class ZipFileSystem extends FileSystem {
   private void implClose(URI root) throws IOException {
     ZipUtils.remove(root); // remove cached filesystem
     provider.removeFileSystem(root);
-    Iterator<Closeable> itr = closeables.iterator();
-    while (itr.hasNext()) {
-      try {
-        itr.next().close();
-        itr.remove();
-      } 
-      catch (IOException e) {
-        throw e;
-      }
+
+    final Iterator<Closeable> i = closeables.iterator();
+    while (i.hasNext()) {
+      i.next().close();
+      i.remove();
     }
   }
 
@@ -167,16 +396,16 @@ public class ZipFileSystem extends FileSystem {
 
   @Override
   public ZipFilePath getPath(String path) {
-
     if (path == null) {
       throw new NullPointerException();
     }
     if (path.equals("")) {
       throw new InvalidPathException(path, "path should not be empty");
     }
+
     try {
       begin();
-      byte[] parsedPath = ZipPathParser.normalize(path).getBytes();
+      final byte[] parsedPath = ZipPathParser.normalize(path).getBytes();
       return new ZipFilePath(this, parsedPath);
     }
     finally {

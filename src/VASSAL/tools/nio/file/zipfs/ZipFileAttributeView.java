@@ -52,6 +52,8 @@ public class ZipFileAttributeView extends ZipFileBasicAttributeView {
     return new ZipFileAttributes(file);
   }
 
+// FIXME: should make comment, method settable
+
   @Override
   public Object getAttribute(String attribute) throws IOException {
     final ZipFileAttributes zfa = readAttributes();

@@ -38,22 +38,56 @@ import VASSAL.tools.nio.file.attribute.*;
 import java.io.IOException;
 import java.util.Calendar;
 
+import static VASSAL.tools.nio.file.zipfs.ZipFileSystem.DELETED;
+
 public class ZipFileBasicAttributes implements BasicFileAttributes {
 
   ZipEntryInfo ze;
 
   /** Creates a new instance of ZipFileAttributes */
   public ZipFileBasicAttributes(ZipFilePath file) throws IOException {
-    if (!file.getFileSystem().isOpen()) {
-      throw new ClosedFileSystemException();
-    }
+    final ZipFileSystem fs = file.getFileSystem();
 
     try {
-      ZipIO.readLock(file);
-      ze = ZipUtils.getEntry(file);
+      fs.readLock(file);
+
+      Path rpath = fs.getReal(file);
+      if (rpath != null) {
+        if (rpath == DELETED) {
+          throw new NoSuchFileException(file.toString());
+        }
+
+        ze = fs.getInfo(file);
+        if (ze == null) {
+          // build fake ZipEntryInfo from temporary file
+          final BasicFileAttributes attrs =
+            Attributes.readBasicFileAttributes(rpath);
+
+          ze = new ZipEntryInfo();
+
+          ze.filename = file.toAbsolutePath().toString().getBytes();
+          ze.compSize = -1;
+// FIXME: int cast is a problem---test what happens when we try to write an
+// archive containing a >4GB file 
+          ze.size = (int) attrs.size();
+          ze.isDirectory = attrs.isDirectory();
+          ze.isOtherFile = attrs.isOther();
+          ze.isRegularFile = attrs.isRegularFile();
+          ze.lastModifiedTime = attrs.lastModifiedTime().toMillis();
+
+          fs.putInfo(file, ze);
+        }
+      }
+      else {
+        ze = fs.getInfo(file);
+        if (ze == null) {
+          ze = ZipUtils.getEntry(file);
+          fs.putInfo(file, ze);
+        }
+      }
     }
     finally {
-      ZipIO.readUnlock(file);
+      fs.readUnlock(file);
     }
   }
 

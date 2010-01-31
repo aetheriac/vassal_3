@@ -335,7 +335,7 @@ public class ZipUtils {
       throws IOException {
     Map<ZipFilePath, ZipEntryInfo> entries = null;
     ZipEntryInfo ze = null;
-    ZipFilePath file = (ZipFilePath) file1;
+    ZipFilePath file = ((ZipFilePath) file1).toAbsolutePath();
     int entryCount = file.getEntryNameCount();
     if (file.isArchiveFile() && entryCount == 1) {
       ZipFilePath root1 = file.getRoot();
@@ -414,7 +414,7 @@ public class ZipUtils {
         }
       }
     }
-    throw new NoSuchFileException("" + zfp); // no matching
+    throw new NoSuchFileException(zfp.toString()); // no matching
   }
 
   private static long javaTimeToDosTime(long time) {

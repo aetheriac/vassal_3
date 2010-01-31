@@ -57,6 +57,10 @@ import VASSAL.tools.nio.file.DirectoryStream.Filter;
 import VASSAL.tools.nio.file.attribute.*;
 import VASSAL.tools.nio.file.spi.*;
 
+import static VASSAL.tools.nio.file.zipfs.ZipFileSystem.DELETED;
+
+import VASSAL.tools.io.IOUtils;
+
 /**
  * Jar/Zip path implementation of Path
  * We use "/" as the Zip File entry seperator.
@@ -64,7 +68,7 @@ import VASSAL.tools.nio.file.spi.*;
  */
 public class ZipFilePath extends Path {
 
-  private ZipFileSystem fileSystem;
+  private ZipFileSystem fs;
   //zip file separator
   public static final String separator = "/";
   // path inside zip and it can contain nested zip/jar paths
@@ -80,14 +84,14 @@ public class ZipFilePath extends Path {
   private final byte[] pathForPrint;
 
   // package-private
-  ZipFilePath(ZipFileSystem fileSystem, byte[] pathInZip) {
-    this.fileSystem = fileSystem;
+  ZipFilePath(ZipFileSystem fs, byte[] pathInZip) {
+    this.fs = fs;
     this.path = pathInZip;
     this.pathForPrint = pathInZip;
     boolean isAbs = (path[0] == '/');
     String toResolve = new String(path);
     if (!isAbs) {
-      String defdir = fileSystem.getDefaultDir();
+      String defdir = fs.getDefaultDir();
       boolean endsWith = defdir.endsWith("/");
       if (endsWith) {
         toResolve = defdir + toResolve;
@@ -100,8 +104,8 @@ public class ZipFilePath extends Path {
   }
 
   // if given path is resolved
-  ZipFilePath(ZipFileSystem fileSystem, byte[] pathInZip, byte[] pathForZip) {
-    this.fileSystem = fileSystem;
+  ZipFilePath(ZipFileSystem fs, byte[] pathInZip, byte[] pathForZip) {
+    this.fs = fs;
     this.path = pathForZip;
     this.pathForZip = pathForZip;
     this.pathForPrint = pathInZip; //given path
@@ -147,7 +151,7 @@ public class ZipFilePath extends Path {
    */
   public boolean isDirectory() {
     try {
-      fileSystem.begin();
+      fs.begin();
       try {
         ZipFilePath resolved = getResolvedPathForZip();
         return Attributes.readBasicFileAttributes(resolved, LinkOption.NOFOLLOW_LINKS).isDirectory();
@@ -157,7 +161,7 @@ public class ZipFilePath extends Path {
       }
     }
     finally {
-      fileSystem.end();
+      fs.end();
     }
   }
 
@@ -231,7 +235,7 @@ public class ZipFilePath extends Path {
   @Override
   public ZipFilePath getRoot() {
     if (this.isAbsolute()) {
-      return new ZipFilePath(this.fileSystem, new byte[]{path[0]});
+      return new ZipFilePath(this.fs, new byte[]{path[0]});
     } 
     else {
       return null;
@@ -246,7 +250,7 @@ public class ZipFilePath extends Path {
     }
     String result = subString(offsets.get(offsets.size() - 1), path.length);
     result = (result.endsWith("/")) ? result.substring(0, result.length() - 1) : result;
-    return new ZipFilePath(this.fileSystem, result.getBytes());
+    return new ZipFilePath(this.fs, result.getBytes());
   }
 
   public ZipFilePath getEntryName() {
@@ -256,7 +260,7 @@ public class ZipFilePath extends Path {
     }
     String result = subString(entryOffsets.get(entryOffsets.size() - 1), path.length);
     result = (result.endsWith("/")) ? result.substring(0, result.length() - 1) : result;
-    return new ZipFilePath(this.fileSystem, result.getBytes());
+    return new ZipFilePath(this.fs, result.getBytes());
 
   }
 
@@ -273,13 +277,13 @@ public class ZipFilePath extends Path {
     if (count == 1) {
       // has the root as its parent if absolute, and no parent otherwise
       return isAbsolute() ?
-        new ZipFilePath(this.fileSystem, new byte[]{path[0]}) : null;
+        new ZipFilePath(this.fs, new byte[]{path[0]}) : null;
     }
 
     // all other paths have a parent
     int position = offsets.get(count - 1);
     String parent = subString(0, position - 1);
-    return new ZipFilePath(this.fileSystem, parent.getBytes());
+    return new ZipFilePath(this.fs, parent.getBytes());
   }
 
   public ZipFilePath getParentEntry() {
@@ -290,7 +294,7 @@ public class ZipFilePath extends Path {
     int position = entryOffsets.get(entryCount - 1);
     String parent = subString(0, position - 1);
     byte[] parentBytes = parent.getBytes();
-    ZipFilePath path1 = new ZipFilePath(this.fileSystem, parentBytes);
+    ZipFilePath path1 = new ZipFilePath(this.fs, parentBytes);
     return path1;
   }
 
@@ -315,11 +319,11 @@ public class ZipFilePath extends Path {
     if (index == offsets.size() - 1) {
       String s = subString(offsets.get(index), path.length);
       s = (s.endsWith("/")) ? s.substring(0, s.length() - 1) : s;
-      return new ZipFilePath(this.fileSystem, s.getBytes());
+      return new ZipFilePath(this.fs, s.getBytes());
     }
 
     byte[] pathInBytes = subString(offsets.get(index), offsets.get(index + 1) - 1).getBytes();
-    return new ZipFilePath(this.fileSystem, pathInBytes);
+    return new ZipFilePath(this.fs, pathInBytes);
   }
 
   public ZipFilePath getEntryName(int index) {
@@ -330,10 +334,10 @@ public class ZipFilePath extends Path {
     if (index == entryOffsets.size() - 1) {
       String s = subString(entryOffsets.get(index), path.length);
       s = (s.endsWith("/")) ? s.substring(0, s.length() - 1) : s;
-      return new ZipFilePath(this.fileSystem, s.getBytes());
+      return new ZipFilePath(this.fs, s.getBytes());
     }
     byte[] pathInBytes = subString(entryOffsets.get(index), entryOffsets.get(index + 1) - 1).getBytes();
-    return new ZipFilePath(this.fileSystem, pathInBytes);
+    return new ZipFilePath(this.fs, pathInBytes);
   }
 
   String subString(int beginIndex, int endIndex) {
@@ -373,7 +377,7 @@ public class ZipFilePath extends Path {
 
     if (result.endsWith("/")) result = result.substring(0, result.length()-1);
 
-    return new ZipFilePath(fileSystem, result.getBytes());
+    return new ZipFilePath(fs, result.getBytes());
   }
 
   public ZipFilePath subEntryPath(int beginIndex, int endIndex) {
@@ -405,12 +409,12 @@ public class ZipFilePath extends Path {
     }
     result = result1.toString();
     result = (result.endsWith("/")) ? result.substring(0, result.length() - 1) : result;
-    return new ZipFilePath(fileSystem, result.getBytes());
+    return new ZipFilePath(fs, result.getBytes());
   }
 
   @Override
   public ZipFilePath toRealPath(boolean resolveLinks) throws IOException {
-    ZipFilePath realPath = new ZipFilePath(this.fileSystem, pathForZip);
+    ZipFilePath realPath = new ZipFilePath(this.fs, pathForZip);
     realPath.checkAccess();
     return realPath;
   }
@@ -426,8 +430,8 @@ public class ZipFilePath extends Path {
       return this;
     } 
     else {
-      // add / bofore the existing path
-      byte[] defaultdir = fileSystem.getDefaultDir().getBytes();
+      // add / before the existing path
+      byte[] defaultdir = fs.getDefaultDir().getBytes();
       int defaultlen = defaultdir.length;
       boolean endsWith = (defaultdir[defaultlen - 1] == '/');
       byte[] t = null;
@@ -443,14 +447,14 @@ public class ZipFilePath extends Path {
         t[defaultlen++] = '/';
       }
       System.arraycopy(path, 0, t, defaultlen, path.length);
-      return new ZipFilePath(this.fileSystem, t);
+      return new ZipFilePath(this.fs, t);
     }
   }
 
   @Override
   public URI toUri() {
 
-    String fullPath = fileSystem.getZipFileSystemFile();
+    String fullPath = fs.getZipFileSystemFile();
     if (File.separatorChar == '\\') {
       fullPath = "/" + fullPath.replace("\\", "/"); // if Windows replace all separators by '/'
     }
@@ -465,7 +469,7 @@ public class ZipFilePath extends Path {
     }
     String pathStr = new String(t);
     if (!isAbsolute()) {
-      String defaultdir = fileSystem.getDefaultDir();
+      String defaultdir = fs.getDefaultDir();
       if (defaultdir.endsWith("/")) {
         pathStr = defaultdir + pathStr;
       } else {
@@ -484,7 +488,7 @@ public class ZipFilePath extends Path {
 
   URI toUri0() {
     try {
-      String fullPath = fileSystem.getZipFileSystemFile();
+      String fullPath = fs.getZipFileSystemFile();
       if (File.separatorChar == '\\') {
         fullPath = "/" + fullPath.replace("\\", "/"); // if Windows replace all separators by '/'
       }
@@ -497,7 +501,7 @@ public class ZipFilePath extends Path {
       }
       String pathStr = new String(t);
       if (!isAbsolute()) {
-        String defaultdir = fileSystem.getDefaultDir();
+        String defaultdir = fs.getDefaultDir();
         if (defaultdir.endsWith("/")) {
           pathStr = defaultdir + pathStr;
         }
@@ -556,12 +560,12 @@ public class ZipFilePath extends Path {
       }
       System.arraycopy(subPath.path, 0, result, arr.length, subpathlen);
     }
-    return new ZipFilePath(this.fileSystem, result);
+    return new ZipFilePath(this.fs, result);
   }
 
   //@Override
   public ZipFileSystem getFileSystem() {
-    return fileSystem;
+    return fs;
   }
 
   @Override
@@ -594,7 +598,7 @@ public class ZipFilePath extends Path {
       resolved[path.length] = '/';
       System.arraycopy(other1.path, 0, resolved, path.length + 1, other1.path.length);
     }
-    return new ZipFilePath(this.fileSystem, resolved);
+    return new ZipFilePath(this.fs, resolved);
   }
 
   @Override
@@ -655,7 +659,7 @@ public class ZipFilePath extends Path {
   }
 
   public FileSystemProvider provider() {
-    return fileSystem.provider();
+    return fs.provider();
   }
 
   @Override
@@ -724,55 +728,69 @@ public class ZipFilePath extends Path {
     throw new UnsupportedOperationException("Not supported.");
   }
 
-// FIXME: write lock
   @Override
-  public Path createDirectory(
-      FileAttribute<?>... attrs) throws IOException {
-    throw new ReadOnlyFileSystemException();
+  public Path createDirectory(FileAttribute<?>... attrs) throws IOException {
+    try {
+      fs.writeLock(this);
+
+      if (exists()) throw new FileAlreadyExistsException(toString());
+      fs.putReal(this, fs.createTempDirectory(attrs));
+      return this;
+    }
+    finally {
+      fs.writeUnlock(this);
+    }
   }
 
   ZipFilePath getResolvedPathForZip() {
     if (pathToZip == null) {
-      pathToZip = new ZipFilePath(fileSystem, path, pathForZip);
+      pathToZip = new ZipFilePath(fs, path, pathForZip);
     }
     return pathToZip;
   }
 
+  @Override
   public InputStream newInputStream(OpenOption... options) throws IOException {
-    if (options.length > 0) {
-      for (OpenOption opt : options) {
-        if (opt != StandardOpenOption.READ) {
-          throw new UnsupportedOperationException("'" + opt + "' not allowed");
-        }
-      }
-    }
 
-// FIXME: why is this under a lock?
+    // validate OpenOptions
+    for (OpenOption o : options) {
+      if (o != StandardOpenOption.READ) {
+        throw new UnsupportedOperationException(
+          "'" + o + "' is not a valid option");
+      }
+    } 
+
     try {
-      fileSystem.begin();
+      fs.readLock(this);
 
-      ZipFilePath realPath = getResolvedPathForZip();
-      if (realPath.getNameCount() == 0) {
-        throw new IOException("entry missing in the path");
+      final Path rpath = fs.getReal(this);
+      if (rpath != null) {
+        if (rpath == DELETED) throw new NoSuchFileException(toString());
+        return ZipIO.wrapReadLocked(this, rpath.newInputStream(options));
       }
+      else {
+        final ZipFilePath realPath = getResolvedPathForZip();
+        if (realPath.getNameCount() == 0) {
+          throw new IOException("entry missing in the path");
+        }
 
-      return ZipIO.in(this, options);
+        return ZipIO.wrapReadLocked(this, ZipIO.in(this, options));
+      }      
     }
     finally {
-      fileSystem.end();
+      fs.readUnlock(this);
     }
   }
 
   @Override
-  public DirectoryStream<Path> newDirectoryStream(
-      Filter<? super Path> filter) throws IOException
-  {
+  public DirectoryStream<Path> newDirectoryStream(Filter<? super Path> filter)
+                                                           throws IOException {
     try {
-      fileSystem.begin();
+      fs.readLock(this);
       return new ZipFileStream(getResolvedPathForZip(), filter);
     }
     finally {
-      fileSystem.end();
+      fs.readUnlock(this);
     }
   }
 
@@ -804,20 +822,50 @@ public class ZipFilePath extends Path {
     return newDirectoryStream(filter);
   }
 
-// FIXME: write lock
   @Override
   public void delete() throws IOException {
-    throw new ReadOnlyFileSystemException();
+    try {
+      fs.writeLock(this);
+
+      if (!exists()) throw new NoSuchFileException(toString());
+
+      // delete only empty directories
+      if (Boolean.TRUE.equals(getAttribute("isDirectory"))) {
+        DirectoryStream<Path> ds = null;
+        try {
+          ds = newDirectoryStream();
+          if (ds.iterator().hasNext()) {
+            throw new DirectoryNotEmptyException(toString());
+          }
+          ds.close();
+        }
+        finally {
+          IOUtils.closeQuietly(ds);
+        }
+      }
+
+      final Path old = fs.putReal(this, DELETED);
+      if (old != null) old.delete();
+    }
+    finally {
+      fs.writeUnlock(this);
+    }
   }
 
-// FIXME: write lock
   @Override
   public void deleteIfExists() throws IOException {
-    throw new ReadOnlyFileSystemException();
+    try {
+      fs.writeLock(this);
+      if (exists()) delete();
+    }
+    finally {
+      fs.writeUnlock(this);
+    }
   }
 
   @SuppressWarnings("unchecked")
-  public <V extends FileAttributeView> V getFileAttributeView(Class<V> type, LinkOption... options) {
+  public <V extends FileAttributeView> V getFileAttributeView(
+                                        Class<V> type, LinkOption... options) {
     if (type == null) {
       throw new NullPointerException();
     }
@@ -849,30 +897,35 @@ public class ZipFilePath extends Path {
     return null;
   }
 
-// FIXME: write lock
-  public void setAttribute(String attribute, Object value, LinkOption... options) {
+// FIXME: implement!
+  public void setAttribute(String attribute, Object value,
+                                             LinkOption... options) {
     throw new UnsupportedOperationException();
   }
 
-  public Object getAttribute(String attribute, LinkOption... options) throws IOException {
+  @Override
+  public Object getAttribute(String attribute, LinkOption... options)
+                                                           throws IOException {
+    final int colon = attribute.indexOf(':');
 
-    String view = null;
-    String attr = null;
-    int colonPos = attribute.indexOf(':');
-    if (colonPos == -1) {
+    final String view;
+    final String name;
+
+    if (colon == -1) {
       view = "basic";
-      attr = attribute;
+      name = attribute;
     }
     else {
-      view = attribute.substring(0, colonPos++);
-      attr = attribute.substring(colonPos);
+      view = attribute.substring(0, colon);
+      name = attribute.substring(colon+1, attribute.length());
     }
 
-    ReadableAttributeViewByName fileView = getFileAttributeView(view);
+    final ReadableAttributeViewByName fileView = getFileAttributeView(view);
     if (fileView == null) {
       throw new UnsupportedOperationException("view not supported");
     }
-    return fileView.getAttribute(attr);
+
+    return fileView.getAttribute(name);
   }
 
   public Map<String,?> readAttributes(String attributes, LinkOption... options)
@@ -935,7 +988,11 @@ public class ZipFilePath extends Path {
         }
       }
       else {
-        map.put(attr, getAttribute(attr));
+// FIXME: inefficient, creates new view, attributes each time
+        final ReadableAttributeViewByName fv = getFileAttributeView(view);
+        if (fv != null) { 
+          map.put(name, fv.getAttribute(name));
+        }
       }
     }
     
@@ -945,7 +1002,7 @@ public class ZipFilePath extends Path {
   @Override
   public FileStore getFileStore() throws IOException {
     try {
-      fileSystem.begin();
+      fs.begin();
       if (isAbsolute()) {
         return ZipFileStore.create(getRoot());
       }
@@ -954,7 +1011,7 @@ public class ZipFilePath extends Path {
       }
     }
     finally {
-      fileSystem.end();
+      fs.end();
     }
   }
 
@@ -1027,54 +1084,104 @@ public class ZipFilePath extends Path {
     };
   }
 
-// FIXME: read lock
-// FIXME: write lock
   @Override
-  public SeekableByteChannel newByteChannel(
-      Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws IOException {
+  public SeekableByteChannel newByteChannel(Set<? extends OpenOption> options,
+                                            FileAttribute<?>... attrs)
+                                                           throws IOException {
+    // validate OpenOptions
+    boolean read = false;
+    boolean write = false;
+    boolean append = false;
+    boolean truncate_existing = false;
+    boolean create_new = false;
 
-    // check for options of null type and option is an intance of StandardOpenOption
-    for (OpenOption option : options) {
-      if (option == null) {
-        throw new NullPointerException();
+    for (OpenOption o : options) {
+      if (o instanceof StandardOpenOption) {
+        switch ((StandardOpenOption) o) {
+        case APPEND:            append            = true; break;
+        case TRUNCATE_EXISTING: truncate_existing = true; break;
+        case CREATE_NEW:        create_new        = true; break;
+        case WRITE:             write             = true; break;
+        case READ:              read              = true; break;
+        case CREATE:                                      break;
+        case DELETE_ON_CLOSE:
+        case SPARSE:
+        case SYNC:
+        case DSYNC:
+          throw new UnsupportedOperationException(
+            "'" + o + "' is not a valid option");
+        }
       }
-      if (!(option instanceof StandardOpenOption)) {
-        throw new IllegalArgumentException();
+      else {
+        throw new UnsupportedOperationException(
+          "'" + o + "' is not a valid option");
+      }
+    } 
+
+    if (truncate_existing) {
+      if (read) { 
+        throw new UnsupportedOperationException(
+          "READ is in incompatible with TRUNCATE_EXISTING");
+      }
+      else if (append) {
+        throw new UnsupportedOperationException(
+          "APPEND is in incompatible with TRUNCATE_EXISTING");
       }
     }
 
-    boolean openedForWriteOrAppend = options.contains(StandardOpenOption.WRITE) ||
-        options.contains(StandardOpenOption.APPEND);
-    if (openedForWriteOrAppend) {
-      throw new ReadOnlyFileSystemException();
-    }
+    if (write || append) {
+      try {
+        fs.writeLock(this);
 
-    boolean openedForRead = options.contains(StandardOpenOption.READ);
-    openedForRead = openedForRead || true; // if not opened for read then set openedForRed to true;
+        if (create_new) {
+          if (exists()) throw new FileAlreadyExistsException(toString());
 
-    if (!openedForRead) {
-      throw new IllegalArgumentException("not opened for Read"); //this is never thrown
-    }
+          // don't pass CREATE_NEW through to operations on temporary store
+          options.remove(StandardOpenOption.CREATE_NEW);
+        }
 
-    try {
-      fileSystem.begin();
+        Path rpath = fs.getReal(this);
+        if (rpath == null || rpath == DELETED) {
+          rpath = fs.createTempFile(attrs);
+          fs.putReal(this, rpath);
+        }
 
-      ZipFilePath realPath = getResolvedPathForZip();
-      if (realPath.getNameCount() == 0) {
-        throw new IOException("entry Not Found");
+        final SeekableByteChannel ch = rpath.newByteChannel(options, attrs);
+        return ZipIO.wrapWriteLocked(this, ch);
       }
-
-      return ZipIO.channel(this, options);
+      finally {
+        fs.writeUnlock(this);
+      }
     }
-    finally {
-      fileSystem.end();
+    else {
+      try {
+        fs.readLock(this);
+
+        final Path rpath = fs.getReal(this);
+        if (rpath != null) {
+          if (rpath == DELETED) throw new NoSuchFileException(toString());
+          final SeekableByteChannel ch = rpath.newByteChannel(options, attrs);
+          return ZipIO.wrapReadLocked(this, ch);
+        }
+        else {
+          final ZipFilePath zpath = getResolvedPathForZip();
+          if (zpath.getNameCount() == 0) {
+            throw new IOException("entry Not Found");
+          }
+          
+          return ZipIO.wrapReadLocked(this, ZipIO.channel(this, options));
+        }  
+      }
+      finally {
+        fs.readUnlock(this);
+      }
     }
   }
 
   @Override
   public SeekableByteChannel newByteChannel(OpenOption... options)
-      throws IOException {
-    Set<OpenOption> set = new HashSet<OpenOption>(options.length);
+                                                           throws IOException {
+    final Set<OpenOption> set = new HashSet<OpenOption>(options.length);
     Collections.addAll(set, options);
     return newByteChannel(set);
   }
@@ -1086,14 +1193,14 @@ public class ZipFilePath extends Path {
     int entryCount = realPath.getEntryNameCount();
     if (realPath.isNestedZip()) {
       if (realPath.isArchiveFile() && entryCount == 1) {
-        pathtoZip = this.fileSystem.getZipFileSystemFile();
+        pathtoZip = this.fs.getZipFileSystemFile();
       }
       else {
         pathtoZip = ZipUtils.extractNestedZip(realPath.getParentEntry()).toString();
       }
     }
     else {
-      pathtoZip = this.fileSystem.getZipFileSystemFile();
+      pathtoZip = this.fs.getZipFileSystemFile();
     }
 
     return pathtoZip;
@@ -1119,21 +1226,38 @@ public class ZipFilePath extends Path {
       }
     }
 
+    final ZipFilePath resolvedZipPath = getResolvedPathForZip();
+    final int nameCount = resolvedZipPath.getNameCount();
+    if (nameCount == 0) {
+      throw new NoSuchFileException(toString());
+    }
+
     try {
-      fileSystem.begin();
-      ZipFilePath resolvedZipPath = getResolvedPathForZip();
-      int nameCount = resolvedZipPath.getNameCount();
-      if (nameCount == 0) {
-        throw new NoSuchFileException(toString());
+      fs.readLock(this);
+
+      final Path rpath = fs.getReal(this);
+      if (rpath != null) {
+        // the path has been modified
+        if (rpath == DELETED) throw new NoSuchFileException(toString());
+        rpath.checkAccess(modes);
       }
+      else {
+        // the path is original to the ZIP archive
+        final ZipEntryInfo ze = ZipUtils.getEntry(resolvedZipPath);
 
-      try {
-        ZipIO.readLock(resolvedZipPath);
-
-        ZipEntryInfo ze = ZipUtils.getEntry(resolvedZipPath);
         if (w) {
-          throw new AccessDeniedException(
-            "write access denied for the file: " + this.toString());
+          // check write access on archive file
+          try {
+            final Path zpath = Paths.get(fs.getZipFileSystemFile());
+            zpath.checkAccess(AccessMode.WRITE);
+          }
+          catch (AccessDeniedException e) {
+            throw (IOException) new AccessDeniedException(
+              "write access denied for the file: " + toString()).initCause(e);
+          }
+          catch (IOException e) {
+            throw (IOException) new IOException().initCause(e);
+          }
         }
 
         if (x) {
@@ -1144,12 +1268,9 @@ public class ZipFilePath extends Path {
           }
         }
       }
-      finally {
-        ZipIO.readUnlock(resolvedZipPath);
-      }
     }
     finally {
-      fileSystem.end();
+      fs.readUnlock(this);
     }
   }
 
@@ -1197,122 +1318,306 @@ public class ZipFilePath extends Path {
     final String parsed = ZipPathParser.resolve(new String(path));
 
     return parsed.equals("") ? null :
-      new ZipFilePath(fileSystem, parsed.getBytes(), pathForZip);
+      new ZipFilePath(fs, parsed.getBytes(), pathForZip);
   }
 
-// FIXME: write lock
   @Override
-  public Path createFile(FileAttribute<?>... attrs) {
-    throw new ReadOnlyFileSystemException();
+  public Path createFile(FileAttribute<?>... attrs) throws IOException {
+    try {
+      fs.writeLock(this);
+
+      if (exists()) throw new FileAlreadyExistsException(toString());
+      fs.putReal(this, fs.createTempFile(attrs));
+      return this;
+    }
+    finally {
+      fs.writeUnlock(this);
+    }
   }
 
-// FIXME: write lock
-  public OutputStream newOutputStream(OpenOption... options) {
-    throw new ReadOnlyFileSystemException();
-  }
-
-// FIXME: write lock
   @Override
-  public Path moveTo(Path target, CopyOption... options) {
-    throw new ReadOnlyFileSystemException();
+  public OutputStream newOutputStream(OpenOption... options)
+                                                           throws IOException {
+    // validate OpenOptions
+    boolean append = false;
+    boolean truncate_existing = false;
+    boolean create_new = false;
+
+    for (OpenOption o : options) {
+      if (o instanceof StandardOpenOption) {
+        switch ((StandardOpenOption) o) {
+        case APPEND:            append = true;            break;
+        case TRUNCATE_EXISTING: truncate_existing = true; break;
+        case CREATE_NEW:        create_new = true;        break;
+        case CREATE:                                      break;
+        case WRITE:                                       break;
+        case READ:
+        case DELETE_ON_CLOSE:
+        case SPARSE:
+        case SYNC:
+        case DSYNC:
+          throw new UnsupportedOperationException(
+            "'" + o + "' is not a valid option");
+        }
+      }
+      else {
+        throw new UnsupportedOperationException(
+          "'" + o + "' is not a valid option");
+      }
+    } 
+
+    if (append && truncate_existing) {
+      throw new UnsupportedOperationException(
+        "APPEND is in incompatible with TRUNCATE_EXISTING");
+    }
+
+    try {
+      fs.writeLock(this);
+
+      if (create_new) {
+        if (exists()) throw new FileAlreadyExistsException(toString());
+
+        // don't pass CREATE_NEW through to operations on temporary store
+        final Set<OpenOption> oset =
+          new HashSet<OpenOption>(Arrays.asList(options));
+        
+        oset.remove(StandardOpenOption.CREATE_NEW);
+        options = oset.toArray(new OpenOption[oset.size()]);
+      }
+
+      Path rpath = fs.getReal(this);
+      if (rpath == null || rpath == DELETED) {
+        rpath = fs.createTempFile();
+        fs.putReal(this, rpath);
+      }
+
+      return ZipIO.wrapWriteLocked(this, rpath.newOutputStream(options));
+    }
+    finally {
+      fs.writeUnlock(this);
+    }
   }
 
-// FIXME: read lock
-// FIXME: write lock
   @Override
-  public Path copyTo(Path target, CopyOption... options) throws IOException {
-    if ((getFileSystem().provider() == target.getFileSystem().provider()))
-      throw new ReadOnlyFileSystemException();
+  public Path moveTo(Path target, CopyOption... options) throws IOException {
+    if (this.isSameFile(target)) return target;
 
-    boolean replaceExisting = false;
-    boolean copyAttributes = false;
+    // validate CopyOptions
+    boolean replace_existing = false;
 
     for (CopyOption option: options) {
       if (option == StandardCopyOption.REPLACE_EXISTING) {
-        replaceExisting = true;
-        continue;
+        replace_existing = true;
       }
-      if (option == LinkOption.NOFOLLOW_LINKS) {
-        // ignore
-        continue;
+      else {
+        throw new UnsupportedOperationException(
+          "'" + option + "' is not a valid copy option");
       }
-      if (option == StandardCopyOption.COPY_ATTRIBUTES) {
-        copyAttributes = true;
-        continue;
-      }
-      if (option == null)
-        throw new NullPointerException();
-      throw new IllegalArgumentException("'" + option +
-        "' is not a valid copy option");
     }
 
-    // attributes of source file
-    BasicFileAttributes attrs = Attributes.readBasicFileAttributes(this);
-    if (attrs.isSymbolicLink())
-      throw new IOException("Copying of symbolic links not supported");
+    try {
+      fs.writeLock(this);
 
-    // check for or delete target file.
-    if (replaceExisting) {
-      target.deleteIfExists();
-    }
-    else {
-      if (target.exists())
-        throw new FileAlreadyExistsException(target.toString());
-    }
-
-    // create directory or file
-    if (attrs.isDirectory()) {
-      target.createDirectory();
-    }
-    else {
-      copyToTarget(target);
-    }
-
-    // copy basic attributes to target
-    if (copyAttributes) {
-      BasicFileAttributeView view = target
-        .getFileAttributeView(BasicFileAttributeView.class);
-      try {
-        view.setTimes(attrs.lastModifiedTime(),
-                      attrs.lastAccessTime(),
-                      attrs.creationTime());
-      }
-      catch (IOException x) {
-        // rollback
-        try {
-          target.delete();
+      if (target.getFileSystem().provider() != fs.provider()) {
+        // destination is not local
+        if (replace_existing) {
+          copyTo(target, StandardCopyOption.REPLACE_EXISTING,
+                         StandardCopyOption.COPY_ATTRIBUTES);
         }
-        catch (IOException ignore) { }
-        throw x;
+        else {
+          copyTo(target, StandardCopyOption.COPY_ATTRIBUTES);
+        }
       }
+      else {
+        try {
+          // destination is local
+          fs.writeLock(target);
+
+          if (!replace_existing && target.exists()) {
+            throw new FileAlreadyExistsException(target.toString());
+          }
+
+          final Path src = fs.removeReal(this);
+          if (src != null) {
+            // file is modified, just remap
+            if (src == DELETED) throw new NoSuchFileException(toString());
+            fs.putReal((ZipFilePath) target, src);
+          }
+          else {
+            // file is unmodified, copy out to temp
+            final Path dst = fs.createTempFile();
+            copyTo(dst, StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.COPY_ATTRIBUTES);
+            fs.putReal((ZipFilePath) target, dst);
+          }
+        }
+        finally {
+          fs.writeUnlock(target);
+        }
+      }
+      
+      delete();
+      return target;
+    }
+    finally {
+      fs.writeUnlock(this);
+    }
+  }
+
+  @Override
+  public Path copyTo(Path target, CopyOption... options) throws IOException {
+    if (this.isSameFile(target)) return target;
+
+    // validate CopyOptions
+    boolean replace_existing = false;
+    boolean copy_attributes = false;
+
+    for (CopyOption o : options) {
+      if (o == StandardCopyOption.REPLACE_EXISTING) {
+        replace_existing = true;
+      }
+      else if (o == StandardCopyOption.COPY_ATTRIBUTES) {
+        copy_attributes = true;
+      }
+      else {
+        throw new UnsupportedOperationException(
+          "'" + o + "' is not a valid copy option");
+      }
+    }
+
+    try {
+      fs.readLock(this);
+
+      final Path src = fs.getReal(this);
+      if (src != null) {
+        // src is modified
+        if (src == DELETED) throw new NoSuchFileException(toString());
+      
+        if (target.getFileSystem().provider() == fs.provider()) {
+          // dst is local
+          try {
+            fs.writeLock(target);
+
+            if (!replace_existing && target.exists()) {
+              throw new FileAlreadyExistsException(target.toString());
+            }
+
+            Path dst = fs.getReal(target);
+            if (dst == null) {
+              // dst is unmodified
+              dst = fs.createTempFile();
+            }
+
+            if (copy_attributes) {
+              src.copyTo(dst, StandardCopyOption.REPLACE_EXISTING,
+                              StandardCopyOption.COPY_ATTRIBUTES);
+            }
+            else {
+              src.copyTo(dst, StandardCopyOption.REPLACE_EXISTING);
+            }
+          }
+          finally {          
+            fs.writeUnlock(target);
+          }
+        }
+        else {
+          // dst is not local
+          src.copyTo(target, options);
+        }
+      }
+      else {
+        // src is unmodified
+        if (target.getFileSystem().provider() == fs.provider()) {
+          // dst is local
+          try {
+            fs.writeLock(target);
+      
+            if (!replace_existing && target.exists()) {
+              throw new FileAlreadyExistsException(target.toString());
+            }
+
+            Path dst = fs.getReal(target);
+            if (dst == null) {
+              // dst is unmodified
+              dst = fs.createTempFile();
+            }
+
+            copyToTarget(dst, copy_attributes);
+          }
+          finally {
+            fs.writeUnlock(target);
+          }
+        }
+        else {
+          // dst is not local
+          if (!replace_existing && target.exists()) {
+            throw new FileAlreadyExistsException(target.toString());
+          }
+
+          copyToTarget(target, copy_attributes);
+        }
+      }
+    }
+    finally {
+      fs.readUnlock(this);
     }
 
     return target;
   }
 
-  private void copyToTarget(Path target) throws IOException {
-    InputStream in = newInputStream();
-    try {
-      // open target file for writing
-      OutputStream out = target.newOutputStream();
-      // simple copy loop
-      try {
-        byte[] buf = new byte[8192];
-        int n = 0;
-        for (;;) {
-          n = in.read(buf);
-          if (n < 0)
-            break;
-          out.write(buf, 0, n);
-        }
+  protected void copyToTarget(Path target, boolean copyAttributes)
+                                                           throws IOException {
+    // read attributes of source file
+    final BasicFileAttributes attrs = Attributes.readBasicFileAttributes(this);
 
+    if (attrs.isDirectory()) {
+      target.deleteIfExists();
+      target.createDirectory();
+    }
+    else {
+      InputStream in = newInputStream();
+      try {
+        // open target file for writing
+        OutputStream out = target.newOutputStream();
+        // simple copy loop
+        try {
+          final byte[] buf = new byte[8192];
+          int n = 0;
+          for (;;) {
+            n = in.read(buf);
+            if (n < 0)
+              break;
+            out.write(buf, 0, n);
+          }
+  
+        }
+        finally {
+          out.close();
+        }
       }
       finally {
-        out.close();
+        in.close();
       }
     }
-    finally {
-      in.close();
+
+    // copy basic attributes to target
+    if (copyAttributes) {
+      final BasicFileAttributeView view =
+        target.getFileAttributeView(BasicFileAttributeView.class);
+
+      try {
+        view.setTimes(attrs.lastModifiedTime(),
+                      attrs.lastAccessTime(),
+                      attrs.creationTime());
+      }
+      catch (IOException e) {
+        // rollback
+        try {
+          target.delete();
+        }
+        catch (IOException ignore) { }
+        throw e;
+      }
     }
   }
 }
