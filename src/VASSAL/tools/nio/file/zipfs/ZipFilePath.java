@@ -1504,7 +1504,7 @@ public class ZipFilePath extends Path {
               throw new FileAlreadyExistsException(target.toString());
             }
 
-            Path dst = fs.getReal(target);
+            Path dst = fs.getReal((ZipFilePath) target);
             if (dst == null || dst == DELETED) {
               dst = fs.createTempFile();
               fs.putReal((ZipFilePath) target, dst); 
@@ -1538,7 +1538,7 @@ public class ZipFilePath extends Path {
               throw new FileAlreadyExistsException(target.toString());
             }
 
-            Path dst = fs.getReal(target);
+            Path dst = fs.getReal((ZipFilePath) target);
             if (dst == null || dst == DELETED) {
               dst = fs.createTempFile();
               fs.putReal((ZipFilePath) target, dst); 

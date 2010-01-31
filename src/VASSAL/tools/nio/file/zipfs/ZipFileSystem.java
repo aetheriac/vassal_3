@@ -180,8 +180,9 @@ public class ZipFileSystem extends FileSystem {
           while (en.hasMoreElements()) {
             final ZipEntry e = en.nextElement();
             final ZipFilePath path = getPath(e.toString());
-     
-            if (real.containsKey(path)) continue;
+    
+            final Path rpath = getReal(path);
+            if (rpath != null) continue;
 
             if (Boolean.TRUE.equals(path.getAttribute("isDirectory"))) {
               out.putNextEntry(e);
@@ -325,11 +326,12 @@ public class ZipFileSystem extends FileSystem {
     closeLock.readLock().unlock();
   }
 
-  Path getReal(Object zpath) {
-    return real.get(zpath);
+  Path getReal(ZipFilePath zpath) {
+    return real.get(zpath.toAbsolutePath());
   }
 
   Path putReal(ZipFilePath zpath, Path rpath) throws IOException {
+    zpath = zpath.toAbsolutePath();
     removeInfo(zpath);
     final Path old = real.put(zpath, rpath);
     if (old != null && old != DELETED) old.delete();
@@ -337,20 +339,21 @@ public class ZipFileSystem extends FileSystem {
   }
 
   Path removeReal(ZipFilePath zpath) {
+    zpath = zpath.toAbsolutePath();
     removeInfo(zpath);
     return real.remove(zpath);
   }
 
-  ZipEntryInfo getInfo(Object zpath) {
-    return info.get(zpath);
+  ZipEntryInfo getInfo(ZipFilePath zpath) {
+    return info.get(zpath.toAbsolutePath());
   }
 
   ZipEntryInfo putInfo(ZipFilePath zpath, ZipEntryInfo zinfo) {
-    return info.put(zpath, zinfo);
+    return info.put(zpath.toAbsolutePath(), zinfo);
   }
 
   ZipEntryInfo removeInfo(ZipFilePath zpath) {
-    return info.remove(zpath);
+    return info.remove(zpath.toAbsolutePath());
   }
 
 // FIXME
