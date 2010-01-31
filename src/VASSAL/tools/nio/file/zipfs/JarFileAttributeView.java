@@ -54,7 +54,7 @@ public class JarFileAttributeView extends ZipFileAttributeView {
 
   @Override
   public Object getAttribute (String attribute) throws IOException {
-     JarFileAttributes jfa = readAttributes();
+    final JarFileAttributes jfa = readAttributes();
     if (attribute.equals("manifestAttributes")) {
       return jfa.getManifestAttributes();
     }
