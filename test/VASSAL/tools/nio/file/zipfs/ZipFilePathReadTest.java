@@ -92,7 +92,6 @@ public class ZipFilePathReadTest {
       super(ZipFilePathReadTest.fac, input, mode, expected);
     }
 
-// FIXME: once we are read-write, should check a file which can be written
     @Parameters
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
