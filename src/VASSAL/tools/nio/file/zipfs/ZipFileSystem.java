@@ -134,6 +134,26 @@ public class ZipFileSystem extends FileSystem {
     }
   }
 
+  Path externalize(ZipFilePath path) throws IOException {
+    try {
+      writeLock(path);
+
+      Path ext = getReal(path);
+      if (ext == DELETED) throw new NoSuchFileException(path.toString());
+
+      if (ext == null) {
+        ext = createTempFile();
+        path.copyTo(ext, StandardCopyOption.REPLACE_EXISTING);
+        putReal(path, ext);
+      }
+
+      return ext;
+    }
+    finally {
+      writeUnlock(path);
+    }
+  }
+
   Path createTempFile(FileAttribute<?>... attrs) throws IOException {
     final Path tmp =
       Paths.get(File.createTempFile("zipfs", "tmp").toString());

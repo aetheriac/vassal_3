@@ -36,7 +36,6 @@ import VASSAL.tools.nio.file.attribute.*;
 //import java.nio.file.*;
 //import java.nio.file.attribute.*;
 import java.io.IOException;
-import java.util.Calendar;
 
 import static VASSAL.tools.nio.file.zipfs.ZipFileSystem.DELETED;
 
@@ -59,22 +58,7 @@ public class ZipFileBasicAttributes implements BasicFileAttributes {
 
         ze = fs.getInfo(file);
         if (ze == null) {
-          // build fake ZipEntryInfo from temporary file
-          final BasicFileAttributes attrs =
-            Attributes.readBasicFileAttributes(rpath);
-
-          ze = new ZipEntryInfo();
-
-          ze.filename = file.toAbsolutePath().toString().getBytes();
-          ze.compSize = -1;
-// FIXME: int cast is a problem---test what happens when we try to write an
-// archive containing a >4GB file 
-          ze.size = (int) attrs.size();
-          ze.isDirectory = attrs.isDirectory();
-          ze.isOtherFile = attrs.isOther();
-          ze.isRegularFile = attrs.isRegularFile();
-          ze.lastModifiedTime = attrs.lastModifiedTime().toMillis();
-
+          ze = ZipUtils.getFakeEntry(file, rpath);
           fs.putInfo(file, ze);
         }
       }
@@ -114,20 +98,7 @@ public class ZipFileBasicAttributes implements BasicFileAttributes {
   }
 
   public FileTime lastModifiedTime() {
-    final Calendar cal = dosTimeToJavaTime(ze.lastModifiedTime);
-    return FileTime.fromMillis(cal.getTimeInMillis());
-  }
-
-  private Calendar dosTimeToJavaTime(long time) {
-    final Calendar cal = Calendar.getInstance();
-    cal.clear();  // to set the milliseconds 0
-    cal.set((int) (((time >> 25) & 0x7f) + 1980),
-            (int) (((time >> 21) & 0x0f) - 1),
-            (int) ( (time >> 16) & 0x1f),
-            (int) ( (time >> 11) & 0x1f),
-            (int) ( (time >>  5) & 0x3f),
-            (int) ( (time <<  1) & 0x3e));
-    return cal;
+    return FileTime.fromMillis(ZipUtils.dosToJavaTime(ze.lastModifiedTime));
   }
 
   public long size() {

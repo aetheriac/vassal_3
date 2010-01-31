@@ -30,12 +30,14 @@
  */
 package VASSAL.tools.nio.file.zipfs;
 
-import VASSAL.tools.nio.file.*;
 import VASSAL.tools.nio.channels.SeekableByteChannel;
 import VASSAL.tools.nio.channels.FileChannelAdapter;
+import VASSAL.tools.nio.file.*;
 import VASSAL.tools.nio.file.FileSystem;
 import VASSAL.tools.nio.file.FileSystems;
 import VASSAL.tools.nio.file.Path;
+//import VASSAL.tools.nio.file.attribute.Attributes;
+import VASSAL.tools.nio.file.attribute.BasicFileAttributes;
 
 import static VASSAL.tools.nio.file.zipfs.ZipHeaderConstants.*;
 
@@ -51,6 +53,8 @@ import java.net.URI;
 //import java.nio.file.FileSystems;
 //import java.nio.file.Path;
 import java.util.*;
+import java.util.Calendar;
+import java.util.TimeZone;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Attributes;
@@ -73,8 +77,8 @@ public class ZipUtils {
    * The zip file entries themselves are stored as map entries whose
    * keys are zip file references to the entries.
    */
-  public static Map<URI, Map<ZipFilePath, ZipEntryInfo>> cachedEntries =
-      new HashMap<URI, Map<ZipFilePath, ZipEntryInfo>>();
+  public static Map<URI,Map<ZipFilePath,ZipEntryInfo>> cachedEntries =
+      new HashMap<URI,Map<ZipFilePath,ZipEntryInfo>>();
   private static final boolean debug = true;
   private static final FileSystem defFileSystem = FileSystems.getDefault();
 
@@ -491,5 +495,50 @@ public class ZipUtils {
       throw e;
     }
     return tmpFile.getAbsolutePath();
+  }
+
+  static ZipEntryInfo getFakeEntry(ZipFilePath zpath, Path rpath)
+                                                           throws IOException {
+    // build fake ZipEntryInfo from file
+    final BasicFileAttributes attrs =
+      VASSAL.tools.nio.file.attribute.Attributes.readBasicFileAttributes(rpath);
+
+    final ZipEntryInfo ze = new ZipEntryInfo();
+
+    ze.filename = zpath.toAbsolutePath().toString().getBytes();
+    ze.compSize = -1;
+// FIXME: int cast is a problem---test what happens when we try to write an
+// archive containing a >4GB file 
+    ze.size = (int) attrs.size();
+    ze.isDirectory = attrs.isDirectory();
+    ze.isOtherFile = attrs.isOther();
+    ze.isRegularFile = attrs.isRegularFile();
+    ze.lastModifiedTime = attrs.lastModifiedTime().toMillis();
+
+    return ze;
+  }
+
+  static long dosToJavaTime(long time) {
+    final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    cal.clear();  // to set the milliseconds 0
+    cal.set((int) (((time >> 25) & 0x7f) + 1980),
+            (int) (((time >> 21) & 0x0f) - 1), // Calendar months are 0-based
+            (int) ( (time >> 16) & 0x1f),
+            (int) ( (time >> 11) & 0x1f),
+            (int) ( (time >>  5) & 0x3f),
+            (int) ( (time <<  1) & 0x3e));
+    return cal.getTimeInMillis();
+  }
+
+  static long javaToDosTime(long time) {
+    final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    cal.setTimeInMillis(time);
+   
+    return (((cal.get(Calendar.YEAR) - 1980) << 25) |
+            ((cal.get(Calendar.MONTH) + 1)   << 21) |
+            ( cal.get(Calendar.DATE)         << 16) |
+            ( cal.get(Calendar.HOUR_OF_DAY)  << 11) |
+            ( cal.get(Calendar.MINUTE)       <<  5) |
+            ( cal.get(Calendar.SECOND)       >>  1)) & 0xffffffffL;
   }
 }

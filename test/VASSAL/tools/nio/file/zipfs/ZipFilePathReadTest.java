@@ -156,8 +156,8 @@ public class ZipFilePathReadTest {
 
   @RunWith(Parameterized.class)
   public static class GetAttributeTest extends PathGetAttributeTest {
-    public GetAttributeTest(String path, String attrib, Object expected) {
-      super(ZipFilePathReadTest.fac, path, attrib, expected);
+    public GetAttributeTest(String path, String attr, Object expected) {
+      super(ZipFilePathReadTest.fac, path, attr, expected);
     }
 
     @Parameters

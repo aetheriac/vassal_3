@@ -63,4 +63,9 @@ public class JarFileAttributeView extends ZipFileAttributeView {
     }
     return super.getAttribute(attribute);
   }
+
+  @Override
+  public void setAttribute(String attribute, Object value) throws IOException {
+    throw new UnsupportedOperationException();
+  }
 }

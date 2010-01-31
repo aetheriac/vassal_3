@@ -96,4 +96,19 @@ public class ZipFileAttributeView extends ZipFileBasicAttributeView {
 
     return null;
   }
+
+  @Override
+  public void setAttribute(String attribute, Object value) throws IOException {
+
+    if (attribute.equals("comment")) {
+    }
+    else if (attribute.equals("extra")) {
+    }
+    else if (attribute.equals("method")) {
+    }
+    else if (attribute.equals("extAttrs")) {
+    }
+
+    throw new UnsupportedOperationException();
+  }
 }

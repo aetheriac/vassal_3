@@ -880,11 +880,12 @@ public class ZipFilePath extends Path {
     }
     if (type == JarFileAttributeView.class) {
       return (V) new JarFileAttributeView(this);
-    }
+    }   
+ 
     return null;
   }
 
-  private ReadableAttributeViewByName getFileAttributeView(String view) {
+  private AttributeViewByName getFileAttributeView(String view) {
     if (view == null) {
       throw new NullPointerException();
     }
@@ -900,35 +901,45 @@ public class ZipFilePath extends Path {
     return null;
   }
 
-// FIXME: implement!
+  protected String[] parseAttribute(String attribute) {
+    final int colon = attribute.indexOf(':');
+
+    if (colon == -1) {
+      return new String[] { "basic", attribute };
+    }
+    else {
+      return new String[] {
+        attribute.substring(0, colon), 
+        attribute.substring(colon+1, attribute.length())
+      };
+    }
+  }
+
+  @Override
   public void setAttribute(String attribute, Object value,
-                                             LinkOption... options) {
-    throw new UnsupportedOperationException();
+                                             LinkOption... options)
+                                                           throws IOException {
+    final String[] a = parseAttribute(attribute);
+
+    final AttributeViewByName view = getFileAttributeView(a[0]);
+    if (view == null) {
+      throw new UnsupportedOperationException("view not supported");
+    }
+
+    view.setAttribute(a[1], value);
   }
 
   @Override
   public Object getAttribute(String attribute, LinkOption... options)
                                                            throws IOException {
-    final int colon = attribute.indexOf(':');
+    final String[] a = parseAttribute(attribute);
 
-    final String view;
-    final String name;
-
-    if (colon == -1) {
-      view = "basic";
-      name = attribute;
-    }
-    else {
-      view = attribute.substring(0, colon);
-      name = attribute.substring(colon+1, attribute.length());
-    }
-
-    final ReadableAttributeViewByName fileView = getFileAttributeView(view);
-    if (fileView == null) {
+    final AttributeViewByName view = getFileAttributeView(a[0]);
+    if (view == null) {
       throw new UnsupportedOperationException("view not supported");
     }
 
-    return fileView.getAttribute(name);
+    return view.getAttribute(a[1]);
   }
 
   public Map<String,?> readAttributes(String attributes, LinkOption... options)
@@ -942,22 +953,10 @@ public class ZipFilePath extends Path {
     final Map<String,Object> map = new HashMap<String,Object>();
 
     for (String attr : attributes) {
-      final int colon = attr.indexOf(':');
+      final String[] a = parseAttribute(attr);
 
-      final String view;
-      final String name;
-
-      if (colon == -1) {
-        view = "basic";
-        name = attr;
-      }
-      else {
-        view = attr.substring(0, colon);
-        name = attr.substring(colon+1, attr.length());
-      }
-
-      if ("*".equals(name)) {
-        if ("basic".equals(view)) {
+      if ("*".equals(a[1])) {
+        if ("basic".equals(a[0])) {
           map.putAll(readAttributes(new String[] {
             "basic:lastModifiedTime",
             "basic:lastAccessTime",
@@ -970,7 +969,7 @@ public class ZipFilePath extends Path {
             "basic:fileKey"
           }));
         }
-        else if ("zip".equals(view)) {
+        else if ("zip".equals(a[0])) {
           map.putAll(readAttributes(new String[] {
             "zip:comment",
             "zip:compressedSize",
@@ -983,7 +982,7 @@ public class ZipFilePath extends Path {
             "zip:extAttrs"
           }));
         }
-        else if ("jar".equals(view)) {
+        else if ("jar".equals(a[0])) {
           map.putAll(readAttributes(new String[] {
             "jar:manifestAttributes",
             "jar:entryAttributes"
@@ -992,9 +991,9 @@ public class ZipFilePath extends Path {
       }
       else {
 // FIXME: inefficient, creates new view, attributes each time
-        final ReadableAttributeViewByName fv = getFileAttributeView(view);
-        if (fv != null) { 
-          map.put(name, fv.getAttribute(name));
+        final AttributeViewByName view = getFileAttributeView(a[0]);
+        if (view != null) { 
+          map.put(a[0], view.getAttribute(a[1]));
         }
       }
     }

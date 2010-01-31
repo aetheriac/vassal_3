@@ -119,29 +119,6 @@ public class ZipFilePathOldTest {
   }
 */
 
-  @Test (expected = UnsupportedOperationException.class)
-  public void testSetAttributeUnsupportedOption() throws IOException {
-    pathTestFileCreated.setAttribute("whateverName", "whateverValue", LinkOption.NOFOLLOW_LINKS);
-  }
-  
-  @Test (expected = UnsupportedOperationException.class)
-  public void testSetAttributeUnsupportedView() throws IOException {
-    pathTestFileCreated.setAttribute("nonBasic:Name", "whateverValue");
-  }
-
-  @Test (expected = UnsupportedOperationException.class)
-  public void testSetAttributeUnsupportedName() throws IOException {
-    pathTestFileCreated.setAttribute("basic:creationTime", "whateverValue");
-  }
-  
-  @Test
-  public void testSetAttributeModifTime() throws IOException {
-    pathTestFileCreated.setAttribute(
-      "basic:lastModifiedTime",
-      FileTime.fromMillis(System.currentTimeMillis())
-    );
-  }
-
 /*
   @Test(expected = UnsupportedOperationException.class)
   public void testRegisterWatchServiceKindOfQArray() throws IOException {

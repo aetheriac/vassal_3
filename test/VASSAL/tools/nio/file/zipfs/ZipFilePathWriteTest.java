@@ -33,7 +33,9 @@ import VASSAL.tools.nio.file.PathDeleteIfExistsTest;
 import VASSAL.tools.nio.file.PathMoveToExtIntTest;
 import VASSAL.tools.nio.file.PathMoveToIntExtTest;
 import VASSAL.tools.nio.file.PathMoveToIntIntTest;
+import VASSAL.tools.nio.file.PathSetAttributeTest;
 import VASSAL.tools.nio.file.StandardCopyOption;
+import VASSAL.tools.nio.file.attribute.FileTime;
 
 import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
 
@@ -50,7 +52,8 @@ import static VASSAL.tools.nio.file.StandardCopyOption.REPLACE_EXISTING;
   ZipFilePathWriteTest.DeleteIfExistsTest.class,
   ZipFilePathWriteTest.MoveToExtIntTest.class,
   ZipFilePathWriteTest.MoveToIntExtTest.class,
-  ZipFilePathWriteTest.MoveToIntIntTest.class
+  ZipFilePathWriteTest.MoveToIntIntTest.class,
+  ZipFilePathWriteTest.SetAttributeTest.class
 })
 public class ZipFilePathWriteTest {
 
@@ -359,4 +362,24 @@ public class ZipFilePathWriteTest {
     }
   }
 */
+
+  @RunWith(Parameterized.class)
+  public static class SetAttributeTest extends PathSetAttributeTest {
+    public SetAttributeTest(String path, String attr,
+                            Object value, Object expected) {
+      super(ZipFilePathWriteTest.fac, path, attr, value, expected);
+    }
+
+    @Parameters
+    public static List<Object[]> cases() {
+      return Arrays.asList(new Object[][] {
+        // Path   Attribute   Value   Expected
+        { "foo", "bogus",       null, t(UnsupportedOperationException.class) },
+        { "foo", "basic:bogus", null, t(UnsupportedOperationException.class) },
+        { "foo", "bogus:bogus", null, t(UnsupportedOperationException.class) },
+        { "foo", "basic:size",  null, t(UnsupportedOperationException.class) },
+        { "foo", "lastModifiedTime", FileTime.fromMillis(10L), null          }
+      });
+    }
+  }
 }

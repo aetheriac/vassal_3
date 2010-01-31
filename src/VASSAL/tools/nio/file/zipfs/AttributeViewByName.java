@@ -32,6 +32,8 @@ package VASSAL.tools.nio.file.zipfs;
 
 import java.io.IOException;
 
-public interface ReadableAttributeViewByName {
+public interface AttributeViewByName {
   Object getAttribute(String attribute) throws IOException;
+
+  void setAttribute(String attribute, Object value) throws IOException;
 }
