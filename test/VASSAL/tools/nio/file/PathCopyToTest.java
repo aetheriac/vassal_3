@@ -34,9 +34,9 @@ public abstract class PathCopyToTest extends AbstractPathMethodTest {
       final Path ret = sp.copyTo(dp, opts);
 
       assertEquals(dp, ret);
+      assertTrue(dp.exists());
 
       if (Boolean.TRUE.equals(sp.getAttribute("isDirectory"))) {
-        assertTrue(dp.exists());
         assertEquals(Boolean.TRUE, dp.getAttribute("isDirectory")); 
       }
       else {
