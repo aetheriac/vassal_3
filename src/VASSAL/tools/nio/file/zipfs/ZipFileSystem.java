@@ -329,9 +329,11 @@ public class ZipFileSystem extends FileSystem {
     return real.get(zpath);
   }
 
-  Path putReal(ZipFilePath zpath, Path rpath) {
+  Path putReal(ZipFilePath zpath, Path rpath) throws IOException {
     removeInfo(zpath);
-    return real.put(zpath, rpath);
+    final Path old = real.put(zpath, rpath);
+    if (old != null && old != DELETED) old.delete();
+    return old;
   }
 
   Path removeReal(ZipFilePath zpath) {

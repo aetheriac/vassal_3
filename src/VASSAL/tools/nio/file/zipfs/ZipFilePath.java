@@ -822,6 +822,22 @@ public class ZipFilePath extends Path {
     return newDirectoryStream(filter);
   }
 
+  protected void checkEmptyDirectory() throws IOException {
+    if (Boolean.TRUE.equals(getAttribute("isDirectory"))) {
+      DirectoryStream<Path> ds = null;
+      try {
+        ds = newDirectoryStream();
+        if (ds.iterator().hasNext()) {
+          throw new DirectoryNotEmptyException(toString());
+        }
+        ds.close();
+      }
+      finally {
+        IOUtils.closeQuietly(ds);
+      }
+    }
+  }
+
   @Override
   public void delete() throws IOException {
     try {
@@ -830,22 +846,9 @@ public class ZipFilePath extends Path {
       if (!exists()) throw new NoSuchFileException(toString());
 
       // delete only empty directories
-      if (Boolean.TRUE.equals(getAttribute("isDirectory"))) {
-        DirectoryStream<Path> ds = null;
-        try {
-          ds = newDirectoryStream();
-          if (ds.iterator().hasNext()) {
-            throw new DirectoryNotEmptyException(toString());
-          }
-          ds.close();
-        }
-        finally {
-          IOUtils.closeQuietly(ds);
-        }
-      }
+      checkEmptyDirectory();
 
-      final Path old = fs.putReal(this, DELETED);
-      if (old != null) old.delete();
+      fs.putReal(this, DELETED);
     }
     finally {
       fs.writeUnlock(this);
@@ -1448,7 +1451,6 @@ public class ZipFilePath extends Path {
             final Path dst = fs.createTempFile();
             copyTo(dst, StandardCopyOption.REPLACE_EXISTING,
                         StandardCopyOption.COPY_ATTRIBUTES);
-            fs.putReal((ZipFilePath) target, dst);
           }
         }
         finally {
@@ -1503,9 +1505,9 @@ public class ZipFilePath extends Path {
             }
 
             Path dst = fs.getReal(target);
-            if (dst == null) {
-              // dst is unmodified
+            if (dst == null || dst == DELETED) {
               dst = fs.createTempFile();
+              fs.putReal((ZipFilePath) target, dst); 
             }
 
             if (copy_attributes) {
@@ -1537,9 +1539,9 @@ public class ZipFilePath extends Path {
             }
 
             Path dst = fs.getReal(target);
-            if (dst == null) {
-              // dst is unmodified
+            if (dst == null || dst == DELETED) {
               dst = fs.createTempFile();
+              fs.putReal((ZipFilePath) target, dst); 
             }
 
             copyToTarget(dst, copy_attributes);
