@@ -378,7 +378,7 @@ public class ZipFilePathWriteTest {
         { "foo", "basic:bogus", null, t(UnsupportedOperationException.class) },
         { "foo", "bogus:bogus", null, t(UnsupportedOperationException.class) },
         { "foo", "basic:size",  null, t(UnsupportedOperationException.class) },
-        { "foo", "lastModifiedTime", FileTime.fromMillis(10L), null          }
+        { "foo", "lastModifiedTime", FileTime.fromMillis(315532800000L), null }
       });
     }
   }
