@@ -16,8 +16,8 @@ import VASSAL.tools.nio.file.zipfs.ZipUtils;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-  ZipUtilsTest.FromZipTimeTest.class,
-  ZipUtilsTest.ToZipTimeTest.class
+  ZipUtilsTest.DosToJavaTimeTest.class,
+  ZipUtilsTest.JavaToDosTimeTest.class
 })
 public class ZipUtilsTest {
 
