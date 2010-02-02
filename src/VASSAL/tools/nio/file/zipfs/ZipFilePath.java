@@ -993,7 +993,7 @@ public class ZipFilePath extends Path {
 // FIXME: inefficient, creates new view, attributes each time
         final AttributeViewByName view = getFileAttributeView(a[0]);
         if (view != null) { 
-          map.put(a[0], view.getAttribute(a[1]));
+          map.put(a[1], view.getAttribute(a[1]));
         }
       }
     }
