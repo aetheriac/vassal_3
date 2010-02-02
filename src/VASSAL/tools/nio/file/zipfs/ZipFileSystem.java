@@ -181,8 +181,6 @@ public class ZipFileSystem extends FileSystem {
       // no modifications, nothing to do
       if (real.isEmpty()) return;
 
-      info.clear();
-
       // create a temp file into which to write the new ZIP archive
       final Path nzip =
         Paths.get(File.createTempFile("rwzipfs", "zip").toString());
@@ -272,6 +270,10 @@ public class ZipFileSystem extends FileSystem {
 
       // replace the old archive with the new one
       nzip.moveTo(ozip, StandardCopyOption.REPLACE_EXISTING);
+
+      // blow away cached header info
+      ZipUtils.remove(getPath("/").toUri());
+      info.clear();
 
       // delete external versions of new files
       for (Path rpath : real.values()) {

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,6 +16,7 @@ import java.util.zip.ZipFile;
 import VASSAL.tools.io.IOUtils;
 import VASSAL.tools.nio.channels.FileChannelAdapter;
 import VASSAL.tools.nio.channels.SeekableByteChannel;
+import VASSAL.tools.nio.file.FileRef;
 import VASSAL.tools.nio.file.OpenOption;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.Paths;
@@ -250,5 +252,13 @@ class ZipIO {
     }
 
     return pathToZip;
+  }
+
+  static SeekableByteChannel open(FileRef fr) throws IOException {
+    final Set<StandardOpenOption> opts = EnumSet.of(StandardOpenOption.READ);
+    final Path p = (Path) fr;
+
+    return new FileChannelAdapter(
+      p.getFileSystem().provider().newFileChannel(p, opts));
   }
 }

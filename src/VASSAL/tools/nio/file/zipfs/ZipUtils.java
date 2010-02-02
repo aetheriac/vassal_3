@@ -82,44 +82,33 @@ public class ZipUtils {
   private static final boolean debug = true;
   private static final FileSystem defFileSystem = FileSystems.getDefault();
 
-  static SeekableByteChannel open(FileRef fr) throws IOException {
-    Set<StandardOpenOption> options = new HashSet<StandardOpenOption>();
-    options.add(StandardOpenOption.READ);
-
-    final Path p = (Path) fr;
-    return new FileChannelAdapter(
-      p.getFileSystem().provider().newFileChannel(p, options));
-  }
-
-  private static ByteBuffer getHeaderField(
-      SeekableByteChannel ch, long offset, int nBytes)
-      throws IOException {
-    ByteBuffer buf = ByteBuffer.allocate(nBytes);
-    buf = buf.order(ByteOrder.LITTLE_ENDIAN);
+  private static ByteBuffer getHeaderField(SeekableByteChannel ch,
+                                           long offset, int nBytes)
+                                                           throws IOException {
+    final ByteBuffer buf = ByteBuffer.allocate(nBytes);
+    buf.order(ByteOrder.LITTLE_ENDIAN);
     ch.position(offset);
-    int read = ch.read(buf);
-    if (read <= 0) {
-      return null;
-    }
+    final int read = ch.read(buf);
+    if (read <= 0) return null;
     buf.flip();
-    return (buf);
+    return buf;
   }
 
   private static int readInt(SeekableByteChannel ch, long offset)
-      throws IOException {
-    ByteBuffer buf = getHeaderField(ch, offset, 4);
+                                                           throws IOException {
+    final ByteBuffer buf = getHeaderField(ch, offset, 4);
     return buf.getInt();
   }
 
   private static int readShort(SeekableByteChannel ch, long offset)
-      throws IOException {
-    ByteBuffer buf = getHeaderField(ch, offset, 2);
+                                                           throws IOException {
+    final ByteBuffer buf = getHeaderField(ch, offset, 2);
     return buf.getShort();
   }
 
   private static byte[] readBytes(SeekableByteChannel ch, long offset, int len)
-      throws IOException {
-    ByteBuffer buf = getHeaderField(ch, offset, len);
+                                                           throws IOException {
+    final ByteBuffer buf = getHeaderField(ch, offset, len);
     return buf.array();
   }
 
@@ -163,7 +152,7 @@ public class ZipUtils {
       ZipFilePath zipPath, FileRef file)
       throws IOException {
 
-    SeekableByteChannel ch = open(file);
+    SeekableByteChannel ch = ZipIO.open(file);
     ZipFileSystem m = zipPath.getFileSystem();
     FileSystem fs = null;
     Map<ZipFilePath, ZipEntryInfo> entries =
