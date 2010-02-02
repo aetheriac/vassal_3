@@ -187,15 +187,15 @@ public class ZipFilePathReadTest {
         { "/fileInZip", "basic:fileKey",        null  },
         { "/fileInZip", "zip:comment",          null  },
         { "/fileInZip", "zip:crc",              0L    },
-        { "/fileInZip", "zip:extra",            null  },
+//        { "/fileInZip", "zip:extra",            null  },
         { "/fileInZip", "zip:method",           0     },
         { "/fileInZip", "zip:name",             "fileInZip".getBytes() },
         { "/fileInZip", "zip:isArchiveFile",    false },
         { "/fileInZip", "zip:versionMadeBy",    "UNIX" },
-        { "/fileInZip", "zip:extAttrs",         0 },
+//        { "/fileInZip", "zip:extAttrs",         0 },
         { "/dirInZip", null,                    t(NullPointerException.class) },
         { "/dirInZip", "whatever",              null },
-        { "/dirInZip", "basic:lastModifiedTime", FileTime.fromMillis(1264357268000L) },
+        { "/dirInZip", "basic:lastModifiedTime", FileTime.fromMillis(1259921068000L) },
         { "/dirInZip", "basic:lastAccessTime", FileTime.fromMillis(-1L) },
         { "/dirInZip", "basic:creationTime",   FileTime.fromMillis(-1L) },
         { "/dirInZip", "basic:size",           0L },
@@ -206,12 +206,12 @@ public class ZipFilePathReadTest {
         { "/dirInZip", "basic:fileKey",        null  },
         { "/dirInZip", "zip:comment",          null  },
         { "/dirInZip", "zip:crc",              0L    },
-        { "/dirInZip", "zip:extra",            null  },
+//        { "/dirInZip", "zip:extra",            null  },
         { "/dirInZip", "zip:method",           0     },
         { "/dirInZip", "zip:name",             "dirInZip/".getBytes() },
         { "/dirInZip", "zip:isArchiveFile",    false },
         { "/dirInZip", "zip:versionMadeBy",    "UNIX" },
-        { "/dirInZip", "zip:extAttrs",         0 }
+//        { "/dirInZip", "zip:extAttrs",         0 }
       });
     }
   }
@@ -274,16 +274,16 @@ public class ZipFilePathReadTest {
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
         // Path         Attributes     Expected
-        { "/fileInZip", "*",     map(
-            "basic:lastModifiedTime", FileTime.from(1259794214L, TimeUnit.SECONDS),
-            "basic:lastAccessTime",   FileTime.fromMillis(-1L), 
-            "basic:creationTime",     FileTime.fromMillis(-1L),
-            "basic:size",             0L,
-            "basic:isRegularFile",    true,
-            "basic:isDirectory",      false,
-            "basic:isSymbolicLink",   false,
-            "basic:isOther",          false,
-            "basic:fileKey",          null)
+        { "/fileInZip", "*", map(
+            "lastModifiedTime", FileTime.fromMillis(1259797814000L),
+            "lastAccessTime",   FileTime.fromMillis(-1L), 
+            "creationTime",     FileTime.fromMillis(-1L),
+            "size",             0L,
+            "isRegularFile",    true,
+            "isDirectory",      false,
+            "isSymbolicLink",   false,
+            "isOther",          false,
+            "fileKey",          null)
         },
         { "/fileNotInZip", "*", t(NoSuchFileException.class) },
         { "/fileInZip", "foo:bar", map() }
