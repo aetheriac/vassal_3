@@ -21,6 +21,6 @@ public abstract class PathReadAttributesTest extends AbstractPathMethodTest {
 
   protected void doTest() throws IOException {
     final Map<String,?> result = fs.getPath(input).readAttributes(attrs);
-    assertEquals(result, expected); 
+    assertEquals(expected, result); 
   }
 }
