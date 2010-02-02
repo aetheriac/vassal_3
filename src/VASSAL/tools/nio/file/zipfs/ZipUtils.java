@@ -112,10 +112,8 @@ public class ZipUtils {
     return buf.array();
   }
 
-  static long locateEndOfCentralDirRecord(
-      SeekableByteChannel ch, FileRef file)
-      throws IOException {
-
+  static long locateEndOfCentralDirRecord(SeekableByteChannel ch, FileRef file)
+                                                           throws IOException {
     long fileLen = ch.size();
     // read the file backwards 4 bytes at a time
     long backOffset = fileLen - C_END_RECORD_MIN_OFF;
@@ -149,8 +147,7 @@ public class ZipUtils {
    * and is of type FileRef.
    */
   public static Map<ZipFilePath, ZipEntryInfo> fillEntries(
-      ZipFilePath zipPath, FileRef file)
-      throws IOException {
+                        ZipFilePath zipPath, FileRef file) throws IOException {
 
     SeekableByteChannel ch = ZipIO.open(file);
     ZipFileSystem m = zipPath.getFileSystem();
@@ -301,9 +298,8 @@ public class ZipUtils {
   /*
    * Returns a map containing the all the entries of the given zip file
    */
-  public static Map<ZipFilePath, ZipEntryInfo> getEntries(
-      ZipFilePath file)
-      throws IOException {
+  public static Map<ZipFilePath, ZipEntryInfo> getEntries(ZipFilePath file)
+                                                           throws IOException {
 
     //getKey() returns path upto archive file if exists
     //otherwise path to Zip file in native filesytem
