@@ -446,6 +446,8 @@ public class SendToLocation extends Decorator implements TranslatablePiece {
     protected Box mapControls;
     protected Box boardControls;
     protected Box advancedControls;
+    protected Box zoneControls;
+    protected Box regionControls;
 
     public Ed(SendToLocation p) {
       controls = new JPanel();
@@ -524,11 +526,43 @@ public class SendToLocation extends Decorator implements TranslatablePiece {
       yInput = new FormattedExpressionConfigurer(null, "Y Position:  ", p.y.getFormat(), p);
       controls.add(yInput.getControls());
       
+      zoneControls = Box.createHorizontalBox();
       zoneInput = new FormattedExpressionConfigurer(null, "Zone Name:  ", p.zone.getFormat(), p);
-      controls.add(zoneInput.getControls());
+      zoneControls.add(zoneInput.getControls());
+      select = new JButton("Select");
+      select.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+          selectZone();
+        }
+      });
+      clear = new JButton("Clear");
+      clear.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+          clearZone();
+        }
+      });
+      zoneControls.add(select);
+      zoneControls.add(clear);
+      controls.add(zoneControls);
 
+      regionControls = Box.createHorizontalBox();
       regionInput = new FormattedExpressionConfigurer(null, "Region Name:  ", p.region.getFormat(), p);
-      controls.add(regionInput.getControls());
+      regionControls.add(regionInput.getControls());
+      select = new JButton("Select");
+      select.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+          selectRegion();
+        }
+      });
+      clear = new JButton("Clear");
+      clear.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+          clearRegion();
+        }
+      });
+      regionControls.add(select);
+      regionControls.add(clear);
+      controls.add(regionControls);
       
       propertyInput = new PropertyExpressionConfigurer(null, "Property Match:  ", p.propertyFilter);
       controls.add(propertyInput.getControls());
@@ -569,8 +603,8 @@ public class SendToLocation extends Decorator implements TranslatablePiece {
       yInput.getControls().setVisible(destOption.equals(DEST_LOCATION));
       mapControls.setVisible(!destOption.equals(DEST_COUNTER));
       boardControls.setVisible(destOption.equals(DEST_LOCATION));
-      zoneInput.getControls().setVisible(destOption.equals(DEST_ZONE));
-      regionInput.getControls().setVisible(destOption.equals(DEST_REGION));
+      zoneControls.setVisible(destOption.equals(DEST_ZONE));
+      regionControls.setVisible(destOption.equals(DEST_REGION));
       propertyInput.getControls().setVisible(destOption.equals(DEST_COUNTER));
       
       Window w = SwingUtilities.getWindowAncestor(controls);
@@ -586,6 +620,14 @@ public class SendToLocation extends Decorator implements TranslatablePiece {
     private void clearMap() {
       //map = null;
       mapIdInput.setValue("");
+    }
+    
+    private void clearZone() {
+    	zoneInput.setValue("");
+    }
+    
+    private void clearRegion() {
+    	regionInput.setValue("");
     }
 
     private void selectBoard() {
@@ -605,6 +647,25 @@ public class SendToLocation extends Decorator implements TranslatablePiece {
         mapIdInput.setValue(map.getMapName());
       }
     }
+    
+    private void selectZone() {
+        ChooseComponentDialog d = new ChooseComponentDialog((Frame) SwingUtilities.getAncestorOfClass(Frame.class, controls), Zone.class);
+        d.setVisible(true);
+        if (d.getTarget() != null) {
+          Zone zone = (Zone) d.getTarget();
+          mapIdInput.setValue(zone.getName());
+        }
+      }
+      
+    private void selectRegion() {
+        ChooseComponentDialog d = new ChooseComponentDialog((Frame) SwingUtilities.getAncestorOfClass(Frame.class, controls), Region.class);
+        d.setVisible(true);
+        if (d.getTarget() != null) {
+          Region region = (Region) d.getTarget();
+          mapIdInput.setValue(region.getName());
+        }
+      }
+      
 
     public Component getControls() {
       return controls;
