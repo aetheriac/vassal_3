@@ -42,6 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -70,8 +71,11 @@ public class ZipFileSystem extends FileSystem {
   // this contains real path following the links (change it, if no need to follow links)
   private final String zipFile;
   private final String defaultdir;
+
   private final ReentrantReadWriteLock closeLock = new ReentrantReadWriteLock();
+
   private boolean open = true;
+  private final boolean readonly;
 
   private final Set<Closeable> closeables =
     Collections.synchronizedSet(new HashSet<Closeable>());
@@ -85,14 +89,12 @@ public class ZipFileSystem extends FileSystem {
   protected final ConcurrentMap<ZipFilePath,ZipEntryInfo> info =
     new ConcurrentHashMap<ZipFilePath,ZipEntryInfo>();
  
-  ZipFileSystem(ZipFileSystemProvider provider, FileRef fref) {
-    this(provider, fref.toString(), "/");
-  }
-
-  ZipFileSystem(ZipFileSystemProvider provider, String path, String defaultDir) {
+  ZipFileSystem(ZipFileSystemProvider provider, String path,
+                String defaultDir, boolean readonly) {
     this.provider = provider;
     this.zipFile = path;
     this.defaultdir = defaultDir;
+    this.readonly = readonly;
   }
 
   @Override
@@ -112,7 +114,7 @@ public class ZipFileSystem extends FileSystem {
 
   @Override
   public boolean isReadOnly() {
-    return false;
+    return readonly;
   }
 
   @Override
@@ -122,10 +124,21 @@ public class ZipFileSystem extends FileSystem {
 
       if (!open) return;
       
-      final URI root = getPath("/").toUri();
+//      final URI root = getPath("/").toUri();
+// FIXME: we should keep a path to the zipFile, in order to support
+// archives at arbitrary locations, not just on the real filesystem.
+      URI root;
+      try {
+        final URI zuri = Paths.get(zipFile).toUri();
+        root = new URI("zip", zuri.getHost(), zuri.getPath(), null);
+      }
+      catch (URISyntaxException e) {
+        throw new AssertionError(e); //never thrown
+      }
+
       implClose(root);
 
-      flush();
+      if (!readonly) flush();
 
       open = false;
     }
@@ -186,6 +199,8 @@ public class ZipFileSystem extends FileSystem {
   }
 
   public void revert() throws IOException {
+    if (readonly) throw new ReadOnlyFileSystemException();
+
     try {
       closeLock.writeLock().lock();
       cleanup();  
@@ -196,11 +211,13 @@ public class ZipFileSystem extends FileSystem {
   }
 
   public void flush() throws IOException {
+    if (readonly) throw new ReadOnlyFileSystemException();
+
     try {
       closeLock.writeLock().lock();
 
       // no modifications, nothing to do
-      if (real.isEmpty()) return;
+      if (readonly || real.isEmpty()) return;
 
       // create a temp file into which to write the new ZIP archive
       final Path nzip =
@@ -545,7 +562,7 @@ public class ZipFileSystem extends FileSystem {
 
   private static final Set<String> supportedFileAttributeViews =
     Collections.unmodifiableSet(
-    new HashSet<String>(Arrays.asList("basic", "zip", "jar")));
+      new HashSet<String>(Arrays.asList("basic", "zip", "jar")));
 
   @Override
   public Set<String> supportedFileAttributeViews() {

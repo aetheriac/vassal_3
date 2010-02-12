@@ -842,6 +842,8 @@ public class ZipFilePath extends Path {
 
   @Override
   public void delete() throws IOException {
+    if (fs.isReadOnly()) throw new ReadOnlyFileSystemException();
+
     try {
       fs.writeLock(this);
 
@@ -859,6 +861,8 @@ public class ZipFilePath extends Path {
 
   @Override
   public void deleteIfExists() throws IOException {
+    if (fs.isReadOnly()) throw new ReadOnlyFileSystemException();
+
     try {
       fs.writeLock(this);
       if (exists()) delete();
@@ -1148,6 +1152,8 @@ public class ZipFilePath extends Path {
     }
 
     if (write || append) {
+      if (fs.isReadOnly()) throw new ReadOnlyFileSystemException();
+
       try {
         fs.writeLock(this);
 
@@ -1355,6 +1361,8 @@ public class ZipFilePath extends Path {
 
   @Override
   public Path createFile(FileAttribute<?>... attrs) throws IOException {
+    if (fs.isReadOnly()) throw new ReadOnlyFileSystemException();
+
     try {
       fs.writeLock(this);
 
@@ -1369,7 +1377,9 @@ public class ZipFilePath extends Path {
 
   @Override
   public OutputStream newOutputStream(OpenOption... options)
-                                                           throws IOException {
+                                                           throws IOException { 
+    if (fs.isReadOnly()) throw new ReadOnlyFileSystemException();
+ 
     // validate OpenOptions
     boolean append = false;
     boolean truncate_existing = false;
@@ -1432,6 +1442,8 @@ public class ZipFilePath extends Path {
 
   @Override
   public Path moveTo(Path target, CopyOption... options) throws IOException {
+    if (fs.isReadOnly()) throw new ReadOnlyFileSystemException();
+
     if (this.isSameFile(target)) return target;
 
     // validate CopyOptions
@@ -1525,6 +1537,8 @@ public class ZipFilePath extends Path {
         if (src == DELETED) throw new NoSuchFileException(toString());
       
         if (target.getFileSystem().provider() == fs.provider()) {
+          if (fs.isReadOnly()) throw new ReadOnlyFileSystemException();
+
           // dst is local
           try {
             fs.writeLock(target);
@@ -1559,6 +1573,8 @@ public class ZipFilePath extends Path {
       else {
         // src is unmodified
         if (target.getFileSystem().provider() == fs.provider()) {
+          if (fs.isReadOnly()) throw new ReadOnlyFileSystemException();
+
           // dst is local
           try {
             fs.writeLock(target);
