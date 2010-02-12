@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,7 +45,7 @@ import VASSAL.tools.nio.file.attribute.FileTime;
 import static VASSAL.tools.nio.file.StandardOpenOption.APPEND;
 import static VASSAL.tools.nio.file.StandardOpenOption.READ;
 
-import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
+import static VASSAL.tools.nio.file.AbstractMethodTest.t;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -84,6 +85,11 @@ public class ZipFilePathReadTest {
     zfURI = URI.create("zip://" + zfPath.toString());
 
     fs = (ZipFileSystem) FileSystems.newFileSystem(zfURI, null);
+  }
+
+  @AfterClass
+  public static void tearDownFS() throws IOException {
+    fs.close();
   }
 
   @RunWith(Parameterized.class)
