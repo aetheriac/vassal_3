@@ -30,6 +30,7 @@
  */
 package VASSAL.tools.nio.file.zipfs;
 
+import VASSAL.tools.nio.channels.SeekableByteChannel;
 import VASSAL.tools.nio.file.*;
 import VASSAL.tools.nio.file.attribute.*;
 import VASSAL.tools.nio.file.spi.FileSystemProvider;
@@ -47,6 +48,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import VASSAL.tools.io.IOUtils;
+
 public class ZipFileSystemProvider extends FileSystemProvider {
 
   private String scheme = "zip";
@@ -63,122 +66,147 @@ public class ZipFileSystemProvider extends FileSystemProvider {
   }
 
   @Override
-  public FileSystem newFileSystem(URI uri, Map<String, ?> env)
-      throws IOException {
+  public FileSystem newFileSystem(URI uri, Map<String,?> env)
+                                                           throws IOException {
     String scheme1 = uri.getScheme();
-    if ((scheme1 == null) || !scheme1.equalsIgnoreCase(scheme)) {
+    if (scheme1 == null || !scheme1.equalsIgnoreCase(scheme)) {
       throw new IllegalArgumentException("URI scheme is not '" + scheme + "'");
     }
 
-    URI uriPath = null;
-    try {
-      uriPath = new URI("file", uri.getHost(), uri.getPath(), null);
-    }
-    catch (URISyntaxException e) {
-      throw new AssertionError(e); //never thrown
-    }
+    //making use of underlying URI path parsing
+    final Path nativePath = Paths.get(toFileURI(uri));
 
-    Path nativePath = null;
-    try {
-      nativePath = Paths.get(uriPath); //making use of underlying URI path parsing
-    }
-    catch (InvalidPathException e) {
-      throw e;
-    }
-
-/*
-    if (!checkZipFilePath(nativePath)) {
-      throw new InvalidPathException(nativePath.toString(), "file name does not contain zip/jar File");
-    }
-*/
-
-    nativePath.checkAccess(); // check the existance of the path before proceed
-
-    ZipFileSystem fileSystem = null;
     // construct uri to find in cached file systems
-    try {
-      uriPath = new URI("zip", uri.getHost(), uri.getPath(), null);
+    final URI uriPath = toZipURI(uri);
+// FIXME: race condition!
+    if (fileSystems.containsKey(uriPath)) {
+      throw new FileSystemAlreadyExistsException();
     }
-    catch (URISyntaxException e) {
-      throw new AssertionError(e); //never thrown
-    }
-
-    String pathStr = nativePath.toAbsolutePath().toString(); // think whether to pass .toRealPath(true) to follow links
+    
+    // FIXME: think whether to pass .toRealPath(true) to follow links
+    String pathStr = nativePath.toAbsolutePath().toString();
 
     String defaultdir = null;
-    Object obj = null;
+
+    boolean write = true;
+    boolean truncate_existing = false;
+    boolean create_new = false;
+
+    // check properties
     if (env != null) {
-      obj = env.get("default.dir");
-      if ((obj != null) && !(obj instanceof String)) {
+
+      // determine default directory
+      Object obj = env.get("default.dir");
+      if (obj != null && !(obj instanceof String)) {
         throw new IllegalArgumentException();
       }
+
       defaultdir = (String) obj;
+    
+      if (defaultdir != null) {
+        if (defaultdir.charAt(0) != '/') {
+          throw new IllegalArgumentException("default dir should be absolute");
+        }
+
+        if (!defaultdir.equals("/")) {
+          defaultdir = ZipPathParser.normalize(defaultdir);
+        }
+      }
+
+      // determine open flags
+      obj = env.get("open.options");
+      if (obj != null) {
+        write = false;
+        truncate_existing = false;
+        create_new = false;
+
+        // open options were given, parse them
+        OpenOption[] opts;
+
+        // check that we have the right kind of object
+        if (obj instanceof OpenOption[]) {
+          opts = (OpenOption[]) obj;
+        }
+        else if (obj instanceof Set) {
+          final Set<? extends OpenOption> s = (Set<? extends OpenOption>) obj;
+          opts = s.toArray(new OpenOption[s.size()]);
+        }
+        else {
+          throw new IllegalArgumentException();
+        }
+
+        // validate the options
+        for (OpenOption o : opts) {
+          if (!(o instanceof StandardOpenOption)) {
+            throw new IllegalArgumentException();
+          }
+
+          switch ((StandardOpenOption) o) {
+          case READ:                                        break;
+          case WRITE:             write = true;             break;
+          case TRUNCATE_EXISTING: truncate_existing = true; break;
+          case CREATE:                                      break;
+          case CREATE_NEW:        create_new = true;        break;
+          default:
+            throw new IllegalArgumentException();
+          }
+        }
+
+        if (!write) {
+          if (truncate_existing) {
+            throw new IllegalArgumentException();
+          }
+          
+          if (create_new) { 
+            throw new IllegalArgumentException();
+          }
+        }
+
+        if (create_new) {
+          if (truncate_existing) {
+            throw new IllegalArgumentException();
+          }
+
+          if (nativePath.exists()) {
+            throw new FileAlreadyExistsException(nativePath.toString());
+          }
+        }
+      }
     }
 
     if (defaultdir == null) {
       defaultdir = "/";
     }
 
-    if (defaultdir.charAt(0) != '/') {
-      throw new IllegalArgumentException("default dir should be absolute");
-    }
+    if (write) {
+      nativePath.checkAccess(AccessMode.READ, AccessMode.WRITE);
 
-    if (!defaultdir.equals("/")) {
-      defaultdir = ZipPathParser.normalize(defaultdir);
-    }
-
-    fileSystem = new ZipFileSystem(this, pathStr, defaultdir);
-    fileSystems.put(uriPath, fileSystem);
-    return fileSystem;
-  }
-
-  @Override
-  public FileSystem newFileSystem(FileRef file,
-      Map<String, ?> env)
-      throws IOException {
-    ZipFileSystem fileSystem = null;
-    if (!((Path) file).toUri().getScheme().equalsIgnoreCase("file")) {
-      throw new UnsupportedOperationException();
-    }
-
-/*
-    if (!checkZipFilePath(file)) {
-      throw new UnsupportedOperationException();
-    }
-*/
-
-    try {
-      ((Path) file).checkAccess();
-    }
-    catch (IOException e) {
-      throw e;
-    }
-
-    String pathStr = ((Path) file).toAbsolutePath().toString(); //follow links
-    String defaultdir = null;
-    Object obj = null;
-    if (env != null) {
-      obj = env.get("default.dir");
-      if ((obj != null) && !(obj instanceof String)) {
-        throw new IllegalArgumentException();
+      if (truncate_existing) {
+        // truncate the archive, if requested
+        SeekableByteChannel ch = null;
+        try {
+          ch = nativePath.newByteChannel(StandardOpenOption.TRUNCATE_EXISTING);
+          ch.close();
+        }
+        finally {
+          IOUtils.closeQuietly(ch);
+        }
       }
-      defaultdir = (String) obj;
+    }
+    else {
+      nativePath.checkAccess(AccessMode.READ);
     }
 
-    if (defaultdir == null) {
-      defaultdir = "/";
-    }
+// CHECK: if file exists and we're not truncating, whether it it is a valid
+// ZIP archive!
 
-    if (defaultdir.charAt(0) != '/') {
-      throw new IllegalArgumentException("default dir should be absolute");
-    }
-
-    if (!defaultdir.equals("/")) {
-      defaultdir = ZipPathParser.normalize(defaultdir);
-    }
-
-    fileSystem = new ZipFileSystem(this, pathStr, defaultdir);
-    return fileSystem;
+    
+    // build the new file system
+    final ZipFileSystem fs =
+      new ZipFileSystem(this, pathStr, defaultdir, !write);
+// FIXME: race condition with put()!
+    fileSystems.put(uriPath, fs);
+    return fs;
   }
 
 /*
@@ -244,16 +272,7 @@ public class ZipFileSystemProvider extends FileSystemProvider {
         "URI scheme is not '" + getScheme() + "'");
     }
 
-    //construct uri ignoring fragement in the given URI
-    URI uriPath = null;
-    try {
-      uriPath = new URI("zip", uri.getHost(), uri.getPath(), null);
-    }
-    catch (URISyntaxException e) {
-      throw new AssertionError(e); //never thrown
-    }
-
-    ZipFileSystem fileSystem = fileSystems.get(uriPath);
+    ZipFileSystem fileSystem = fileSystems.get(toZipURI(uri));
     if (fileSystem == null) {
       throw new FileSystemNotFoundException();
     }
@@ -261,14 +280,24 @@ public class ZipFileSystemProvider extends FileSystemProvider {
   }
 
   void removeFileSystem(URI uri) {
-    //construct uri ignoring fragement in the given URI
-    URI uriPath = null;
+    fileSystems.remove(toZipURI(uri));
+  }
+
+  URI toZipURI(URI uri) {
     try {
-      uriPath = new URI("zip", uri.getHost(), uri.getPath(), null);
+      return new URI("zip", uri.getHost(), uri.getPath(), null);
     }
     catch (URISyntaxException e) {
       throw new AssertionError(e); //never thrown
     }
-    fileSystems.remove(uriPath);
+  }
+
+  URI toFileURI(URI uri) {
+    try {
+      return new URI("file", uri.getHost(), uri.getPath(), null);
+    }
+    catch (URISyntaxException e) {
+      throw new AssertionError(e); //never thrown
+    }
   }
 }
