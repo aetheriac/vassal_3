@@ -84,13 +84,10 @@ public class ZipFileSystemProvider extends FileSystemProvider {
     }
     
     // FIXME: think whether to pass .toRealPath(true) to follow links
-    String pathStr = nativePath.toAbsolutePath().toString();
+    final String pathStr = nativePath.toAbsolutePath().toString();
 
     String defaultdir = null;
-
     boolean write = true;
-    boolean truncate_existing = false;
-    boolean create_new = false;
 
     // check properties
     if (env != null) {
@@ -117,8 +114,6 @@ public class ZipFileSystemProvider extends FileSystemProvider {
       obj = env.get("open.options");
       if (obj != null) {
         write = false;
-        truncate_existing = false;
-        create_new = false;
 
         // open options were given, parse them
         OpenOption[] opts;
@@ -142,33 +137,10 @@ public class ZipFileSystemProvider extends FileSystemProvider {
           }
 
           switch ((StandardOpenOption) o) {
-          case READ:                                        break;
-          case WRITE:             write = true;             break;
-          case TRUNCATE_EXISTING: truncate_existing = true; break;
-          case CREATE:                                      break;
-          case CREATE_NEW:        create_new = true;        break;
+          case READ:                break;
+          case WRITE: write = true; break;
           default:
             throw new IllegalArgumentException();
-          }
-        }
-
-        if (!write) {
-          if (truncate_existing) {
-            throw new IllegalArgumentException();
-          }
-          
-          if (create_new) { 
-            throw new IllegalArgumentException();
-          }
-        }
-
-        if (create_new) {
-          if (truncate_existing) {
-            throw new IllegalArgumentException();
-          }
-
-          if (nativePath.exists()) {
-            throw new FileAlreadyExistsException(nativePath.toString());
           }
         }
       }
@@ -179,28 +151,16 @@ public class ZipFileSystemProvider extends FileSystemProvider {
     }
 
     if (write) {
-      nativePath.checkAccess(AccessMode.READ, AccessMode.WRITE);
+      if (nativePath.exists()) {
+        nativePath.checkAccess(AccessMode.READ, AccessMode.WRITE);
 
-      if (truncate_existing) {
-        // truncate the archive, if requested
-        SeekableByteChannel ch = null;
-        try {
-          ch = nativePath.newByteChannel(StandardOpenOption.TRUNCATE_EXISTING);
-          ch.close();
-        }
-        finally {
-          IOUtils.closeQuietly(ch);
-        }
+        // FIXME: check here whether this is really a ZIP archive
       }
     }
     else {
       nativePath.checkAccess(AccessMode.READ);
     }
 
-// CHECK: if file exists and we're not truncating, whether it it is a valid
-// ZIP archive!
-
-    
     // build the new file system
     final ZipFileSystem fs =
       new ZipFileSystem(this, pathStr, defaultdir, !write);
