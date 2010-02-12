@@ -43,10 +43,10 @@ import java.net.URI;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.channels.FileChannel;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import VASSAL.tools.io.IOUtils;
 
@@ -54,8 +54,8 @@ public class ZipFileSystemProvider extends FileSystemProvider {
 
   private String scheme = "zip";
 
-  private Map<URI,ZipFileSystem> fileSystems =
-    Collections.synchronizedMap(new HashMap<URI,ZipFileSystem>());
+  private ConcurrentMap<URI,ZipFileSystem> fileSystems =
+    new ConcurrentHashMap<URI,ZipFileSystem>();
 
   public ZipFileSystemProvider() {
   }
@@ -78,7 +78,6 @@ public class ZipFileSystemProvider extends FileSystemProvider {
 
     // construct uri to find in cached file systems
     final URI uriPath = toZipURI(uri);
-// FIXME: race condition!
     if (fileSystems.containsKey(uriPath)) {
       throw new FileSystemAlreadyExistsException();
     }
@@ -164,8 +163,12 @@ public class ZipFileSystemProvider extends FileSystemProvider {
     // build the new file system
     final ZipFileSystem fs =
       new ZipFileSystem(this, pathStr, defaultdir, !write);
-// FIXME: race condition with put()!
-    fileSystems.put(uriPath, fs);
+
+    final ZipFileSystem old = fileSystems.putIfAbsent(uriPath, fs);
+    if (old != null) {
+      throw new FileSystemAlreadyExistsException();
+    }
+
     return fs;
   }
 
@@ -204,10 +207,11 @@ public class ZipFileSystemProvider extends FileSystemProvider {
       throw new AssertionError(e);
     }
 
-    ZipFileSystem fileSystem = fileSystems.get(uripath);
+    final ZipFileSystem fileSystem = fileSystems.get(uripath);
     if (fileSystem == null) {
       throw new FileSystemNotFoundException();
     }
+
     // if fragment is empty, the following method throws InvalidPathException.
     ZipFilePath path = fileSystem.getPath(fragment);
     return path;
@@ -232,7 +236,7 @@ public class ZipFileSystemProvider extends FileSystemProvider {
         "URI scheme is not '" + getScheme() + "'");
     }
 
-    ZipFileSystem fileSystem = fileSystems.get(toZipURI(uri));
+    final ZipFileSystem fileSystem = fileSystems.get(toZipURI(uri));
     if (fileSystem == null) {
       throw new FileSystemNotFoundException();
     }
