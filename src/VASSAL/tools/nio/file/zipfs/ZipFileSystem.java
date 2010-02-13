@@ -69,7 +69,7 @@ public class ZipFileSystem extends FileSystem {
   //path upto first zip file
   // for example in Win c:/foo/bar.zip/a/b/c - zipFile represents c:/foo/bar.zip
   // this contains real path following the links (change it, if no need to follow links)
-  private final String zipFile;
+  private final Path zipFile;
   private final String defaultdir;
 
   private final ReentrantReadWriteLock closeLock = new ReentrantReadWriteLock();
@@ -88,15 +88,15 @@ public class ZipFileSystem extends FileSystem {
 
   protected final ConcurrentMap<ZipFilePath,ZipEntryInfo> info =
     new ConcurrentHashMap<ZipFilePath,ZipEntryInfo>();
- 
-  ZipFileSystem(ZipFileSystemProvider provider, String path,
+
+  ZipFileSystem(ZipFileSystemProvider provider, Path path,
                 String defaultDir, boolean readonly) {
     this.provider = provider;
-    this.zipFile = path;
+    this.zipFile = path.toAbsolutePath();
     this.defaultdir = defaultDir;
     this.readonly = readonly;
   }
-
+ 
   @Override
   public FileSystemProvider provider() {
     return provider;
@@ -129,7 +129,7 @@ public class ZipFileSystem extends FileSystem {
 // archives at arbitrary locations, not just on the real filesystem.
       URI root;
       try {
-        final URI zuri = Paths.get(zipFile).toUri();
+        final URI zuri = zipFile.toUri();
         root = new URI("zip", zuri.getHost(), zuri.getPath(), null);
       }
       catch (URISyntaxException e) {
@@ -451,11 +451,11 @@ public class ZipFileSystem extends FileSystem {
   }
 
   public String getZipFileSystemFile() {
-    return zipFile;
+    return zipFile.toString();
   }
 
   public Path getFileSystemPath() {
-    return Paths.get(zipFile);
+    return zipFile;
   }
 
   @Override

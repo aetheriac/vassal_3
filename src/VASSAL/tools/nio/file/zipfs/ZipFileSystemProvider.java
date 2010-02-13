@@ -73,17 +73,15 @@ public class ZipFileSystemProvider extends FileSystemProvider {
       throw new IllegalArgumentException("URI scheme is not '" + scheme + "'");
     }
 
-    //making use of underlying URI path parsing
-    final Path nativePath = Paths.get(toFileURI(uri));
-
     // construct uri to find in cached file systems
     final URI uriPath = toZipURI(uri);
     if (fileSystems.containsKey(uriPath)) {
       throw new FileSystemAlreadyExistsException();
     }
     
+    //making use of underlying URI path parsing
     // FIXME: think whether to pass .toRealPath(true) to follow links
-    final String pathStr = nativePath.toAbsolutePath().toString();
+    final Path nativePath = Paths.get(toFileURI(uri)).toAbsolutePath();
 
     String defaultdir = null;
     boolean readonly = false;
@@ -125,20 +123,30 @@ public class ZipFileSystemProvider extends FileSystemProvider {
       defaultdir = "/";
     }
 
+    // all archives must be readable, writable archives need not exist
+    final boolean exists;
     if (readonly) {
       nativePath.checkAccess(AccessMode.READ);
+      exists = true;
     }
     else {
       if (nativePath.exists()) {
         nativePath.checkAccess(AccessMode.READ, AccessMode.WRITE);
-
-        // FIXME: check here whether this is really a ZIP archive
+        exists = true;
       }
+      else {
+        exists = false;
+      }
+    }
+
+    // ensure that existing files are valid archives
+    if (exists) {
+      // FIXME: need to do some kind of test here 
     }
 
     // build the new file system
     final ZipFileSystem fs =
-      new ZipFileSystem(this, pathStr, defaultdir, readonly);
+      new ZipFileSystem(this, nativePath, defaultdir, readonly);
 
     final ZipFileSystem old = fileSystems.putIfAbsent(uriPath, fs);
     if (old != null) {
