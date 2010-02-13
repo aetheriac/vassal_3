@@ -47,8 +47,6 @@ import java.nio.channels.FileChannel;
 //import java.nio.file.attribute.Attributes;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import VASSAL.tools.nio.channels.FileChannelAdapter;
 import VASSAL.tools.nio.channels.SeekableByteChannel;
