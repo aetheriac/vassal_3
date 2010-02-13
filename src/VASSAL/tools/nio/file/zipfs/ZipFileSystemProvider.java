@@ -86,61 +86,37 @@ public class ZipFileSystemProvider extends FileSystemProvider {
     final String pathStr = nativePath.toAbsolutePath().toString();
 
     String defaultdir = null;
-    boolean write = true;
+    boolean readonly = false;
 
     // check properties
     if (env != null) {
+      for (Map.Entry<String,?> e : env.entrySet()) {
+        final String key = e.getKey();
 
-      // determine default directory
-      Object obj = env.get("default.dir");
-      if (obj != null && !(obj instanceof String)) {
-        throw new IllegalArgumentException();
-      }
+        if ("default.dir".equals(key)) {
+          // determine default directory
+          final Object val = e.getValue();
+          if (!(val instanceof String)) {
+            throw new IllegalArgumentException();
+          }
 
-      defaultdir = (String) obj;
+          defaultdir = (String) val;
     
-      if (defaultdir != null) {
-        if (defaultdir.charAt(0) != '/') {
-          throw new IllegalArgumentException("default dir should be absolute");
+          if (defaultdir.charAt(0) != '/') {
+            throw new IllegalArgumentException(
+              "default dir should be absolute");
+          }
+
+          if (!defaultdir.equals("/")) {
+            defaultdir = ZipPathParser.normalize(defaultdir);
+          }
         }
-
-        if (!defaultdir.equals("/")) {
-          defaultdir = ZipPathParser.normalize(defaultdir);
-        }
-      }
-
-      // determine open flags
-      obj = env.get("open.options");
-      if (obj != null) {
-        write = false;
-
-        // open options were given, parse them
-        OpenOption[] opts;
-
-        // check that we have the right kind of object
-        if (obj instanceof OpenOption[]) {
-          opts = (OpenOption[]) obj;
-        }
-        else if (obj instanceof Set) {
-          final Set<? extends OpenOption> s = (Set<? extends OpenOption>) obj;
-          opts = s.toArray(new OpenOption[s.size()]);
+        else if ("readonly".equals(key)) {
+          // open archive read-only
+          readonly = true;
         }
         else {
           throw new IllegalArgumentException();
-        }
-
-        // validate the options
-        for (OpenOption o : opts) {
-          if (!(o instanceof StandardOpenOption)) {
-            throw new IllegalArgumentException();
-          }
-
-          switch ((StandardOpenOption) o) {
-          case READ:                break;
-          case WRITE: write = true; break;
-          default:
-            throw new IllegalArgumentException();
-          }
         }
       }
     }
@@ -149,20 +125,20 @@ public class ZipFileSystemProvider extends FileSystemProvider {
       defaultdir = "/";
     }
 
-    if (write) {
+    if (readonly) {
+      nativePath.checkAccess(AccessMode.READ);
+    }
+    else {
       if (nativePath.exists()) {
         nativePath.checkAccess(AccessMode.READ, AccessMode.WRITE);
 
         // FIXME: check here whether this is really a ZIP archive
       }
     }
-    else {
-      nativePath.checkAccess(AccessMode.READ);
-    }
 
     // build the new file system
     final ZipFileSystem fs =
-      new ZipFileSystem(this, pathStr, defaultdir, !write);
+      new ZipFileSystem(this, pathStr, defaultdir, readonly);
 
     final ZipFileSystem old = fileSystems.putIfAbsent(uriPath, fs);
     if (old != null) {
