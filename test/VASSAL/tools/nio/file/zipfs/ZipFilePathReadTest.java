@@ -84,6 +84,7 @@ public class ZipFilePathReadTest {
     zfPath = Paths.get(zfPathName).toAbsolutePath();
     zfURI = URI.create("zip://" + zfPath.toString());
 
+// FIXME: also run these tests in RO mode
     fs = (ZipFileSystem) FileSystems.newFileSystem(zfURI, null);
   }
 

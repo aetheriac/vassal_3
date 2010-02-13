@@ -21,6 +21,7 @@ import VASSAL.tools.nio.file.FileSystem;
 import VASSAL.tools.nio.file.FileSystems;
 import VASSAL.tools.nio.file.FSHandler;
 import VASSAL.tools.nio.file.NoSuchFileException;
+import VASSAL.tools.nio.file.OpenOption;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.Paths;
 import VASSAL.tools.nio.file.PathCopyToExtIntTest;
@@ -37,7 +38,7 @@ import VASSAL.tools.nio.file.PathSetAttributeTest;
 import VASSAL.tools.nio.file.StandardCopyOption;
 import VASSAL.tools.nio.file.attribute.FileTime;
 
-import static VASSAL.tools.nio.file.AbstractPathMethodTest.t;
+import static VASSAL.tools.nio.file.AbstractMethodTest.t;
 
 import static VASSAL.tools.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
