@@ -578,6 +578,7 @@ public class ZipFilePath extends Path {
   public ZipFilePath resolve(Path other) {
     if (other == null) return this;
 
+// FIXME: Why do this?
     if (!(other instanceof ZipFilePath)) {
       throw new ProviderMismatchException();
     }
@@ -658,10 +659,6 @@ public class ZipFilePath extends Path {
     }
 
     return true;
-  }
-
-  public FileSystemProvider provider() {
-    return fs.provider();
   }
 
   @Override
@@ -1465,7 +1462,7 @@ public class ZipFilePath extends Path {
     try {
       fs.writeLock(this);
 
-      if (target.getFileSystem().provider() != fs.provider()) {
+      if (target.getFileSystem() != fs) {
         // destination is not local
         if (replace_existing) {
           copyTo(target, StandardCopyOption.REPLACE_EXISTING,
@@ -1539,7 +1536,7 @@ public class ZipFilePath extends Path {
         // src is modified
         if (src == DELETED) throw new NoSuchFileException(toString());
       
-        if (target.getFileSystem().provider() == fs.provider()) {
+        if (target.getFileSystem() == fs) {
           if (fs.isReadOnly()) throw new ReadOnlyFileSystemException();
 
           // dst is local
@@ -1575,7 +1572,7 @@ public class ZipFilePath extends Path {
       }
       else {
         // src is unmodified
-        if (target.getFileSystem().provider() == fs.provider()) {
+        if (target.getFileSystem() == fs) {
           if (fs.isReadOnly()) throw new ReadOnlyFileSystemException();
 
           // dst is local
