@@ -1427,6 +1427,12 @@ public class ZipFilePath extends Path {
       Path rpath = fs.getReal(this);
       if (rpath == null || rpath == DELETED) {
         rpath = fs.createTempFile();
+
+        // copy out existing bytes for append
+        if (append && exists()) {
+          copyTo(rpath, StandardCopyOption.REPLACE_EXISTING);
+        }
+
         fs.putReal(this, rpath);
       }
 
