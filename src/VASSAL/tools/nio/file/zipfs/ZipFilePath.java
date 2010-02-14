@@ -1389,6 +1389,8 @@ public class ZipFilePath extends Path {
         case CREATE:                                      break;
         case WRITE:                                       break;
         case READ:
+          throw new IllegalArgumentException(
+            "READ may not be set on OutputStreams");
         case DELETE_ON_CLOSE:
         case SPARSE:
         case SYNC:
