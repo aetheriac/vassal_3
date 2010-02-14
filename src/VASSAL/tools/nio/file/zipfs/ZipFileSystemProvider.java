@@ -123,7 +123,6 @@ public class ZipFileSystemProvider extends FileSystemProvider {
       defaultdir = "/";
     }
 
-    // all archives must be readable, writable archives need not exist
     final boolean exists;
     if (readonly) {
       nativePath.checkAccess(AccessMode.READ);
@@ -131,10 +130,13 @@ public class ZipFileSystemProvider extends FileSystemProvider {
     }
     else {
       if (nativePath.exists()) {
+        // archive is old, check that we can write to it
         nativePath.checkAccess(AccessMode.READ, AccessMode.WRITE);
         exists = true;
       }
       else {
+        // archive is new, check that we can write to its parent directory
+        nativePath.getParent().checkAccess(AccessMode.WRITE);
         exists = false;
       }
     }
