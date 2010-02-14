@@ -1268,17 +1268,9 @@ public class ZipFilePath extends Path {
         final ZipEntryInfo ze = ZipUtils.getEntry(resolvedZipPath);
 
         if (w) {
-          // check write access on archive file
-          try {
-            final Path zpath = Paths.get(fs.getZipFileSystemFile());
-            zpath.checkAccess(AccessMode.WRITE);
-          }
-          catch (AccessDeniedException e) {
-            throw (IOException) new AccessDeniedException(
-              "write access denied for the file: " + toString()).initCause(e);
-          }
-          catch (IOException e) {
-            throw (IOException) new IOException().initCause(e);
+          if (fs.isReadOnly()) {
+            throw new AccessDeniedException(
+              "write access denied for the file: " + toString());
           }
         }
 
