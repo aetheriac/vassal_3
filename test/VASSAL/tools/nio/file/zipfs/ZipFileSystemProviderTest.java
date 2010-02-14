@@ -34,7 +34,7 @@ import static VASSAL.tools.nio.file.StandardOpenOption.*;
 public class ZipFileSystemProviderTest {
 
   protected static final String testDir =
-    "test/VASSAL/tools/nio/file/zipfs/".replace("/", File.separator);
+    "test/VASSAL/tools/nio/file/zipfs/readtest/".replace("/", File.separator);
 
   @RunWith(Parameterized.class)
   public static class NewFileSystemTest extends AbstractMethodTest {

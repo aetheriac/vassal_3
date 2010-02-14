@@ -34,12 +34,17 @@ import VASSAL.tools.nio.file.PathDeleteIfExistsTest;
 import VASSAL.tools.nio.file.PathMoveToExtIntTest;
 import VASSAL.tools.nio.file.PathMoveToIntExtTest;
 import VASSAL.tools.nio.file.PathMoveToIntIntTest;
+import VASSAL.tools.nio.file.PathNewOutputStreamTest;
 import VASSAL.tools.nio.file.PathSetAttributeTest;
 import VASSAL.tools.nio.file.StandardCopyOption;
 import VASSAL.tools.nio.file.attribute.FileTime;
 
 import static VASSAL.tools.nio.file.AbstractMethodTest.t;
 
+import static VASSAL.tools.nio.file.StandardOpenOption.APPEND;
+import static VASSAL.tools.nio.file.StandardOpenOption.CREATE_NEW;
+import static VASSAL.tools.nio.file.StandardOpenOption.READ;
+import static VASSAL.tools.nio.file.StandardOpenOption.WRITE;
 import static VASSAL.tools.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 @RunWith(Suite.class)
@@ -54,15 +59,16 @@ import static VASSAL.tools.nio.file.StandardCopyOption.REPLACE_EXISTING;
   ZipFilePathWriteTest.MoveToExtIntTest.class,
   ZipFilePathWriteTest.MoveToIntExtTest.class,
   ZipFilePathWriteTest.MoveToIntIntTest.class,
+  ZipFilePathWriteTest.NewOutputStreamTest.class,
   ZipFilePathWriteTest.SetAttributeTest.class
 })
 public class ZipFilePathWriteTest {
 
   protected static final String thisDir =
-    "test/VASSAL/tools/nio/file/zipfs/".replace("/", File.separator);
+    "test/VASSAL/tools/nio/file/zipfs/writetest/".replace("/", File.separator);
 
   protected static final String td =
-    thisDir + ("test/".replace("/", File.separator));
+    thisDir + ("../test/".replace("/", File.separator));
 
   protected static final String zfName = "write.zip";
   protected static final String zfPathName = td + zfName;
@@ -72,17 +78,9 @@ public class ZipFilePathWriteTest {
       // clear and create our test directory
       final Path tdPath = Paths.get(td);
       FileUtils.deleteIfExists(tdPath);
-      tdPath.createDirectory();
-      tdPath.resolve("yea").createFile();
+      FileUtils.copy(Paths.get(thisDir), tdPath);
       
-      Paths.get(thisDir + "foo").copyTo(tdPath.resolve("foo"));
-      tdPath.resolve("dir").createDirectory(); 
-
-      // work in a copy of write.zip
       final Path zfWrite = Paths.get(zfPathName).toAbsolutePath();
-      final Path zfRead = Paths.get(thisDir + "write.zip").toAbsolutePath();
-      zfRead.copyTo(zfWrite, REPLACE_EXISTING);
-
       final URI zfURI = URI.create("zip://" + zfWrite.toString());
       return FileSystems.newFileSystem(zfURI, null);
     }
@@ -344,27 +342,26 @@ public class ZipFilePathWriteTest {
     }
   }
 
-/*
   @RunWith(Parameterized.class)
   public static class NewOutputStreamTest extends PathNewOutputStreamTest {
-    public NewOutputStreamTest(String output, OpenOption[] opts,
-                                                             Object expected) {
-      super(ZipFilePathReadTest.fs, output, opts, expected);
+    public NewOutputStreamTest(String src, String dst,
+                               OpenOption[] opts, Object expected) {
+      super(ZipFilePathWriteTest.fac, src, dst, opts, expected);
     }
 
     @Parameters
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
-        // Output       Options                     Expected
-        { "/fileInZip", new OpenOption[0],          testDir + "fileInZip" },
-        { "/fileInZip", new OpenOption[]{ READ },   t(IllegalArgumentException) },
-        { "/fileInZip", new OpenOption[]{ APPEND },  },
-        { "/foo",       new OpenOption[0],          testDir + "foo"       },
-        { "foo",        new OpenOption[0],          testDir + "foo"       },
+        // Source     Destination   Options            Expected
+        { td + "foo", "/fileInZip", new OpenOption[0], td + "foo" },
+        { td + "foo", "/fileInZip", new OpenOption[]{ READ }, t(IllegalArgumentException.class) },
+        { td + "foo", "/fileInZip", new OpenOption[]{ APPEND }, td + "foo" },
+        { td + "foo", "/foo",       new OpenOption[]{ APPEND }, td + "foofoo" },
+        { td + "foo", "/foo",       new OpenOption[]{ CREATE_NEW }, t(FileAlreadyExistsException.class) },
+        { td + "foo", "/bar",       new OpenOption[]{ CREATE_NEW }, td + "foo" }
       });
     }
   }
-*/
 
   @RunWith(Parameterized.class)
   public static class SetAttributeTest extends PathSetAttributeTest {

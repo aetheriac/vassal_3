@@ -71,7 +71,7 @@ public class ZipFilePathReadTest {
   };
 
   protected static final String testDir =
-    "test/VASSAL/tools/nio/file/zipfs/".replace("/", File.separator);
+    "test/VASSAL/tools/nio/file/zipfs/readtest/".replace("/", File.separator);
 
   protected static final String zfName = "test.zip";
   protected static final String zfPathName = testDir + zfName;
