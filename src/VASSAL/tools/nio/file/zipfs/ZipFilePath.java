@@ -822,8 +822,14 @@ public class ZipFilePath extends Path {
     return newDirectoryStream(filter);
   }
 
-  protected void checkEmptyDirectory() throws IOException {
+  protected void checkEmptyNonRootDirectory() throws IOException {
     if (Boolean.TRUE.equals(getAttribute("isDirectory"))) {
+      // check for root
+      if (path[0] == '/' && path.length == 1) {
+        throw new IOException("cannot delete /");
+      }
+
+      // check for emptiness
       DirectoryStream<Path> ds = null;
       try {
         ds = newDirectoryStream();
@@ -847,8 +853,7 @@ public class ZipFilePath extends Path {
 
       if (!exists()) throw new NoSuchFileException(toString());
 
-      // delete only empty directories
-      checkEmptyDirectory();
+      checkEmptyNonRootDirectory();
 
       fs.putReal(this, DELETED);
     }
@@ -1253,7 +1258,7 @@ public class ZipFilePath extends Path {
 
       final ZipFilePath resolvedZipPath = getResolvedPathForZip();
       final int nameCount = resolvedZipPath.getNameCount();
-      if (nameCount == 0) {
+      if (nameCount == 0 && !resolvedZipPath.isAbsolute()) {
         throw new NoSuchFileException(toString());
       }
 

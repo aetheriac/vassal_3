@@ -86,15 +86,27 @@ public class ZipFileSystem extends FileSystem {
   // dummy value for real map
   static final Path DELETED = new ZipFilePath(null, null, null);
 
-  protected final ConcurrentMap<ZipFilePath,ZipEntryInfo> info =
-    new ConcurrentHashMap<ZipFilePath,ZipEntryInfo>();
+  protected final ConcurrentMap<ZipFilePath,ZipEntryInfo> info;
 
   ZipFileSystem(ZipFileSystemProvider provider, Path path,
-                String defaultDir, boolean readonly) {
+                String defaultDir, boolean readonly) throws IOException {
     this.provider = provider;
     this.zipFile = path.toAbsolutePath();
     this.defaultdir = defaultDir;
     this.readonly = readonly;
+
+    if (path.exists()) {
+      // Read entries from the zip archive
+      info = new ConcurrentHashMap<ZipFilePath,ZipEntryInfo>(
+        ZipUtils.getEntries(getPath("/")));
+    }
+    else {
+      // New archive, no entries to read
+      info = new ConcurrentHashMap<ZipFilePath,ZipEntryInfo>();
+
+      // Ensure that the root directory exists
+      getPath("/").createDirectory();
+    }
   }
  
   @Override
@@ -217,7 +229,11 @@ public class ZipFileSystem extends FileSystem {
       closeLock.writeLock().lock();
 
       // no modifications, nothing to do
-      if (readonly || real.isEmpty()) return;
+      if (real.isEmpty()) return;
+      if (!zipFile.exists() && real.size() == 1 &&
+                               real.containsKey(getPath("/"))) {
+        return;
+      }
 
       // create a temp file into which to write the new ZIP archive
       final Path nzip =

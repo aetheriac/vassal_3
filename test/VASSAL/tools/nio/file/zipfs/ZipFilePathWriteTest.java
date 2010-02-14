@@ -227,10 +227,11 @@ public class ZipFilePathWriteTest {
     @Parameters
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
-        // Input           Expected
-        { "/notAFile",     t(NoSuchFileException.class)        },
-        { "/foo",          null                                },
-        { "/dirInZip",     t(DirectoryNotEmptyException.class) }
+        // Input       Expected
+        { "/",         t(IOException.class)                },
+        { "/notAFile", t(NoSuchFileException.class)        },
+        { "/foo",      null                                },
+        { "/dirInZip", t(DirectoryNotEmptyException.class) }
       });
     }
   }
@@ -245,6 +246,7 @@ public class ZipFilePathWriteTest {
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
         // Input
+        { "/",         t(IOException.class)                },
         { "/notAFile", null                                },
         { "/foo",      null                                },
         { "/dirInZip", t(DirectoryNotEmptyException.class) }

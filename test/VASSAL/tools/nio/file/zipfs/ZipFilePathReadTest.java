@@ -103,6 +103,14 @@ public class ZipFilePathReadTest {
     public static List<Object[]> cases() {
       return Arrays.asList(new Object[][] {
         // Input          Mode  Expected
+        { "/",             00,  null                           },
+        { "/",             01,  t(AccessDeniedException.class) },
+        { "/",             02,  null                           }, 
+        { "/",             03,  t(AccessDeniedException.class) },
+        { "/",             04,  null                           },
+        { "/",             05,  t(AccessDeniedException.class) }, 
+        { "/",             06,  null                           }, 
+        { "/",             07,  t(AccessDeniedException.class) },
         { "/fileInZip",    00,  null                           },
         { "/fileInZip",    01,  t(AccessDeniedException.class) },
         { "/fileInZip",    02,  null                           },
