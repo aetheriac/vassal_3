@@ -222,6 +222,81 @@ public class ZipFileSystem extends FileSystem {
     }
   }
 
+  protected void copyOldFiles(ZipOutputStream out) throws IOException {
+    ZipFile zf = null;
+    try {
+      zf = new ZipFile(getZipFileSystemFile());
+        
+      // copy all unchanged files from old archive to new archive
+      final Enumeration<? extends ZipEntry> en = zf.entries();
+      while (en.hasMoreElements()) {
+        final ZipEntry e = en.nextElement();
+        final ZipFilePath path = getPath(e.toString());
+      
+        final Path rpath = getReal(path);
+        if (rpath != null) continue;
+  
+        if (Boolean.TRUE.equals(path.getAttribute("isDirectory"))) {
+          out.putNextEntry(e);
+        }
+        else {
+          InputStream in = null;
+          try {
+            in = zf.getInputStream(e);
+         
+            // We can't reuse entries for compressed files because
+            // there's no way to reset the fields to acceptable values. 
+            final ZipEntry ze = new ZipEntry(e.getName());
+            ze.setMethod(ZipEntry.DEFLATED);
+
+// FIXME: preserve attribs?
+            out.putNextEntry(ze);
+            IOUtils.copy(in, out);
+            out.closeEntry();
+            in.close();
+          }
+          finally {
+            IOUtils.closeQuietly(in);
+          }
+        }
+      }
+        
+      zf.close();
+    }
+    finally {
+      IOUtils.closeQuietly(zf);
+    }
+  }
+
+  protected void copyNewFiles(ZipOutputStream out) throws IOException {
+    // copy all new files to new archive
+    for (Map.Entry<ZipFilePath,Path> e : real.entrySet()) {
+      final Path rpath = e.getValue();
+      if (rpath == DELETED) continue;  // path was deleted, skip
+
+// FIXME: preserve attribs?
+      final ZipEntry ze = new ZipEntry(e.getKey().toString());
+      if (Boolean.TRUE.equals(rpath.getAttribute("isDirectory"))) {
+        out.putNextEntry(ze);
+      }
+      else {
+        ze.setMethod(ZipEntry.DEFLATED);
+
+        InputStream in = null;
+        try {
+          in = rpath.newInputStream();
+          out.putNextEntry(ze);
+          IOUtils.copy(in, out);
+          out.closeEntry();
+          in.close();
+        }
+        finally {
+          IOUtils.closeQuietly(in);
+        }
+      }
+    }
+  }
+
   public void flush() throws IOException {
     if (readonly) throw new ReadOnlyFileSystemException();
 
@@ -230,90 +305,26 @@ public class ZipFileSystem extends FileSystem {
 
       // no modifications, nothing to do
       if (real.isEmpty()) return;
-      if (!zipFile.exists() && real.size() == 1 &&
-                               real.containsKey(getPath("/"))) {
-        return;
-      }
 
-      // create a temp file into which to write the new ZIP archive
-      final Path nzip =
-        Paths.get(File.createTempFile("rwzipfs", "zip").toString());
+      // NB: must check prior to opening the ZipOutputStream,
+      // because that will create the archive file.
+      final boolean exists = zipFile.exists();
+
+      final Path nzip;
+      if (exists) {
+        // create a temp file into which to write the new ZIP archive
+        nzip = Paths.get(File.createTempFile("rwzipfs", ".zip").toString());
+      }
+      else {
+        if (real.size() == 1 && real.containsKey(getPath("/"))) return;
+        nzip = zipFile;
+      }
 
       ZipOutputStream out = null;
       try {
         out = new ZipOutputStream(nzip.newOutputStream());
-
-        ZipFile zf = null;
-        try {
-          zf = new ZipFile(getZipFileSystemFile());
-        
-          // copy all unchanged files from old archive to new archive
-          final Enumeration<? extends ZipEntry> en = zf.entries();
-          while (en.hasMoreElements()) {
-            final ZipEntry e = en.nextElement();
-            final ZipFilePath path = getPath(e.toString());
-    
-            final Path rpath = getReal(path);
-            if (rpath != null) continue;
-
-            if (Boolean.TRUE.equals(path.getAttribute("isDirectory"))) {
-              out.putNextEntry(e);
-            }
-            else {
-              InputStream in = null;
-              try {
-                in = zf.getInputStream(e);
-         
-                // We can't reuse entries for compressed files because
-                // there's no way to reset the fields to acceptable values. 
-                final ZipEntry ze = new ZipEntry(e.getName());
-                ze.setMethod(ZipEntry.DEFLATED);
-
-// FIXME: preserve attribs?
-                out.putNextEntry(ze);
-                IOUtils.copy(in, out);
-                out.closeEntry();
-                in.close();
-              }
-              finally {
-                IOUtils.closeQuietly(in);
-              }
-            }
-          }
-        
-          zf.close();
-        }
-        finally {
-          IOUtils.closeQuietly(zf);
-        }
-
-        // copy all new files to new archive
-        for (Map.Entry<ZipFilePath,Path> e : real.entrySet()) {
-          final Path rpath = e.getValue();
-          if (rpath == DELETED) continue;  // path was deleted, skip
-
-// FIXME: preserve attribs?
-          final ZipEntry ze = new ZipEntry(rpath.toString());
-          if (Boolean.TRUE.equals(rpath.getAttribute("isDirectory"))) {
-            out.putNextEntry(ze);
-          }
-          else {
-            ze.setMethod(ZipEntry.DEFLATED);
-
-            InputStream in = null;
-            try {
-              in = rpath.newInputStream();
-              out.putNextEntry(ze);
-              IOUtils.copy(in, out);
-              out.closeEntry();
-              in.close();
-            }
-            finally {
-              IOUtils.closeQuietly(in);
-            }
-          }
-        }
-  
+        if (exists) copyOldFiles(out);
+        copyNewFiles(out);
         out.close();
       }
       finally {
@@ -323,7 +334,9 @@ public class ZipFileSystem extends FileSystem {
       final Path ozip = Paths.get(getZipFileSystemFile());
 
       // replace the old archive with the new one
-      nzip.moveTo(ozip, StandardCopyOption.REPLACE_EXISTING);
+      if (nzip != ozip) {
+        nzip.moveTo(ozip, StandardCopyOption.REPLACE_EXISTING);
+      }
 
       // blow away cached header info
       ZipUtils.remove(getPath("/").toUri());
@@ -413,6 +426,10 @@ public class ZipFileSystem extends FileSystem {
     zpath = zpath.toAbsolutePath();
     removeInfo(zpath);
     return real.remove(zpath);
+  }
+
+  Map<ZipFilePath,ZipEntryInfo> getAllInfo() {
+    return info;
   }
 
   ZipEntryInfo getInfo(ZipFilePath zpath) {

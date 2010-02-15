@@ -113,7 +113,8 @@ public class ZipFilePath extends Path {
     if (path == null) {
       throw new NullPointerException();
     }
-  
+
+// FIXME: This is unnecessary for path manipulation ops!  
     if (!(path instanceof ZipFilePath)) {
       throw new ProviderMismatchException();
     }
@@ -1025,28 +1026,25 @@ public class ZipFilePath extends Path {
 
   @Override
   public boolean isSameFile(Path other) throws IOException {
-    if (this.equals(other)) {
-      return true;
-    }
-
     if (other == null || (!(other instanceof ZipFilePath))) {
       return false;
     }
   
-    final ZipFilePath other1 = (ZipFilePath) other;
-
     // check whether we have a common file system
-    if (!this.getFileSystem().getZipFileSystemFile().equals(
-          other1.getFileSystem().getZipFileSystemFile())) {
+    if (other.getFileSystem() != fs) {
       return false;
+    }
+
+    if (this.equals(other)) {
+      return true;
     }
 
     // check whether both (or neither) exist
-    if (this.exists() != other1.exists()) {
+    if (this.exists() != other.exists()) {
       return false;
     }
 
-    return this.toAbsolutePath().equals(other1.toAbsolutePath());
+    return this.toAbsolutePath().equals(other.toAbsolutePath());
   }
 
   public WatchKey register(
