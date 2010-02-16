@@ -83,11 +83,9 @@ public class BasicModule extends GameModule {
   }
 
   protected void build() throws IOException {
-    final String fileName = BUILDFILE; 
-
     BufferedInputStream in = null;
     try {
-      in = new BufferedInputStream(getDataArchive().getInputStream(fileName));
+      in = new BufferedInputStream(getDataArchive().getInputStream(BUILDFILE));
     }    
     // FIXME: review error message
     // FIXME: this should be more specific, to separate the case where
