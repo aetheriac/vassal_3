@@ -269,13 +269,20 @@ public class ZipFileSystem extends FileSystem {
   }
 
   protected void copyNewFiles(ZipOutputStream out) throws IOException {
+    final Path root = getPath("/");
+
     // copy all new files to new archive
     for (Map.Entry<ZipFilePath,Path> e : real.entrySet()) {
+      if (e.getKey().isSameFile(root)) continue; // skip root
+
       final Path rpath = e.getValue();
       if (rpath == DELETED) continue;  // path was deleted, skip
 
+      // knock off the initial "/" for creating zip entries
+      final String zname = e.getKey().toString().substring(1);
+
 // FIXME: preserve attribs?
-      final ZipEntry ze = new ZipEntry(e.getKey().toString());
+      final ZipEntry ze = new ZipEntry(zname);
       if (Boolean.TRUE.equals(rpath.getAttribute("isDirectory"))) {
         out.putNextEntry(ze);
       }
