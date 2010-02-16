@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -155,7 +156,7 @@ public class FileUtils {
     }
 
     @Override
-    public FileVisitResult visitFile(Path file,  BasicFileAttributes attrs) {
+    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
       try {
         file.copyTo(dst.resolve(src.relativize(file)));
       }
@@ -241,6 +242,66 @@ public class FileUtils {
       }
 
       // Chug on, regardless of failure.
+      return FileVisitResult.CONTINUE;
+    }
+  }
+
+  /**
+   * Print the subtree rooted at the given path.
+   *
+   * @param path the root
+   *
+   * @throws IOException if one occurs during traversal
+   */
+  public static void list(Path path, OutputStream out) throws IOException {
+    final PrintStream pout = out instanceof PrintStream ?
+      (PrintStream) out : new PrintStream(out);
+
+    final RecursiveListVisitor visitor = new RecursiveListVisitor(pout);
+    Files.walkFileTree(path, visitor);
+    final IOException e = visitor.getException();
+    if (e != null) throw (IOException) (new IOException().initCause(e));
+  }
+
+  private static class RecursiveListVisitor extends SimpleFileVisitor<Path> {
+    private final PrintStream out;
+    private IOException fail = null;
+
+    public RecursiveListVisitor(PrintStream out) {
+      this.out = out;
+    }
+
+    public IOException getException() {
+      return fail;
+    }
+
+    @Override
+    public FileVisitResult preVisitDirectory(Path dir) {
+      out.println(dir.toString());
+      return FileVisitResult.CONTINUE;
+    }
+
+    @Override
+    public FileVisitResult preVisitDirectoryFailed(Path dir, IOException e) {
+      if (e != null) fail = e;
+      return FileVisitResult.CONTINUE;
+    }
+
+    @Override
+    public FileVisitResult postVisitDirectory(Path dir, IOException e) {
+      if (e != null) fail = e;
+      return FileVisitResult.CONTINUE;
+    }
+
+    @Override
+    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+      out.println(file.toString());
+      return FileVisitResult.CONTINUE;
+    }
+
+    @Override
+    public FileVisitResult visitFileFailed(Path file, IOException e) {
+      if (e != null) fail = e;
       return FileVisitResult.CONTINUE;
     }
   }
