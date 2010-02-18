@@ -17,7 +17,7 @@
  * at http://www.opensource.org.
  */
 
-package VASSAL.tools;
+package VASSAL.tools.concurrent;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
@@ -45,11 +45,9 @@ import java.util.concurrent.ConcurrentMap;
  * <p>This implementation does not permit <code>null</code> keys or
  * values.</p>
  *
- * @deprecated Moved to {@link VASSAL.tools.concurrent} package.
  * @since 3.1.0
  * @author Joel Uckelman
  */
-@Deprecated
 public class ConcurrentSoftHashMap<K,V> extends AbstractMap<K,V>
                                         implements ConcurrentMap<K,V> {
 

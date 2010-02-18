@@ -17,14 +17,18 @@
  * at http://www.opensource.org.
  */
 
-package VASSAL.tools;
+package VASSAL.tools.concurrent;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-/** @deprecated Moved to {@link VASSAL.tools.concurrent} package. */
-@Deprecated
+import VASSAL.tools.ErrorDialog;
+
+/**
+ * @author Joel Uckelman
+ * @since 3.1
+ */
 public class FutureUtils {
   private FutureUtils() {}
 

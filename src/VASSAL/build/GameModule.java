@@ -90,7 +90,6 @@ import VASSAL.tools.ArchiveWriter;
 import VASSAL.tools.ArrayUtils;
 import VASSAL.tools.CRCUtils;
 import VASSAL.tools.DataArchive;
-import VASSAL.tools.FutureUtils;
 import VASSAL.tools.KeyStrokeListener;
 import VASSAL.tools.KeyStrokeSource;
 import VASSAL.tools.MTRandom;
@@ -99,6 +98,7 @@ import VASSAL.tools.ReadErrorDialog;
 import VASSAL.tools.ToolBarComponent;
 import VASSAL.tools.WarningDialog;
 import VASSAL.tools.WriteErrorDialog;
+import VASSAL.tools.concurrent.FutureUtils;
 import VASSAL.tools.filechooser.FileChooser;
 import VASSAL.tools.io.IOUtils;
 

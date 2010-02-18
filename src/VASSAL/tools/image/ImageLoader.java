@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (c) 2007-2009 by Joel Uckelman
+ * Copyright (c) 2007-2010 by Joel Uckelman
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -46,7 +46,12 @@ public class ImageLoader {
 
   public static BufferedImage getImage(String name, InputStream in)
                                                       throws ImageIOException {
-    return INSTANCE.load(name, in);
+    return INSTANCE.load(name, in, true);
+  }
+
+  public static BufferedImage getUnconvertedImage(String name, InputStream in)
+                                                      throws ImageIOException {
+    return INSTANCE.load(name, in, false);
   }
 
   public static Dimension getImageSize(String name, InputStream in)
@@ -101,7 +106,7 @@ public class ImageLoader {
     return img;
   }
 
-  protected BufferedImage load(String name, InputStream in)
+  protected BufferedImage load(String name, InputStream in, boolean convert)
                                                       throws ImageIOException {
     //
     // ImageIO fails on the following types of images:
