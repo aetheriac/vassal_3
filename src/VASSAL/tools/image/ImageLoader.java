@@ -46,12 +46,7 @@ public class ImageLoader {
 
   public static BufferedImage getImage(String name, InputStream in)
                                                       throws ImageIOException {
-    return INSTANCE.load(name, in, true);
-  }
-
-  public static BufferedImage getUnconvertedImage(String name, InputStream in)
-                                                      throws ImageIOException {
-    return INSTANCE.load(name, in, false);
+    return INSTANCE.load(name, in);
   }
 
   public static Dimension getImageSize(String name, InputStream in)
@@ -106,7 +101,7 @@ public class ImageLoader {
     return img;
   }
 
-  protected BufferedImage load(String name, InputStream in, boolean convert)
+  protected BufferedImage load(String name, InputStream in)
                                                       throws ImageIOException {
     //
     // ImageIO fails on the following types of images:

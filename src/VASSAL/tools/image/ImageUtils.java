@@ -262,11 +262,6 @@ public class ImageUtils {
     return ImageLoader.getImage(name, in);
   }
 
-  public static BufferedImage getUnconvertedImage(String name, InputStream in) 
-                                                      throws ImageIOException {
-    return ImageLoader.getUnconvertedImage(name, in);
-  }
-
   public static BufferedImage toType(BufferedImage src, int type) {
     final BufferedImage dst =
       new BufferedImage(src.getWidth(), src.getHeight(), type);
