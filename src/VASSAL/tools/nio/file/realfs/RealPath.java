@@ -265,11 +265,12 @@ public abstract class RealPath extends AbstractPath {
         if (!file.renameTo(dst.file)) {
           // maybe we're on a platform where we must delete dst first
           try {
-            dst.deleteIfExists();
+            dst.delete();
 
             if (!file.renameTo(dst.file)) {
-              // maybe we've hit one of the other corner cases for renameTo()
-              // which the Javadoc hints at but, maddeningly, does not name
+              // maybe we've hit some other platform-dependent behavior of
+              // renameTo() which the Javadoc hints at but, maddeningly,
+              // does not name
               copyTo(target, options);
               delete();
             }
