@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * Copyright (c) 2007 by Joel Uckelman
+ * Copyright (c) 2007-2010 by Joel Uckelman
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -206,6 +206,14 @@ public class ScaleOpBitmapImpl extends AbstractTiledOpImpl
     public int hashCode() {
       return hash;
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+      return getClass().getName() +
+        "[sop=" + sop + ",scale=" + scale +
+        ",dx0=" + dx0 + ",dy0=" + dy0 + ",dw=" + dw + ",dy=" + dh + "]";
+    }
   }
 
   public RenderingHints getHints() {
@@ -228,14 +236,21 @@ public class ScaleOpBitmapImpl extends AbstractTiledOpImpl
     if (o == null || o.getClass() != this.getClass()) return false;
 
     final ScaleOpBitmapImpl op = (ScaleOpBitmapImpl) o;
-    return scale == op.getScale() && 
+    return scale == op.scale && 
            sop.equals(op.sop) && 
-           hints.equals(op.getHints());
+           hints.equals(op.hints);
   }
 
   /** {@inheritDoc} */
   @Override
   public int hashCode() {
     return hash;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public String toString() {
+    return getClass().getName() +
+      "[sop=" + sop + ",scale=" + scale + ",hints=" + hints + "]";
   }
 }

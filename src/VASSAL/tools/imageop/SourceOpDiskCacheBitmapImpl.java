@@ -1,7 +1,7 @@
 /*
- * $Id$
+ * $Id: SourceOpBitmapImpl.java 6010 2009-09-05 21:16:56Z uckelman $
  *
- * Copyright (c) 2007-2010 by Joel Uckelman
+ * Copyright (c) 2009-2010 by Joel Uckelman
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,35 +21,36 @@ package VASSAL.tools.imageop;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import VASSAL.build.GameModule;
-import VASSAL.tools.DataArchive;
 import VASSAL.tools.ErrorDialog;
+import VASSAL.tools.HashCode;
+import VASSAL.tools.io.IOUtils;
+import VASSAL.tools.image.ImageDiskCache;
 import VASSAL.tools.image.ImageIOException;
 import VASSAL.tools.image.ImageNotFoundException;
 import VASSAL.tools.image.ImageUtils;
 
 /**
- * An {@link ImageOp} which loads an image from the {@link DataArchive}.
- * 
- * @since 3.1.0
+ * An {@link ImageOp} which loads tiles from the tile cache.
+ *
+ * @since 3.2.0
  * @author Joel Uckelman
  */
-public class SourceOpBitmapImpl extends AbstractTiledOpImpl
-                                implements SourceOp {
+public class SourceOpDiskCacheBitmapImpl extends AbstractTileOpImpl
+                                         implements SourceOp {
+
   /** The name of the image file. */
   protected final String name;
 
   /** The cached hash code of this object. */
   protected final int hash;
-  
-  /** The zip file from which the image will be loaded */
-  protected final DataArchive archive;
+
+  protected final int tileX;
+  protected final int tileY;
+  protected double scale;
 
   /**
    * Constructs an <code>ImageOp</code> which will load the given file.
@@ -58,17 +59,23 @@ public class SourceOpBitmapImpl extends AbstractTiledOpImpl
    * @throws IllegalArgumentException
    *    if <code>name</code> is <code>null</code>.
    */
-  public SourceOpBitmapImpl(String name) {
-    this(name, GameModule.getGameModule().getDataArchive());
-  }
-  
-  public SourceOpBitmapImpl(String name, DataArchive archive) {
-    if (name == null || name.length() == 0 || archive == null)
-      throw new IllegalArgumentException();
+  public SourceOpDiskCacheBitmapImpl(String name,
+                                     int tileX, int tileY, double scale) {
+    if (name == null) throw new IllegalArgumentException();
+    if (name.length() == 0) throw new IllegalArgumentException();
 
     this.name = name;
-    this.archive = archive;
-    hash = name.hashCode() ^ archive.hashCode();
+    this.tileX = tileX;
+    this.tileY = tileY;
+    this.scale = scale;
+
+    final int PRIME = 31;
+    int result = 1;
+    result = PRIME * result + HashCode.hash(name);
+    result = PRIME * result + HashCode.hash(tileX);
+    result = PRIME * result + HashCode.hash(tileY);
+    result = PRIME * result + HashCode.hash(scale);
+    hash = result;
   }
 
   public List<VASSAL.tools.opcache.Op<?>> getSources() {
@@ -76,23 +83,12 @@ public class SourceOpBitmapImpl extends AbstractTiledOpImpl
   }
 
   /**
-   *  {@inheritDoc}
+   * {@inheritDoc}
    *
    * @throws IOException if the image cannot be loaded from the image file.
    */
   public BufferedImage eval() throws ImageIOException {
-    InputStream in = null;
-    try {
-      in = archive.getInputStream(name);
-    }
-    catch (FileNotFoundException e) {
-      throw new ImageNotFoundException(name, e);
-    }
-    catch (IOException e) {
-      throw new ImageIOException(name, e);
-    }
-    
-    return ImageUtils.getImage(name, in);
+    return ImageDiskCache.getImage(name, tileX, tileY, scale);
   }
 
   /** {@inheritDoc} */
@@ -102,33 +98,15 @@ public class SourceOpBitmapImpl extends AbstractTiledOpImpl
     }
   }
 
-// FIXME: we need a way to invalidate ImageOps when an exception is thrown?
-// Maybe size should go to -1,-1 when invalid?
-
   protected Dimension getImageSize() {
     try {
-      InputStream in = null;
-      try {
-        in = archive.getInputStream(name);
-      }
-      catch (FileNotFoundException e) {
-        throw new ImageNotFoundException(name, e);
-      }
-      catch (IOException e) {
-        throw new ImageIOException(name, e);
-      } 
-
-      return ImageUtils.getImageSize(name, in);
+      return ImageDiskCache.getImageSize(name, tileX, tileY, scale);
     }
     catch (IOException e) {
       if (!Op.handleException(e)) ErrorDialog.bug(e);
     }
 
     return new Dimension();
-  }
-
-  protected ImageOp createTileOp(int tileX, int tileY) {
-    return new SourceTileOpBitmapImpl(this, tileX, tileY);
   }
 
   /**
@@ -146,8 +124,11 @@ public class SourceOpBitmapImpl extends AbstractTiledOpImpl
     if (this == o) return true;
     if (o == null || o.getClass() != this.getClass()) return false;
 
-    final SourceOpBitmapImpl s = (SourceOpBitmapImpl) o;
-    return archive == s.archive && name.equals(s.name);
+    final SourceOpDiskCacheBitmapImpl s = (SourceOpDiskCacheBitmapImpl) o;
+    return name.equals(s.name) &&
+           tileX == s.tileX &&
+           tileY == s.tileY &&
+           scale == s.scale;
   }
 
   /** {@inheritDoc} */
@@ -159,6 +140,7 @@ public class SourceOpBitmapImpl extends AbstractTiledOpImpl
   /** {@inheritDoc} */
   @Override
   public String toString() {
-    return getClass().getName() + "[name=" + name + "]";
+    return getClass().getName() + "[name=" + name +
+      ",tileX=" + tileX + ",tileY=" + tileY + ",scale=" + scale + "]";
   }
 }

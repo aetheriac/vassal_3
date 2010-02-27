@@ -52,14 +52,17 @@ public class Op {
     if (name.endsWith(".svg"))
       return new SourceOpSVGImpl(name);
     else
-      return new SourceOpBitmapImpl(name);
+      return new SourceOpTiledBitmapImpl(name);
   }
  
   public static ScaleOp scale(ImageOp sop, double scale) {
     if (sop instanceof SVGOp)
       return new RotateScaleOpSVGImpl((SVGOp) sop, 0.0, scale);
-    else 
-      return new ScaleOpBitmapImpl(sop, scale);
+    else
+// FIXME: Using ScaleOpTiledBitmapImpl for all scaling is wrong, because
+// non-map images aren't in the disk cache!
+//      return new ScaleOpBitmapImpl(sop, scale);
+      return new ScaleOpTiledBitmapImpl(sop, scale);
   }
 
   public static RotateOp rotate(ImageOp sop, double angle) {
