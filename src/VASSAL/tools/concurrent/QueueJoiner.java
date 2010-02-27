@@ -22,7 +22,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 
 /**
- * A {@link Callable} which calls {@code Callable}s from a queue.
+ * A {@link Callable} which calls a {@code Callable} retrieved from a queue.
  *
  * {@code QueueJoiner} permits one queue of {@code Callable}s to be joined
  * into a single {@code Callable} and inserted into another queue. One reason
@@ -40,29 +40,26 @@ import java.util.concurrent.Callable;
  * @since 3.1.11
  */
 public class QueueJoiner implements Callable<Void> {
-  protected final BlockingQueue<Callable<?>> queue;
+  protected final BlockingQueue<? extends Callable<?>> queue;
 
   /**
-   * Creates a {@link Callable} which calls {@code Callable}s from a queue.
+   * Creates a {@link Callable} which calls a {@code Callable} retrieved
+   * from a queue.
    *
-   * @param queue the queue to drain
+   * @param queue the queue
    */
-  public QueueJoiner(BlockingQueue<Callable<?>> queue) {
+  public QueueJoiner(BlockingQueue<? extends Callable<?>> queue) {
     this.queue = queue;
   }
 
   /**
-   * Calls {@link Callable}s from the queue until the queue is empty.
+   * Calls a {@link Callable} from the queue unless the queue is empty.
    *
-   * @throws InterruptedException if the current thread was interrupted
-   * @throws Exception when any {@code Callable} from the queue throws
+   * @throws Exception when the {@code Callable} from the queue throws
    */
   public Void call() throws Exception {
-    Callable<?> c;
-    while ((c = queue.poll()) != null) {
-      c.call();
-      if (Thread.interrupted()) throw new InterruptedException(); 
-    }
+    final Callable<?> c = queue.poll();
+    if (c != null) c.call();
     return null;
   }
 }

@@ -29,10 +29,10 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import VASSAL.tools.ErrorDialog;
 import VASSAL.tools.io.IOUtils;
-import VASSAL.tools.image.ImageDiskCache;
 import VASSAL.tools.image.ImageIOException;
 import VASSAL.tools.image.ImageNotFoundException;
 import VASSAL.tools.image.ImageUtils;
+import VASSAL.tools.image.tilecache.ImageDiskCache;
 
 /**
  * An {@link ImageOp} which loads tiles from the tile cache.

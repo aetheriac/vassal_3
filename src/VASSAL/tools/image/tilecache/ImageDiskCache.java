@@ -16,7 +16,7 @@
  * License along with this library; if not, copies are available
  * at http://www.opensource.org.
  */
-package VASSAL.tools.image;
+package VASSAL.tools.image.tilecache;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
@@ -34,6 +34,9 @@ import java.util.zip.GZIPInputStream;
 import VASSAL.Info;
 import VASSAL.build.GameModule;
 import VASSAL.tools.io.IOUtils;
+import VASSAL.tools.image.ImageIOException;
+import VASSAL.tools.image.ImageNotFoundException;
+import VASSAL.tools.image.ImageUtils;
 
 public class ImageDiskCache {
   private ImageDiskCache() {}
@@ -56,7 +59,6 @@ public class ImageDiskCache {
       );
 
 // FIXME: this might decelerate the image?
-// Maybe write a BufferedImage subclass backed by an IntBuffer?
       final int[] data =
         ((DataBufferInt) img.getRaster().getDataBuffer()).getData();
 
