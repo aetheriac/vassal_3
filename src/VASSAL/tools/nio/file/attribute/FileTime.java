@@ -1,7 +1,7 @@
 /*
  * $Id: URLUtils.java 4860 2009-01-15 17:15:23Z uckelman $
  *
- * Copyright (c) 2009 by Joel Uckelman
+ * Copyright (c) 2009-2010 by Joel Uckelman
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,14 +19,12 @@
 
 package VASSAL.tools.nio.file.attribute;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import VASSAL.tools.HashCode;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 
 public final class FileTime implements Comparable<FileTime> {
   private final int hash;
