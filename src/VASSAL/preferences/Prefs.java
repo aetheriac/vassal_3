@@ -85,9 +85,10 @@ public class Prefs implements Closeable {
   }
 
   public File getFile() {
-    return new File(editor.getURI());
+    final String f = editor.getURI().toString().replaceFirst("^zip", "file");
+    return new File(URI.create(f));
   }
-  
+
   public void addOption(Configurer o) {
     addOption(Resources.getString("Prefs.general_tab"), o); //$NON-NLS-1$
   }
