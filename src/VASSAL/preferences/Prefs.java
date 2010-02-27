@@ -22,8 +22,10 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URI;
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.File;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Enumeration;
@@ -182,7 +184,7 @@ public class Prefs implements Closeable {
 
       final Path path = fs.getPath(name);
       if (path.exists()) {
-        BufferedInputStream in = null;
+        InputStream in = null;
         try {
           in = new BufferedInputStream(path.newInputStream());
           storedValues.clear();
@@ -232,7 +234,7 @@ public class Prefs implements Closeable {
   
       OutputStream out = null;
       try {
-        out = path.newOutputStream();
+        out = new BufferedOutputStream(path.newOutputStream());
         storedValues.store(out, null);
         out.close();
       }
