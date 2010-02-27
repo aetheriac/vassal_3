@@ -32,7 +32,8 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-import VASSAL.tools.HashCode;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import VASSAL.tools.image.GeneralFilter;
 import VASSAL.tools.image.ImageUtils;
 
@@ -164,17 +165,14 @@ public class ScaleOpTiledBitmapImpl extends ScaleOpBitmapImpl {
         sop[i] = rsop.getTileOp(stiles[i]);
       }
 
-// FIXME: move this out of here
-      final int PRIME = 31;
-      int result = 1;
-      result = PRIME * result + HashCode.hash(sop);
-      result = PRIME * result + HashCode.hash(dx0);
-      result = PRIME * result + HashCode.hash(dy0);
-      result = PRIME * result + HashCode.hash(dw);
-      result = PRIME * result + HashCode.hash(dh);
-      result = PRIME * result + HashCode.hash(tx);
-      result = PRIME * result + HashCode.hash(ty);
-      hash = result;
+      hash = new HashCodeBuilder().append(sop)
+                                  .append(dx0)
+                                  .append(dy0)
+                                  .append(dw)
+                                  .append(dh)
+                                  .append(tx)
+                                  .append(ty)
+                                  .toHashCode();
     }
 
     public List<VASSAL.tools.opcache.Op<?>> getSources() {

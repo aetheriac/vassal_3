@@ -26,7 +26,10 @@ import java.util.Arrays;
  *
  * @since 3.1.0
  * @author Joel Uckelman
+ * @deprecated Use {@link org.apache.commons.lang.builder.HashCodeBuilder}
+ * instead.
  */
+@Deprecated
 public final class HashCode {
   private HashCode() {}
 

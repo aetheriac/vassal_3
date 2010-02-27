@@ -25,8 +25,9 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import VASSAL.tools.ErrorDialog;
-import VASSAL.tools.HashCode;
 import VASSAL.tools.io.IOUtils;
 import VASSAL.tools.image.ImageDiskCache;
 import VASSAL.tools.image.ImageIOException;
@@ -69,13 +70,11 @@ public class SourceOpDiskCacheBitmapImpl extends AbstractTileOpImpl
     this.tileY = tileY;
     this.scale = scale;
 
-    final int PRIME = 31;
-    int result = 1;
-    result = PRIME * result + HashCode.hash(name);
-    result = PRIME * result + HashCode.hash(tileX);
-    result = PRIME * result + HashCode.hash(tileY);
-    result = PRIME * result + HashCode.hash(scale);
-    hash = result;
+    hash = new HashCodeBuilder().append(name)
+                                .append(tileX)
+                                .append(tileY)
+                                .append(scale)
+                                .toHashCode();
   }
 
   public List<VASSAL.tools.opcache.Op<?>> getSources() {

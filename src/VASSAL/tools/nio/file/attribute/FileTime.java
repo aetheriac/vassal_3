@@ -19,6 +19,8 @@
 
 package VASSAL.tools.nio.file.attribute;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -27,12 +29,15 @@ import java.util.concurrent.TimeUnit;
 import VASSAL.tools.HashCode;
 
 public final class FileTime implements Comparable<FileTime> {
+  private final int hash;
  
   /** The time in milliseconds. */ 
   protected final long ms;
 
   protected FileTime(long value) {
     ms = value;
+
+    hash = new HashCodeBuilder().append(ms).toHashCode();
   }
 
   public int compareTo(FileTime other) {
@@ -68,7 +73,7 @@ public final class FileTime implements Comparable<FileTime> {
   /** {@inheritDoc} */
   @Override
   public int hashCode() {
-    return HashCode.hash(ms);
+    return hash;
   }
 
   /** {@inheritDoc} */

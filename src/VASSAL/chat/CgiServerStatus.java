@@ -31,8 +31,9 @@ import java.util.Properties;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import VASSAL.i18n.Resources;
-import VASSAL.tools.HashCode;
 import VASSAL.tools.SequenceEncoder;
 
 /**
@@ -257,11 +258,15 @@ public class CgiServerStatus implements ServerStatus {
     public final long l;
     public final long r;
 
+    private final int hash;
+
     public Interval(long left, long right) {
       if (right < left) throw new IllegalArgumentException();
 
       l = left;
       r = right;
+
+      hash = new HashCodeBuilder().append(l).append(r).toHashCode();
     }
 
     public boolean intersects(Interval i) {
@@ -276,8 +281,8 @@ public class CgiServerStatus implements ServerStatus {
     }
 
     public int hashCode() {
-      return HashCode.hash(l) ^ HashCode.hash(r);
-    }
+      return hash; 
+    } 
 
     public String toString() {
       return "[" + l + "," + r + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
