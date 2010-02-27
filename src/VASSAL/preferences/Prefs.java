@@ -47,8 +47,6 @@ import VASSAL.tools.WriteErrorDialog;
 import VASSAL.tools.URIUtils;
 import VASSAL.tools.io.IOUtils;
 import VASSAL.tools.nio.file.FileSystem;
-import VASSAL.tools.nio.file.FileSystemAlreadyExistsException;
-import VASSAL.tools.nio.file.FileSystemNotFoundException;
 import VASSAL.tools.nio.file.FileSystems;
 import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.zipfs.ZipFileSystem;
