@@ -39,6 +39,7 @@ import VASSAL.configure.BooleanConfigurer;
 import VASSAL.configure.Configurer;
 import VASSAL.configure.DirectoryConfigurer;
 import VASSAL.i18n.Resources;
+import VASSAL.tools.DataArchive;
 import VASSAL.tools.ReadErrorDialog;
 import VASSAL.tools.WriteErrorDialog;
 import VASSAL.tools.URIUtils;
@@ -51,15 +52,16 @@ import VASSAL.tools.nio.file.Path;
 import VASSAL.tools.nio.file.zipfs.ZipFileSystem;
 
 /**
- * A set of preferences. Each set of preferences is identified by a name, and different sets may share a common editor,
- * which is responsible for writing the preferences to disk
+ * A set of preferences. Each set of preferences is identified by a name,
+ * and different sets may share a common editor, which is responsible for
+ * writing the preferences to disk.
  */
 public class Prefs implements Closeable {
   /** Preferences key for the directory containing modules */
   public static final String MODULES_DIR_KEY = "modulesDir"; // $NON_NLS-1$
   public static final String DISABLE_D3D = "disableD3d";
   private static Prefs globalPrefs;
-  private Map<String, Configurer> options = new HashMap<String, Configurer>();
+  private Map<String,Configurer> options = new HashMap<String,Configurer>();
   private Properties storedValues = new Properties();
   private PrefsEditor editor;
   private String name;
@@ -83,9 +85,9 @@ public class Prefs implements Closeable {
   }
 
   public File getFile() {
-    return new File(((ZipFileSystem) editor.getFileSystem()).getZipFileSystemFile());
+    return new File(editor.getURI());
   }
-
+  
   public void addOption(Configurer o) {
     addOption(Resources.getString("Prefs.general_tab"), o); //$NON-NLS-1$
   }
@@ -172,13 +174,17 @@ public class Prefs implements Closeable {
   }
 
   private void read() {
-    final FileSystem fs = editor.getFileSystem();
+    final URI uri = editor.getURI();
+
+    FileSystem fs = null;
     try {
-      final Path p = fs.getPath(name);
-      if (p.exists()) {
+      fs = FileSystems.newFileSystem(uri, DataArchive.zipOpts);
+
+      final Path path = fs.getPath(name);
+      if (path.exists()) {
         BufferedInputStream in = null;
         try {
-          in = new BufferedInputStream(p.newInputStream());
+          in = new BufferedInputStream(path.newInputStream());
           storedValues.clear();
           storedValues.load(in);
           in.close();
@@ -187,14 +193,20 @@ public class Prefs implements Closeable {
           IOUtils.closeQuietly(in);
         }
       }
+
+      fs.close();
     }
     catch (IOException e) {
       ReadErrorDialog.error(e, ((ZipFileSystem) fs).getZipFileSystemFile());
+    }
+    finally {
+      IOUtils.closeQuietly(fs);
     }
   }
 
   /**
    * Store this set of preferences in the editor, but don't yet save to disk
+   * FIXME: this a misleading description
    */
   public void save() throws IOException {
     read();
@@ -211,17 +223,27 @@ public class Prefs implements Closeable {
       }
     }
 
-    final FileSystem fs = editor.getFileSystem();
-    final Path p = fs.getPath(name);
+    final URI uri = editor.getURI();
 
-    OutputStream out = null;
+    FileSystem fs = null;
     try {
-      out = p.newOutputStream();
-      storedValues.store(out, null);
-      out.close();
+      fs = FileSystems.newFileSystem(uri, DataArchive.zipOpts);
+      final Path path = fs.getPath(name);
+  
+      OutputStream out = null;
+      try {
+        out = path.newOutputStream();
+        storedValues.store(out, null);
+        out.close();
+      }
+      finally {
+        IOUtils.closeQuietly(out);
+      }
+
+      fs.close();
     }
     finally {
-      IOUtils.closeQuietly(out);
+      IOUtils.closeQuietly(fs);
     }
 
     changed.clear();
@@ -249,32 +271,9 @@ public class Prefs implements Closeable {
       final File prefsFile = new File(Info.getHomeDir(), "Preferences");
       final URI uri = URIUtils.toURI("zip", prefsFile);
 
-      FileSystem fs = null;
       try {
-// FIXME:
-//
-// (1) This is a race---what if the FS is closed between the calls
-// to newFileSystem() and getFileSystem()?
-//
-// (2) If the exception is thrown, how do we ensure that the FS doesn't
-// get closed on us from someplace else?!
-//
-        while (fs == null) {
-          try {
-            fs = FileSystems.newFileSystem(uri, null);
-          }
-          catch (FileSystemAlreadyExistsException e) {
-            try {
-              fs = FileSystems.getFileSystem(uri);
-            }
-            catch (FileSystemNotFoundException ignore) {
-              // ignore?
-            }
-          }
-        }
-
-        globalPrefs = new Prefs(new PrefsEditor(fs), "VASSAL");
-        globalPrefs.write(); 
+        globalPrefs = new Prefs(new PrefsEditor(uri), "VASSAL");
+        globalPrefs.write();
       }
       catch (IOException e) {
         WriteErrorDialog.error(e, prefsFile);
