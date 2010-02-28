@@ -299,6 +299,17 @@ public abstract class GameModule extends AbstractConfigurable implements Command
 
     final Future<Void> f = Exec.ex.submit(task);
 
+// FIXME: This extra thread is started to make sure that exceptions from
+// the tiler task get reported. This is necessary right now because the
+// code in this method is run from the EDT, as is the progress dialog, so
+// in the event of an exception the progress dialog will wait forever for
+// more progress updates.
+    new Thread(new Runnable() {
+      public void run() {
+        FutureUtils.wait(f);
+      }
+    }).start();
+
     pd.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         f.cancel(true);
