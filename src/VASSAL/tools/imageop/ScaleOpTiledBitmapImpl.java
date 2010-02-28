@@ -27,8 +27,6 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.awt.image.WritableRaster;
-import java.awt.RenderingHints;
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
