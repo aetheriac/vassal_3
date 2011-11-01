@@ -53,6 +53,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import VASSAL.build.AbstractBuildable;
 import VASSAL.build.Buildable;
 import VASSAL.build.Builder;
 import VASSAL.build.Configurable;
@@ -83,7 +84,7 @@ import VASSAL.tools.SequenceEncoder;
  * recognizes {@link Command}s that specify the set of boards to be used on a map. As a {@link GameComponent} it reacts
  * to the start of a game by prompting the player to select boards if none have been specified.
  */
-public class BoardPicker implements ActionListener, GameComponent, GameSetupStep, Configurable, CommandEncoder, ValidityChecker {
+public class BoardPicker extends AbstractBuildable implements ActionListener, GameComponent, GameSetupStep, Configurable, CommandEncoder, ValidityChecker {
   private static final long serialVersionUID = 1L;
   public static final String ID = "BoardPicker"; //$NON-NLS-1$
   protected List<Board> possibleBoards = new ArrayList<Board>();
@@ -206,7 +207,7 @@ public class BoardPicker implements ActionListener, GameComponent, GameSetupStep
                               Integer.parseInt(e.getAttribute(SLOT_HEIGHT)));
       }
       catch (NumberFormatException ex) {
-        // Use default values if attribute doesn't parse.
+        // Use default values if attribute doesn't parse. 
         // Correct value will be written when module is saved.
       }
 
@@ -214,7 +215,7 @@ public class BoardPicker implements ActionListener, GameComponent, GameSetupStep
         slotScale = Double.valueOf(e.getAttribute(SCALE)).doubleValue();
       }
       catch (NumberFormatException ex) {
-        // Use default values if attribute doesn't parse.
+        // Use default values if attribute doesn't parse. 
         // Correct value will be written when module is saved.
       }
 
@@ -233,7 +234,7 @@ public class BoardPicker implements ActionListener, GameComponent, GameSetupStep
       }
       /*
        * 'Add Row' and 'Add Column' text are no longer configurable, just use the standard (possibly translated) text
-       *
+       * 
        * value = e.getAttribute(ADD_ROW_BUTTON_TEXT); if (value != null && value.length() > 0) { addRowButtonText =
        * value; } value = e.getAttribute(ADD_COLUMN_BUTTON_TEXT); if (value != null && value.length() > 0) {
        * addColumnButtonText = value; }
@@ -288,13 +289,15 @@ public class BoardPicker implements ActionListener, GameComponent, GameSetupStep
     if (b instanceof Translatable) {
       ((Translatable) b).getI18nData().setOwningComponent(this);
     }
+    super.add(b);  // PG-2011-09-24
   }
 
   /**
    * Remove a board from the list of those available for the user to choose from
    */
   public void remove(Buildable b) {
-    if (b instanceof Board) {
+	  buildComponents.remove(b);  // PG-2011-09-24
+	  if (b instanceof Board) {
       possibleBoards.remove(b);
     }
   }
@@ -549,7 +552,7 @@ public class BoardPicker implements ActionListener, GameComponent, GameSetupStep
 
   /**
    * Return the list of boards as specified in the current controls
-   *
+   * 
    * @return
    */
   public List<Board> getBoardsFromControls() {
@@ -880,4 +883,9 @@ public class BoardPicker implements ActionListener, GameComponent, GameSetupStep
   @Deprecated
   public void pack() {
   }
+
+	@Override  // PG-2011-09-24
+	public String[] getAttributeNames() {
+		return new String[0];
+	}
 }

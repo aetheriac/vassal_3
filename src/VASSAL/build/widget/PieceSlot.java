@@ -33,13 +33,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
-
 import VASSAL.build.Buildable;
 import VASSAL.build.Builder;
 import VASSAL.build.Configurable;
@@ -67,7 +65,7 @@ import VASSAL.i18n.ComponentI18nData;
 
 /**
  * A Component that displays a GamePiece.
- *
+ * 
  * Can be added to any Widget but cannot contain any children Keyboard input on
  * a PieceSlot is forwarded to the {@link GamePiece#keyEvent} method for the
  * PieceSlot's GamePiece. Clicking on a PieceSlot initiates a drag
@@ -110,7 +108,7 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
   public class Panel extends JPanel {
     private static final long serialVersionUID = 1L;
     protected PieceSlot pieceSlot;
-
+    
     public Panel(PieceSlot slot) {
       super();
       setFocusTraversalKeysEnabled(false);
@@ -120,7 +118,7 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
     public PieceSlot getPieceSlot() {
       return pieceSlot;
     }
-
+    
     public void paint(Graphics g) {
       PieceSlot.this.paint(g);
     }
@@ -151,11 +149,11 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
 
   /**
    * Return defined GamePiece with prototypes fully expanded.
-   *
+   * 
    * @return expanded piece
    */
   protected GamePiece getExpandedPiece() {
-    if (expanded == null) {
+    if (expanded == null) { 
       final GamePiece p = getPiece();
       if (p != null) {  // Possible when PlaceMarker is building
         expanded = PieceCloner.getInstance().clonePiece(p);
@@ -163,14 +161,14 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
     }
     return expanded;
   }
-
+ 
   protected void clearExpandedPiece() {
     expanded = null;
   }
-
+ 
   /**
    * Return defined GamePiece with prototypes unexpanded.
-   *
+   * 
    * @return unexpanded piece
    */
   public GamePiece getPiece() {
@@ -193,7 +191,7 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
     if (c != null) {
       c.setProperty(Properties.PIECE_ID, getGpId());
     }
-
+    
     return c;
   }
 
@@ -209,7 +207,7 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
       final FontMetrics fm = g.getFontMetrics();
       g.drawRect(0, 0, size.width - 1, size.height - 1);
       g.setFont(FONT);
-      g.drawString(" nil ",
+      g.drawString(" nil ", 
         size.width/2 - fm.stringWidth(" nil ")/2,
         size.height/2
       );
@@ -237,8 +235,8 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
   }
 
   public void mousePressed(MouseEvent e) {
-    KeyBuffer.getBuffer().clear();
-    Map.clearActiveMap();
+    KeyBuffer.getBuffer().clear(); 
+    Map.clearActiveMap(); 
     if (getPiece() != null) {
       KeyBuffer.getBuffer().add(getPiece());
     }
@@ -362,12 +360,12 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
   }
 
   public void addTo(Buildable parent) {
-    panel.setDropTarget(VASSAL.build.module.map.PieceMover.DragHandler.makeDropTarget(panel, DnDConstants.ACTION_MOVE, null));
+    panel.setDropTarget(VASSAL.build.module.map.PieceMover.AbstractDragHandler.makeDropTarget(panel, DnDConstants.ACTION_MOVE, null));
 
     DragGestureListener dragGestureListener = new DragGestureListener() {
       public void dragGestureRecognized(DragGestureEvent dge) {
         startDrag();
-        VASSAL.build.module.map.PieceMover.DragHandler.getTheDragHandler().dragGestureRecognized(dge);
+        VASSAL.build.module.map.PieceMover.AbstractDragHandler.getTheDragHandler().dragGestureRecognized(dge);
       }
     };
     DragSource.getDefaultDragSource().createDefaultDragGestureRecognizer(panel, DnDConstants.ACTION_MOVE, dragGestureListener);
@@ -443,7 +441,7 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
   public String getAttributeValueString(String attr) {
     return getI18nData().getLocalUntranslatedValue(attr);
   }
-
+  
 
   public ComponentI18nData getI18nData() {
     /*
@@ -451,7 +449,7 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
      */
    return new ComponentI18nData(this, getPiece());
   }
-
+  
   public Configurer getConfigurer() {
     return new MyConfigurer(this);
   }
@@ -459,12 +457,12 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
   /**
    * Update the gpid for this PieceSlot, using the given {@link GpIdSupport}
    * to generate the new id.
-   */
+   */  
   public void updateGpId(GpIdSupport s) {
     gpidSupport = s;
     updateGpId();
   }
-
+  
   /**
    * Allocate a new gpid to this PieceSlot, plus to any PlaceMarker or
    * Replace traits.
@@ -475,10 +473,10 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
     updateGpId(piece);
     setPiece(piece);
   }
-
+  
   /**
    * Allocate new gpid's in the given GamePiece
-   *
+   * 
    * @param piece GamePiece
    */
   public void updateGpId(GamePiece piece) {
@@ -486,11 +484,11 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
       return;
     }
     if (piece instanceof PlaceMarker) {
-      ((PlaceMarker) piece).setGpId(gpidSupport.generateGpId());
+      ((PlaceMarker) piece).setGpId(gpidSupport.generateGpId());      
     }
     updateGpId(((Decorator) piece).getInner());
   }
-
+  
   public String getGpId() {
     return gpId;
   }
@@ -498,7 +496,7 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
   public void setGpId(String id) {
     gpId = id;
   }
-
+  
   private static class MyConfigurer extends Configurer implements HelpWindowExtension {
     private PieceDefiner definer;
 

@@ -13,7 +13,7 @@
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, copies are available
+ * License along with this library; if not, copies are available 
  * at http://www.opensource.org.
  */
 /*
@@ -21,12 +21,14 @@
  * User: rkinney
  * Date: Jul 21, 2002
  * Time: 10:15:59 PM
- * To change template for new interface use
+ * To change template for new interface use 
  * Code Style | Class Templates options (Tools | IDE Options).
  */
 package VASSAL.build.module.map.boardPicker.board.mapgrid;
 
+import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.Rectangle;
 
 import VASSAL.build.module.map.boardPicker.board.MapGrid.BadCoords;
 
@@ -34,11 +36,30 @@ import VASSAL.build.module.map.boardPicker.board.MapGrid.BadCoords;
  * Provides methods for assigning names to locations on a MapGrid, and drawing those locations when drawing a grid
  */
 public interface GridNumbering {
-    public String locationName(Point pt);
-    public String localizedLocationName(Point pt);
+	public static final String FIRST = "first";
+	public static final String SEP = "sep";
+	public static final String H_TYPE = "hType";
+	public static final String V_TYPE = "vType";
+	public static final String H_LEADING = "hLeading";
+	public static final String V_LEADING = "vLeading";
+	public static final String H_OFF = "hOff";
+	public static final String V_OFF = "vOff";
+	public static final String V_DESCEND = "vDescend";
+	public static final String H_DESCEND = "hDescend";
+	public static final String FONT_SIZE = "fontSize";
+	public static final String COLOR = "color";
+	public static final String VISIBLE = "visible";
+	public static final String ROTATE_TEXT = "rotateText";
+	public static final String H_DRAW_OFF = "hDrawOff";
+	public static final String V_DRAW_OFF = "vDrawOff";
+	public static final String LOCATION_FORMAT = "locationFormat";
 
-    public void draw(java.awt.Graphics g, java.awt.Rectangle bounds, java.awt.Rectangle visibleRect, double scale, boolean reversed);
+	public String locationName(Point pt);
+   public String localizedLocationName(Point pt);
 
-    public boolean isVisible();
-    public Point getLocation(String location) throws BadCoords;
+   public void draw(Graphics g, Rectangle bounds, Rectangle visibleRect, double scale, boolean reversed);
+
+   public boolean isVisible();
+   public void setVisible(boolean isVisible);
+   public Point getLocation(String location) throws BadCoords;
 }
