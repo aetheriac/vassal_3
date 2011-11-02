@@ -60,19 +60,22 @@ extends AbstractConfigurable  implements AttributeList {
     attributes.put(attribute.name(), attribute);
     try {
       getDeclaredField(key).setAccessible(true);;
-    } catch (NoSuchFieldException e) {
+    }
+    catch (NoSuchFieldException e) {
       logger.error(String.format("Field %1$s not found in module %2$s", key, e.getStackTrace()[0].getClassName()));
     }
   }
+
   public void addAttribute (String key, String description) {
     this.addAttribute(key, description, AbstractAttribute.visible);
   }
-  public void addAttribute (String key, String description, VisibilityCondition visibility) 
-      {
+
+  public void addAttribute (String key, String description, VisibilityCondition visibility) {
     try {
       Field field = getDeclaredField(key);
       addAttribute(field.getType(), key, description, visibility);
-    } catch (NoSuchFieldException e) {
+    }
+    catch (NoSuchFieldException e) {
       logger.error(String.format("Field %1$s not found in module %2$s", key, e.getStackTrace()[0].getClassName()));
     }
   }
@@ -195,7 +198,7 @@ extends AbstractConfigurable  implements AttributeList {
           field.set(this, value);
       }
       else if (value instanceof String) {
-        if (AttributeParser.class.isAssignableFrom(attribute.getClass().getSuperclass()) ){
+        if (AttributeParser.class.isAssignableFrom(attribute.getClass().getSuperclass()) ) {
           field.set(this, ((AttributeParser<?>)get(key)).valueOf((String) value));
         }
         else {
@@ -204,7 +207,8 @@ extends AbstractConfigurable  implements AttributeList {
             field.set(this,
                 boxingType.cast(boxingType.getDeclaredMethod("valueOf", String.class)
                     .invoke(this,value)));
-          } catch (InvocationTargetException e) { 
+          }
+          catch (InvocationTargetException e) { 
             if ( (e.getTargetException() instanceof NumberFormatException)) {
               ; // ignore these
             }
@@ -277,14 +281,16 @@ extends AbstractConfigurable  implements AttributeList {
             while (true) {
               try {
                 return clazz.getDeclaredField(key);
-              } catch (NoSuchFieldException e) { // look up-stream
+              } 
+              catch (NoSuchFieldException e) { // look up-stream
                 if (clazz == AbstractAttributeListConfigurable.class) throw e;
                 clazz = clazz.getSuperclass();
               }
             }
           }
         });
-    } catch (PrivilegedActionException e) {
+    } 
+    catch (PrivilegedActionException e) {
       throw (NoSuchFieldException) e.getException();
     }
   }

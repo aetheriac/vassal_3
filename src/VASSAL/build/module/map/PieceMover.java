@@ -1305,25 +1305,25 @@ public class PieceMover extends AbstractBuildable
     }
 
     public void dragMouseMoved(DragSourceDragEvent e) {
-        if (!e.getLocation().equals(lastDragLocation)) {
-           lastDragLocation = e.getLocation();
-           moveDragCursor(e.getX(), e.getY());
-           if (dragCursor != null && !dragCursor.isVisible()) {
-             dragCursor.setVisible(true);
-           }
-         }
+      if (!e.getLocation().equals(lastDragLocation)) {
+        lastDragLocation = e.getLocation();
+        moveDragCursor(e.getX(), e.getY());
+        if (dragCursor != null && !dragCursor.isVisible()) {
+          dragCursor.setVisible(true);
+        }
+      }
     }
 
     public void dragEnter(DropTargetDragEvent e) {
       final Component newDropWin = e.getDropTargetContext().getComponent();
       if (newDropWin != dropWin) {
         final double newZoom = newDropWin instanceof Map.View
-              ? ((Map.View) newDropWin).getMap().getZoom() : 1.0;
-            if (Math.abs(newZoom - dragCursorZoom) > 0.01) {
-              makeDragCursor(newZoom);
-            }
-            setDrawWinToOwnerOf(e.getDropTargetContext().getComponent());
-            dropWin = newDropWin;
+          ? ((Map.View) newDropWin).getMap().getZoom() : 1.0;
+        if (Math.abs(newZoom - dragCursorZoom) > 0.01) {
+          makeDragCursor(newZoom);
+        }
+        setDrawWinToOwnerOf(e.getDropTargetContext().getComponent());
+        dropWin = newDropWin;
       }
       super.dragEnter(e);
     }
@@ -1332,21 +1332,20 @@ public class PieceMover extends AbstractBuildable
       removeDragCursor();
       super.drop(e);
     }
-   }
+  }
 
   /** Implementation of AbstractDragHandler when DragImage is supported by JRE
    *
    * @Author Pieter Geerkens
    */
   static public class DragHandler extends AbstractDragHandler {
+    public void dragGestureRecognized(DragGestureEvent dge) {
+      if (dragGestureRecognizedPrep(dge) == null) return;
+      super.dragGestureRecognized(dge);
+    }
 
-  public void dragGestureRecognized(DragGestureEvent dge) {
-    if (dragGestureRecognizedPrep(dge) == null) return;
-    super.dragGestureRecognized(dge);
-  }
+    public void dragDropEnd(DragSourceDropEvent e) {}
 
-  public void dragDropEnd(DragSourceDropEvent e)     { ; }
-
-  public void dragMouseMoved(DragSourceDragEvent e)  { ; }
+    public void dragMouseMoved(DragSourceDragEvent e) {}
   }
 }

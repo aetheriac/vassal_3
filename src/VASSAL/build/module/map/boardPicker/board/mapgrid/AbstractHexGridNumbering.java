@@ -35,9 +35,6 @@ import java.beans.PropertyChangeListener;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import VASSAL.build.Buildable;
 import VASSAL.build.module.GameComponent;
 import VASSAL.build.module.map.boardPicker.board.CanonHexIndices;
@@ -49,8 +46,6 @@ import VASSAL.counters.Labeler;
 
 public abstract class AbstractHexGridNumbering  extends RegularGridNumbering
 implements EnumerableHexGrid, GameComponent {
-  transient private static final Logger logger =
-          LoggerFactory.getLogger(AbstractHexGridNumbering.class);
 
   public AbstractHexGridNumbering() throws NumberFormatException, 
   IllegalArgumentException, SecurityException {
@@ -267,9 +262,10 @@ implements EnumerableHexGrid, GameComponent {
   public Point getCenterPoint(int col, int row) {
     try {
       return whif.hexCenterPoint(col,row);
-    } catch (NoninvertibleTransformException ex) {
-      logger.error("", ex);
-      return null; // Cannot happen
+    }
+    catch (NoninvertibleTransformException e) {
+      // Cannot happen
+      throw new IllegalStateException(e);
     }
   }
   
@@ -281,6 +277,7 @@ implements EnumerableHexGrid, GameComponent {
   public int getRow(Point p) {
     return getWorldIndices(new Point(p)).Row();
   }
+
   /** Returns the <b>column</b>-index of the Point <b>p</b>.
    * @deprecated Use getWorldIndices(p).col instead.  
    * @see getWorldIndices
@@ -289,24 +286,28 @@ implements EnumerableHexGrid, GameComponent {
   public int getColumn(Point p) {
     return getWorldIndices(new Point(p)).Col();
   }
+
   //-------------------- EnumerableHexGrid implementation -------------------
   abstract public void setAffineTransform() ;
   
-   @Override
+  @Override
   public CanonHexIndices.IntegerCHI canonHexIndices(Point2D p) {
-     return grid.canonHexIndices(p);
-   }
-   @Override
+    return grid.canonHexIndices(p);
+  }
+
+  @Override
   public Point2D toOrigin(CanonHexIndices chi){
-     return grid.toOrigin(chi, new Point());
-   }
-   @Override
+    return grid.toOrigin(chi, new Point());
+  }
+
+  @Override
   public CanonHexIndices canonHexIndices() { return grid.canonHexIndices(); }
   //---------------------- GameComponent implementation ---------------------
   /**
    * As soon as module is fully loaded, ensure that numbering is properly
    * bounded in relation to the enclosing grid.
    */
+
   @Override
   public void setup(boolean gameStarting) {
     if (gameStarting) setAffineTransform();

@@ -247,7 +247,8 @@ public class GridShearer extends JDialog {
            if (sp.distance(fp2) < grid.getDy())  break; // ignore out-of-sequence events
            try {
              shearTransformFactory = new ShearTransformFactory(fp1,fp2,sp);
-           } catch (NoninvertibleTransformException e2) {
+           }
+           catch (NoninvertibleTransformException e2) {
              JOptionPane.showMessageDialog(null,
                new StringBuilder("Cannot generate shear transform; try ")
                .append("again with points 1 & 2 in opposite corners of ")
@@ -265,6 +266,7 @@ public class GridShearer extends JDialog {
          default:  break; //throw new BrokenStateMachineException(mode,e.getClass());
        }
      }
+
      @Override public void mouseMoved(MouseEvent e) {
        final Point p = e.getPoint();
        if (!view.contains(p)) return;
@@ -279,7 +281,8 @@ public class GridShearer extends JDialog {
                     try {
                       grid.setTransform(shearTransform);
                       warningShown = false;
-                    } catch (NoninvertibleTransformException e1) {
+                    }
+                    catch (NoninvertibleTransformException e1) {
                        if (!warningShown) {
                          JOptionPane.showMessageDialog(null, 
                            "Don't go there!\nStay on your side of the red line.\n"); 
@@ -320,29 +323,31 @@ public class GridShearer extends JDialog {
    }
    /** Handles the <b>Save</b> and <b>Quit</b> buttons */
    private class ActionExit implements ActionListener {
-    @Override
-    public void actionPerformed(ActionEvent e) {
-      shutDown(e.getSource() == buttonQuit);
-    }
+     @Override
+     public void actionPerformed(ActionEvent e) {
+       shutDown(e.getSource() == buttonQuit);
+     }
    }
    
    private void shutDown (boolean cancel) {
-    // restore grid ...
+     // restore grid ...
      if (cancel) { 
        try {
-        grid.setTransform(saveTransform);
-      } catch (NoninvertibleTransformException e) {
-        logger.error("NoninvertibleTransformException on restoring a saved " +
-            "(valid) shear transformation\n",e); 
-      }
+         grid.setTransform(saveTransform);
+       }
+       catch (NoninvertibleTransformException e) {
+         logger.error("NoninvertibleTransformException on restoring a saved " +
+             "(valid) shear transformation\n",e); 
+       }
      }
      wasCancelled = cancel;
-    grid.setVisible(saveGridVisible);
+     grid.setVisible(saveGridVisible);
 
-    // ... then close down
-    setVisible(false);
-    view.getParent().remove(view);
+     // ... then close down
+     setVisible(false);
+     view.getParent().remove(view);
    }
+
 // --------------------- Shear Calculator ------------------------  
    /** 
     * Calculates an affine transform that holds two specified points <i>fp1</i> and <i>fp2</i>

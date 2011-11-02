@@ -159,7 +159,8 @@ import VASSAL.build.module.map.boardPicker.board.mapgrid.HexGridNumberingX;
                                   0.0,     0.0 );
         try {
           affinePreOp.invert();
-        } catch (NoninvertibleTransformException e) {
+        }
+        catch (NoninvertibleTransformException e) {
           logger.error("Non-invertible 'affinePreOp' isn't possible.", e);
         }
         affineToScreen.preConcatenate(affinePreOp);
