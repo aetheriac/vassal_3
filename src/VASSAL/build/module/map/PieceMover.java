@@ -61,9 +61,6 @@ import javax.swing.JRootPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import VASSAL.build.AbstractBuildable;
 import VASSAL.build.Buildable;
 import VASSAL.build.GameModule;
@@ -104,8 +101,6 @@ public class PieceMover extends AbstractBuildable
                         implements MouseListener,
                                    GameComponent,
                                    Comparator<GamePiece> {
-  private static final Logger logger =
-        LoggerFactory.getLogger(PieceMover.class);
   /** The Preferences key for autoreporting moves. */
   public static final String AUTO_REPORT = "autoReport"; //$NON-NLS-1$
   public static final String NAME = "name";
@@ -781,7 +776,6 @@ public class PieceMover extends AbstractBuildable
                     true, KeyBuffer.class.getClassLoader());
     }
     catch (ClassNotFoundException e) {
-      logger.error("", e);
       throw new IllegalStateException(e); // impossible
     }
   }
