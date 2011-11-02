@@ -315,7 +315,7 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
   }
 
   public Class<?>[] getAllowableConfigureComponents() {
-    return new Class[]{SquareGridNumbering.class};
+    return new Class<?>[]{SquareGridNumbering.class};
   }
 
   public Point getLocation(String location) throws BadCoords {

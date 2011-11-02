@@ -207,7 +207,9 @@ public abstract class AbstractUIHexGrid extends AbstractAttributeListConfigurabl
 
   @Override
   public Class<?>[] getAllowableConfigureComponents() {
-    return new Class[]{HexGridNumberingX.class, HexGridNumberingIrregular.class};
+    return new Class<?>[]{
+      HexGridNumberingX.class, HexGridNumberingIrregular.class
+    };
   }
 
   /* ---------------------------------------------------------

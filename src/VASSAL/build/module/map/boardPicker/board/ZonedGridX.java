@@ -128,9 +128,12 @@ public class ZonedGridX extends AbstractConfigurable implements GeometricGrid, G
 
   @Override
   public Class<?>[] getAllowableConfigureComponents() {
-    return background == null
-      ? new Class[]{Zone.class, HexGridX.class, SquareGrid.class, RegionGrid.class}
-      : new Class[]{Zone.class};
+    return background == null ?
+      new Class<?>[]{
+        Zone.class, HexGridX.class, SquareGrid.class, RegionGrid.class
+      }
+      :
+      new Class<?>[]{Zone.class};
   }
 
   public static String getConfigureTypeName() {
