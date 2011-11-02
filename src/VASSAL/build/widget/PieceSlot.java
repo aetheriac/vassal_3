@@ -49,6 +49,7 @@ import VASSAL.build.module.documentation.HelpFile;
 import VASSAL.build.module.documentation.HelpWindow;
 import VASSAL.build.module.documentation.HelpWindowExtension;
 import VASSAL.build.module.map.MenuDisplayer;
+import VASSAL.build.module.map.PieceMover.AbstractDragHandler;
 import VASSAL.command.AddPiece;
 import VASSAL.command.Command;
 import VASSAL.configure.Configurer;
@@ -360,12 +361,12 @@ public class PieceSlot extends Widget implements MouseListener, KeyListener {
   }
 
   public void addTo(Buildable parent) {
-    panel.setDropTarget(VASSAL.build.module.map.PieceMover.AbstractDragHandler.makeDropTarget(panel, DnDConstants.ACTION_MOVE, null));
+    panel.setDropTarget(AbstractDragHandler.makeDropTarget(panel, DnDConstants.ACTION_MOVE, null));
 
     DragGestureListener dragGestureListener = new DragGestureListener() {
       public void dragGestureRecognized(DragGestureEvent dge) {
         startDrag();
-        VASSAL.build.module.map.PieceMover.AbstractDragHandler.getTheDragHandler().dragGestureRecognized(dge);
+        AbstractDragHandler.getTheDragHandler().dragGestureRecognized(dge);
       }
     };
     DragSource.getDefaultDragSource().createDefaultDragGestureRecognizer(panel, DnDConstants.ACTION_MOVE, dragGestureListener);
