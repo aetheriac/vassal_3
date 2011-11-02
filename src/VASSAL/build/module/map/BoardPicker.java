@@ -207,7 +207,7 @@ public class BoardPicker extends AbstractBuildable implements ActionListener, Ga
                               Integer.parseInt(e.getAttribute(SLOT_HEIGHT)));
       }
       catch (NumberFormatException ex) {
-        // Use default values if attribute doesn't parse. 
+        // Use default values if attribute doesn't parse.
         // Correct value will be written when module is saved.
       }
 
@@ -215,7 +215,7 @@ public class BoardPicker extends AbstractBuildable implements ActionListener, Ga
         slotScale = Double.valueOf(e.getAttribute(SCALE)).doubleValue();
       }
       catch (NumberFormatException ex) {
-        // Use default values if attribute doesn't parse. 
+        // Use default values if attribute doesn't parse.
         // Correct value will be written when module is saved.
       }
 
@@ -234,7 +234,7 @@ public class BoardPicker extends AbstractBuildable implements ActionListener, Ga
       }
       /*
        * 'Add Row' and 'Add Column' text are no longer configurable, just use the standard (possibly translated) text
-       * 
+       *
        * value = e.getAttribute(ADD_ROW_BUTTON_TEXT); if (value != null && value.length() > 0) { addRowButtonText =
        * value; } value = e.getAttribute(ADD_COLUMN_BUTTON_TEXT); if (value != null && value.length() > 0) {
        * addColumnButtonText = value; }
@@ -552,7 +552,7 @@ public class BoardPicker extends AbstractBuildable implements ActionListener, Ga
 
   /**
    * Return the list of boards as specified in the current controls
-   * 
+   *
    * @return
    */
   public List<Board> getBoardsFromControls() {

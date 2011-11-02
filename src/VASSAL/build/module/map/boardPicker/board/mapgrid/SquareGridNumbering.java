@@ -44,7 +44,7 @@ import VASSAL.counters.Labeler;
 
 public class SquareGridNumbering extends RegularGridNumbering {
   private static final long  serialVersionUID  = 1L;
- 
+
 private SquareGrid grid;
 
   public void addTo(Buildable parent) {
@@ -84,8 +84,8 @@ private SquareGrid grid;
     int size = (int) (scale * fontSize + 0.5);
     if (size < 5 || !bounds.intersects(visibleRect)) {
       return;
-    } 
-    
+    }
+
     Rectangle region = bounds.intersection(visibleRect);
     Shape oldClip = g.getClip();
     if (oldClip != null) {

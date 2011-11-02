@@ -79,7 +79,7 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
   public double getDx() {
     return dx;
   }
-  
+
   public void setDx(double d) {
     dx = d;
   }
@@ -88,7 +88,7 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
   public double getDy() {
     return dy;
   }
-  
+
   public void setDy(double d) {
     dy = d;
   }
@@ -96,7 +96,7 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
   public Point getOrigin() {
     return new Point(origin);
   }
-  
+
   public void setOrigin(Point p) {
     origin.x = p.x;
     origin.y = p.y;
@@ -105,11 +105,11 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
   public boolean isSideways() {
     return false;
   }
-  
+
   public void setSideways(boolean b) {
     return;
   }
-  
+
   public GridContainer getContainer() {
     return container;
   }
@@ -126,19 +126,19 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
   public static final String RANGE = "range";
   public static final String RANGE_MANHATTAN = "Manhattan";
   public static final String RANGE_METRIC = "Metric";
-  
+
   public static class RangeOptions extends StringEnum {
     public String[] getValidValues(AutoConfigurable target) {
       return new String[]{RANGE_METRIC, RANGE_MANHATTAN};
     }
   }
-  
+
   public String[] getAttributeNames() {
     return new String[] {
       X0,
-      Y0, 
+      Y0,
       DX,
-      DY, 
+      DY,
       RANGE,
       EDGES,
       CORNERS,
@@ -207,7 +207,7 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
   public String getGridName() {
     return getConfigureTypeName();
   }
-  
+
   public String getConfigureName() {
     return null;
   }
@@ -335,7 +335,7 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
           + abs((int) floor((p2.y - p1.y) / dy + 0.5));
     }
   }
-  
+
 
   public Area getGridShape(Point center, int range) {
     Area shape = shapeCache.get(range);
@@ -379,7 +379,7 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
     int nx = (int) round(offsetX / (0.5 * dx));
     int offsetY = p.y - origin.y;
     int ny = (int) round(offsetY / (0.5 * dy));
-    
+
     Point snap = null;
 
     if (cornersLegal && edgesLegal) {
@@ -441,7 +441,7 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
   public String localizedLocationName(Point p) {
     return gridNumbering == null ? null : gridNumbering.localizedLocationName(p);
   }
-  
+
   public boolean isVisible() {
     return visible;
   }
@@ -449,7 +449,7 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
   public void setVisible(boolean b) {
     visible = true;
   }
-  
+
   protected void reverse(Point p, Rectangle bounds) {
     p.x = bounds.x + bounds.width - (p.x - bounds.x);
     p.y = bounds.y + bounds.height - (p.y - bounds.y);
@@ -520,7 +520,7 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
     }
     g2d.setClip(oldClip);
   }
-  
+
   public Configurer getConfigurer() {
     boolean buttonExists = config != null;
     Configurer c = super.getConfigurer();
@@ -535,7 +535,7 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
     }
     return c;
   }
-  
+
   public void editGrid() {
     gridEditor = new SquareGridEditor((GridEditor.EditableGrid) this);
     gridEditor.setVisible(true);
@@ -547,7 +547,7 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
     cfg.getConfigurer(X0).setValue(String.valueOf(origin.x));
     cfg.getConfigurer(Y0).setValue(String.valueOf(origin.y));
   }
-  
+
   public class SquareGridEditor extends GridEditor {
     private static final long serialVersionUID = 1L;
 
@@ -555,7 +555,7 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
       super(grid);
     }
 
-    /* 
+    /*
      * Calculate Grid metrics based on three selected points
      */
     public void calculate() {
@@ -573,9 +573,9 @@ public class SquareGrid extends AbstractConfigurable implements GeometricGrid, G
       else {
         reportShapeError();
       }
-      
+
     }
-    
+
   }
 
   public int getSnapScale() {

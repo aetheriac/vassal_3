@@ -51,7 +51,7 @@ import VASSAL.tools.SequenceEncoder;
 /**
  * Abstract base class for grid numbering classes for hexagonal and rectangular grids
  */
-public abstract class RegularGridNumbering extends AbstractAttributeListConfigurable 
+public abstract class RegularGridNumbering extends AbstractAttributeListConfigurable
 implements GridNumbering {
   transient protected PropertyChangeSupport propSupport = new PropertyChangeSupport(this);
   protected FirstCoord first = FirstCoord.HORIZONTAL_FIRST;
@@ -80,11 +80,11 @@ implements GridNumbering {
 
   public enum FirstCoord { HORIZONTAL_FIRST, VERTICAL_FIRST; }
   public enum CoordType { ALPHABETIC, NUMERIC; }
-  public enum AngleEnum { 
+  public enum AngleEnum {
     ___0, __30, __45, __60, __90, _120, _135, _150,
     _180, _210, _225, _240, _270, _300, _315, _330, _360;
-    private AngleEnum() { 
-      valueDegrees = toInt(this.toString()); 
+    private AngleEnum() {
+      valueDegrees = toInt(this.toString());
       valueRadians = Math.toRadians(valueDegrees);
     }
     public final int valueDegrees;
@@ -94,14 +94,14 @@ implements GridNumbering {
       return Integer.valueOf(string.replace('_', ' ').trim());
     }
   }
-  
+
   /**
    * The use of EnumCharAttribute and EnumIntAttribute is only required to support
-   * the deprecated paradigm of serializing to a single Character value or an 
-   * unadorned integer, respectively, rather than an to enumeration identifier. 
-   * This practice is discouraged, as these classes may be removed in a 
-   * future release. 
-   * @throws NoSuchFieldException 
+   * the deprecated paradigm of serializing to a single Character value or an
+   * unadorned integer, respectively, rather than an to enumeration identifier.
+   * This practice is discouraged, as these classes may be removed in a
+   * future release.
+   * @throws NoSuchFieldException
    */
   @SuppressWarnings("deprecation")
   public RegularGridNumbering() {
@@ -128,13 +128,13 @@ implements GridNumbering {
     addAttribute(VISIBLE, "Draw Numbering?");
     addAttribute(FONT_SIZE, "Font size:  ",numberingVisiblity);
     addAttribute(new ColorAttribute(COLOR, "Color:  ",numberingVisiblity){});
-    addAttribute(new EnumIntAttribute<AngleEnum>(AngleEnum.class, ROTATE_TEXT, 
+    addAttribute(new EnumIntAttribute<AngleEnum>(AngleEnum.class, ROTATE_TEXT,
         "Rotate text (Degrees):  ") {
     });
     addAttribute(H_DRAW_OFF, "Text X offset:  ");
     addAttribute(V_DRAW_OFF, "Text Y offset:  ");
-    }  
-  
+    }
+
   VisibilityCondition numberingVisiblity = new VisibilityCondition() {
       @Override
       public boolean shouldBeVisible() { return isVisible(); }
@@ -144,7 +144,7 @@ implements GridNumbering {
   public abstract int getColumn(Point p);
   @Override
   public boolean isVisible() { return visible; }
-  @Override 
+  @Override
   public void setVisible(boolean isVisible) { visible = isVisible; }
 
   @Override
@@ -190,7 +190,7 @@ implements GridNumbering {
   protected String getName(int row, int col) {
     String rowName = getNamePart(row + vOff, vType, vLeading);
     String colName = getNamePart(col + hOff, hType, hLeading);
-    if (first == FirstCoord.HORIZONTAL_FIRST) 
+    if (first == FirstCoord.HORIZONTAL_FIRST)
         return colName + sep + rowName;
     else
         return rowName + sep + colName;
@@ -201,14 +201,14 @@ implements GridNumbering {
   // coordinates (as long as both coordinates don't use the same letter).
   // AAFF is not ambiguous, but AAAA is.  Coordinates like 04AB will fail.
   static final String ALPHABETIC_MATCH = "-?(?:A+|B+|C+|D+|E+|F+|G+|H+|I+|J+|K+|L+|M+|N+|O+|P+|Q+|R+|S+|T+|U+|V+|W+|X+|Y+|Z+)";
-  
+
   protected String getMatchingPattern(CoordType type, int leading) {
     if (type == CoordType.ALPHABETIC)
       return ALPHABETIC_MATCH;
     else
       return "-?[0-9]{" + (leading+1) + ",}";
   }
-  
+
   @Override
   public Point getLocation(String location) throws BadCoords {
 
@@ -255,7 +255,7 @@ implements GridNumbering {
 
     if (regex.length() == 0 || colGroup == 0 || rowGroup == 0)
       throw new BadCoords();
-    
+
     Pattern pattern = Pattern.compile(regex.toString());
     Matcher matcher = pattern.matcher(location);
     if (!matcher.matches()) {
@@ -263,12 +263,12 @@ implements GridNumbering {
       throw new BadCoords();
     }
     assert(matcher.groupCount() == groupCount && groupCount >= 2);
-    
+
     String rowName = location.substring(matcher.start(rowGroup), matcher.end(rowGroup));
     String colName = location.substring(matcher.start(colGroup), matcher.end(colGroup));
     int row = parseName(rowName, vType);
     int col = parseName(colName, hType);
-    
+
     return getCenterPoint(col-hOff, row-vOff);
   }
 
@@ -284,7 +284,7 @@ implements GridNumbering {
     format.setProperty(COLUMN, getNamePart(col+hOff, hType, hLeading));
     return format.getLocalizedText();
   }
-  
+
   @Override
   public String localizedLocationName(Point pt) {
     return locationName(pt);
@@ -300,8 +300,8 @@ implements GridNumbering {
       boolean negative = false;
       if (name.startsWith("-")) {
         negative = true;
-        ++index;    
-      }    
+        ++index;
+      }
       while (index < name.length() && Character.isUpperCase(name.charAt(index))) {
         if (index < name.length()-1)
           value += 26;
@@ -317,7 +317,7 @@ implements GridNumbering {
     }
     return value;
   }
-  
+
   protected String getNamePart(int rowOrColumn, CoordType type, int leading) {
     String val = rowOrColumn < 0 ? "-" : "";
     rowOrColumn = Math.abs(rowOrColumn);

@@ -525,20 +525,20 @@ public void mouseReleased(MouseEvent e) {
    * by RegularGridEditor
    * <p>
    * The interface EditableGrid defines the grid size and shape with each hex having
-   * height <b>dY</b> (the separation of horizontal edges in standard orientation, 
+   * height <b>dY</b> (the separation of horizontal edges in standard orientation,
    * with hex flat-sides left and right and the pointy sides top and bottom)
    * and a narrow width (horizontal separation of adjacent hex columns in
-   * standard orientation) of <b>dX</b>. The <i> full width </i> of the HexGrid 
+   * standard orientation) of <b>dX</b>. The <i> full width </i> of the HexGrid
    * (ie the horizontal diameter of the HexGrid hexes in standard orientation) is
    * identically equal to 4.0 / 3.0 * <b>dX</b>.
    */
   public interface EditableGrid {
- 
-    /** @return the narrow width of the grid (ie the horizontal separation of 
+
+    /** @return the narrow width of the grid (ie the horizontal separation of
      * adjacent hex columns in standard orientation)
      */
     public double getDx();
-    /** @return the height of the grid (ie the separation of horizontal edges 
+    /** @return the height of the grid (ie the separation of horizontal edges
      * in standard orientation)
      */
     public double getDy();
@@ -549,9 +549,9 @@ public void mouseReleased(MouseEvent e) {
     public void setOrigin(Point p);
 
     /**
-     * @return true if the grid is in sideways orientation (with hex 
-     * flat-sides left and right and the pointy sides top and bottom), and 
-     * false if the grid is in standard orientation with hex 
+     * @return true if the grid is in sideways orientation (with hex
+     * flat-sides left and right and the pointy sides top and bottom), and
+     * false if the grid is in standard orientation with hex
      * flat-sides top and bottom and the pointy sides left and right).
      */
     public boolean isSideways();
@@ -560,7 +560,7 @@ public void mouseReleased(MouseEvent e) {
     public GridContainer getContainer();
     public GridNumbering getGridNumbering();
 
-    /** 
+    /**
      * @return whether the grid is to be drawn (true) or not(false).
      */
     public boolean isVisible();
