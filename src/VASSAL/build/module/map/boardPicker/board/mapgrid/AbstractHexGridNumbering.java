@@ -68,7 +68,8 @@ implements EnumerableHexGrid, GameComponent {
   public Configurer getConfigurer() {
     if (grid == null) {
       return null;
-    } else { 
+    }
+    else { 
       return super.getConfigurer();
     }
   }  

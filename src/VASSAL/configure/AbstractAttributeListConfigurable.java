@@ -129,14 +129,17 @@ extends AbstractConfigurable  implements AttributeList {
         field.setAccessible(true);
         return getAttributeValue(attribute, field.get(this));
         // *** TODO ** use proper exceptions
-      } catch (NoSuchFieldException e) {
+      }
+      catch (NoSuchFieldException e) {
         throw new IllegalArgumentException(String.format(
             "Attribute '%1$s' not defined for class '%2$s\n",key,this.getClass().getName()),e);
-      } catch (IllegalAccessException e) {
+      }
+      catch (IllegalAccessException e) {
         throw new IllegalArgumentException(String.format(
             "Attribute '%1$s' is inaccessible for class '%2$s\n",key,this.getClass().getName()),e);
       }
-    } else {
+    }
+    else {
       throw new IllegalArgumentException(String.format(
           "Attribute '%1$s' is not assignable to class '%2$s\n",
           key,Attribute.AbstractAttribute.class.getName()));
@@ -162,17 +165,20 @@ extends AbstractConfigurable  implements AttributeList {
       field.setAccessible(true);
       if (attribute instanceof AttributeParser<?>) {
         sReturn = getAttributeValueString((AttributeParser<?>) attribute, field.get(this));
-      } else {
+      }
+      else {
         sReturn = field.get(this).toString();
       }
       return sReturn;
 //    } catch (SecurityException e) {
 //    } catch (IllegalArgumentException e) {
       // *** TODO ** use proper exceptions
-    } catch (NoSuchFieldException e) {
+    }
+    catch (NoSuchFieldException e) {
       throw new IllegalArgumentException(String.format(
           "Attribute '%1$s' not defined for class '%2$s\n",key,this.getClass().getName()),e);
-    } catch (IllegalAccessException e) {
+    }
+    catch (IllegalAccessException e) {
       throw new IllegalArgumentException(String.format(
           "Attribute '%1$s' is inaccessible for class '%2$s\n",key,this.getClass().getName()),e);
     }
@@ -187,10 +193,12 @@ extends AbstractConfigurable  implements AttributeList {
       final Class<?> type = field.getType();
       if (getBoxingClass(attribute.typeStorage).isAssignableFrom(value.getClass())) {
           field.set(this, value);
-      } else if (value instanceof String) {
+      }
+      else if (value instanceof String) {
         if (AttributeParser.class.isAssignableFrom(attribute.getClass().getSuperclass()) ){
           field.set(this, ((AttributeParser<?>)get(key)).valueOf((String) value));
-        } else {
+        }
+        else {
           Class<?> boxingType = getBoxingClass(type);
           try {
             field.set(this,
@@ -199,30 +207,38 @@ extends AbstractConfigurable  implements AttributeList {
           } catch (InvocationTargetException e) { 
             if ( (e.getTargetException() instanceof NumberFormatException)) {
               ; // ignore these
-            } else {
+            }
+            else {
               throw e;
             }
           }
         }
-      } else {
+      }
+      else {
         throw new IllegalArgumentException("value of type " + 
             value.getClass().getSimpleName() + " not assignable to attribute " +
             key + " of type " + attribute.type().getSimpleName());
       }
       // *** TODO ** use proper exceptions
-    } catch (NoSuchMethodException e) {  // very fatal error
+    }
+    catch (NoSuchMethodException e) {  // very fatal error
       e.printStackTrace();
       System.exit(0);
 //    } catch (NoSuchFieldException e) {
 //    } catch (IllegalAccessException e) {
 //    } catch (InvocationTargetException e) {
-    } catch (Exception e) {
+    }
+    catch (Exception e) {
         throw new IllegalArgumentException("value of type " + 
             value.getClass().getSimpleName() + " not assignable to attribute " +
             key + " of type " + attribute.type().getSimpleName(), e);
     }
-    if (changeSupport != null) { changeSupport.firePropertyChange(key,null,value); }
+
+    if (changeSupport != null) {
+      changeSupport.firePropertyChange(key,null,value);
+    }
   }
+
   @Override
   public VisibilityCondition getAttributeVisibility(String key) {
     return get(key).getVisibility();

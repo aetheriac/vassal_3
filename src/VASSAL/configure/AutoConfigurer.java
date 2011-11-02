@@ -170,8 +170,6 @@ public class AutoConfigurer extends Configurer
         config = cf.getConfigurer(target, key, prompt);
       }
     }
-
-    // 
     else if (AttributeList.class.isAssignableFrom(target.getClass())) {
       AttributeList alist            = (AttributeList) target;
       AbstractAttribute<?> attribute = alist.attribute(key);
@@ -181,7 +179,8 @@ public class AutoConfigurer extends Configurer
       else if (EnumAttribute.class.isAssignableFrom(attribute.getClass())) {
         final String[] validValues = ((EnumAttribute<?, ?>)attribute).getValidValues(target);
           config = new StringEnumConfigurer(key, prompt, validValues);
-      } else {
+      }
+      else {
           config = new StringConfigurer(key, prompt);
       }
     }

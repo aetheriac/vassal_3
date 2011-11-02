@@ -292,30 +292,31 @@ implements GridNumbering {
 
   public static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-   @SuppressWarnings("hiding")
-   protected int parseName(String name, CoordType type) {
-     int value = 0;
-     if (type == CoordType.ALPHABETIC) {
-       int index = 0;
-       boolean negative = false;
-       if (name.startsWith("-")) {
-         negative = true;
-         ++index;    
-       }    
-       while (index < name.length() && Character.isUpperCase(name.charAt(index))) {
-         if (index < name.length()-1)
-           value += 26;
-         else
-           value += ALPHABET.indexOf(name.charAt(index));
-         ++index;
-       }
-       if (negative)
-         value *= -1;
-     } else { // Numeric
-       value = Integer.parseInt(name);
-     }
-     return value;
-   }
+  @SuppressWarnings("hiding")
+  protected int parseName(String name, CoordType type) {
+    int value = 0;
+    if (type == CoordType.ALPHABETIC) {
+      int index = 0;
+      boolean negative = false;
+      if (name.startsWith("-")) {
+        negative = true;
+        ++index;    
+      }    
+      while (index < name.length() && Character.isUpperCase(name.charAt(index))) {
+        if (index < name.length()-1)
+          value += 26;
+        else
+          value += ALPHABET.indexOf(name.charAt(index));
+        ++index;
+      }
+      if (negative)
+        value *= -1;
+    }
+    else { // Numeric
+      value = Integer.parseInt(name);
+    }
+    return value;
+  }
   
   protected String getNamePart(int rowOrColumn, CoordType type, int leading) {
     String val = rowOrColumn < 0 ? "-" : "";
@@ -326,7 +327,8 @@ implements GridNumbering {
           rowOrColumn -= 26;
         } while (rowOrColumn >= 0);
         return val;
-    } else {
+    }
+    else {
         while (leading > 0 && rowOrColumn < Math.pow(10.0, leading--)) {
           val += "0";
         }

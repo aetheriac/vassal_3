@@ -241,7 +241,8 @@ public abstract class AbstractUIHexGrid extends AbstractAttributeListConfigurabl
 
        if( p0.distanceSq(edge) < p0.distanceSq(vertex) ) {
          p1 = edge;
-       } else {
+       }
+       else {
          p1 = vertex;
        }
      }
@@ -527,7 +528,8 @@ public abstract class AbstractUIHexGrid extends AbstractAttributeListConfigurabl
     AutoConfigurer cfg = (AutoConfigurer) getConfigurer();
     if (gridShearer.cancelled()) {
       saveShear.getMatrix(m);
-    } else {
+    }
+    else {
       shear.getMatrix(m);
     }
     for (int i = 0; i<6; i++) {

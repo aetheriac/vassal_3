@@ -201,7 +201,8 @@ public class GridShearer extends JDialog {
        buttonShearStart.setEnabled(true);
        buttonShearCancel.setEnabled(false);
        buttonShearClear.setEnabled(true);
-     } else {
+     }
+     else {
        buttonShearStart.setEnabled(false);
        buttonShearCancel.setEnabled(true);
        buttonShearClear.setEnabled(false);
@@ -300,14 +301,17 @@ public class GridShearer extends JDialog {
     public void actionPerformed(ActionEvent e) {
       if (e.getSource() == buttonShearStart) {
         setMode(Mode.SEEK_FP1);
-      } else if (e.getSource() == buttonShearCancel) {
+      }
+      else if (e.getSource() == buttonShearCancel) {
         setMode(Mode.COMMAND);
         shearTransform.setToIdentity();
-      } else if (e.getSource() == buttonShearClear) {
+      }
+      else if (e.getSource() == buttonShearClear) {
         setMode(Mode.COMMAND);
         grid.clearTransform();
         shearTransform.setToIdentity();
-      } else { // (e.getSource() == buttonNumbering) 
+      }
+      else { // (e.getSource() == buttonNumbering) 
         ((RegularGridNumbering) grid.getGridNumbering()).setAttribute(
             RegularGridNumbering.VISIBLE, Boolean.valueOf(!grid.getGridNumbering().isVisible()));
       }
@@ -455,7 +459,8 @@ public class GridShearer extends JDialog {
     public void paint(Graphics g) {
       if (brd == null) {
         super.paint(g);
-      } else {
+      }
+      else {
         Rectangle b = getVisibleRect();
         g.clearRect(b.x, b.y, b.width, b.height);
         brd.draw(g, 0, 0, 1.0, this);

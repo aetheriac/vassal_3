@@ -207,7 +207,8 @@ public interface Attribute <T> {
     public Enum<T> valueOf (String string) {
       if (string.length() == 1) {
         return  map.get(string.charAt(0));
-      } else {
+      }
+      else {
         return Enum.valueOf(typeStorage, string);
       }
     }
@@ -247,7 +248,8 @@ public interface Attribute <T> {
     public Enum<T> valueOf (String string) {
       if (string.charAt(0) != '_') {
         return  map.get(toInt(string));
-      } else {
+      }
+      else {
         return Enum.valueOf(typeStorage, string);
       }
     }
