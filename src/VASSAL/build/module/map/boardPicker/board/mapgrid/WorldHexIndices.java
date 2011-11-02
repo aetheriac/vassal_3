@@ -53,9 +53,11 @@ public interface WorldHexIndices {
     @Override
     public Point2D toPoint2D() { return this; }
   }
+
   /*----------------------------- WHI Factory ----------------------------*/
   public class WorldHexIndicesFactory {
     final EnumerableHexGrid numbering;
+
     public WorldHexIndicesFactory(EnumerableHexGrid numbering) {
       this.numbering = numbering;
     }
@@ -89,6 +91,7 @@ public interface WorldHexIndices {
         );
       return numbering.toOrigin(chi);
     }
+
     public Point hexCenterPoint(int col, int row) throws NoninvertibleTransformException {
       return (Point) hexCenterPoint(new IntegerWHI(col,row));
     }
@@ -111,8 +114,8 @@ public interface WorldHexIndices {
         boolean isOblique,  boolean isNw_se,     boolean isStagger,
         boolean vDescending, boolean hDescending) {
 
-      Boolean isSDescending  = (grid.isSideways() ? vDescending : hDescending );;
-      Boolean isWODescending = (grid.isSideways() ? hDescending : vDescending );;
+      boolean isSDescending  = (grid.isSideways() ? vDescending : hDescending );;
+      boolean isWODescending = (grid.isSideways() ? hDescending : vDescending );;
 
       affineToWCS = new AffineTransform();
       if (isOblique) {
@@ -145,6 +148,7 @@ public interface WorldHexIndices {
                     double m01, double m11) {
       affineToWCS = new AffineTransform(m00, m10, m01, m11, 0, 0);
     }
+
     void setAffineTransform(double m00, double m10,
                     double m01, double m11,
                     double m02, double m12) {
