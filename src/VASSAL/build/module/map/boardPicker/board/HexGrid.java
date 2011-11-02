@@ -25,7 +25,7 @@ package VASSAL.build.module.map.boardPicker.board;
  *
  */
 public class HexGrid extends HexGridX {
-	public HexGrid() { super(); }
-	public HexGrid(double size) { super(size); }
-	public HexGrid(double width, double height) { super(width, height); }
+  public HexGrid() { super(); }
+  public HexGrid(double size) { super(size); }
+  public HexGrid(double width, double height) { super(width, height); }
 }

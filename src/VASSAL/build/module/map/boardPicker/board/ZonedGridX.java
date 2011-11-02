@@ -98,10 +98,10 @@ public class ZonedGridX extends AbstractConfigurable implements GeometricGrid, G
 
   @Override
   public Dimension getSize() {
-  	  if (container == null)
-  		  return null;
-  	  else							
-  		  return container.getSize();
+      if (container == null)
+        return null;
+      else              
+        return container.getSize();
 //    return container.getSize();
   }
 
@@ -129,7 +129,7 @@ public class ZonedGridX extends AbstractConfigurable implements GeometricGrid, G
   @Override
   public Class<?>[] getAllowableConfigureComponents() {
     return background == null
-    	? new Class[]{Zone.class, HexGridX.class, SquareGrid.class, RegionGrid.class}
+      ? new Class[]{Zone.class, HexGridX.class, SquareGrid.class, RegionGrid.class}
       : new Class[]{Zone.class};
   }
 
@@ -144,8 +144,8 @@ public class ZonedGridX extends AbstractConfigurable implements GeometricGrid, G
 
   @Override
   public void removeFrom(Buildable parent) {
-	 ((GridContainer) parent).removeGrid(this);
-	 pcs.firePropertyChange(null,null,null);
+   ((GridContainer) parent).removeGrid(this);
+   pcs.firePropertyChange(null,null,null);
   }
 
   /*
@@ -258,7 +258,7 @@ public class ZonedGridX extends AbstractConfigurable implements GeometricGrid, G
   @Override
   public String locationName(Point p) {
     @SuppressWarnings("hiding")
-	String name = null;
+  String name = null;
     for (Zone zone : zones) {
       if (zone.contains(p)) {
         name = zone.locationName(p);
@@ -275,7 +275,7 @@ public class ZonedGridX extends AbstractConfigurable implements GeometricGrid, G
   @Override
   public String localizedLocationName(Point p) {
     @SuppressWarnings("hiding")
-	String name = null;
+  String name = null;
     for (Zone zone : zones) {
       if (zone.contains(p)) {
         name = zone.localizedLocationName(p);

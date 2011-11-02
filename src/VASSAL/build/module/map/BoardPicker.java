@@ -296,8 +296,8 @@ public class BoardPicker extends AbstractBuildable implements ActionListener, Ga
    * Remove a board from the list of those available for the user to choose from
    */
   public void remove(Buildable b) {
-	  buildComponents.remove(b);  // PG-2011-09-24
-	  if (b instanceof Board) {
+    buildComponents.remove(b);  // PG-2011-09-24
+    if (b instanceof Board) {
       possibleBoards.remove(b);
     }
   }
@@ -884,8 +884,8 @@ public class BoardPicker extends AbstractBuildable implements ActionListener, Ga
   public void pack() {
   }
 
-	@Override  // PG-2011-09-24
-	public String[] getAttributeNames() {
-		return new String[0];
-	}
+  @Override  // PG-2011-09-24
+  public String[] getAttributeNames() {
+    return new String[0];
+  }
 }

@@ -34,40 +34,40 @@ import VASSAL.configure.Attribute.AbstractAttribute;
  * 
  */
 public interface AttributeList extends Iterable<AbstractAttribute<?>>{
-	/**
-	 * Add an <code>AbstractAttribute<code> to the list.
-	 * @param attribute the <code>Attribute</code> to be appended
-	 */
-	public void addAttribute (AbstractAttribute<?> attribute);
-	
-	/**
-	 * 
-	 * @param key the name of the attribute for which the (typed) value is desired.
-	 * @return a typed reference to the attribute (boxed if necessary). 
-	 */
-	public AbstractAttribute<?> attribute(String key);
-	
-	/**
-	 * Returns an array of the <b>Types</b> by which the <code>Attribute</code>s in the List wish to be 
-	 * known as by <code>Configurer</code> & kin. As with the other array-returning methods,
-	 * the order in which attributes were added to the list must be preserved.   
-	 * @return an <b>array</b> of Class<?>.
-	 */
-	public Class<?>[] getAttributeTypes();
-	public String[] getAttributeDescriptions();
-	public String[] getAttributeNames();
-	public <T> T getAttributeValue(Class<T> clazz, String key);
-	public String getAttributeValueString(String key);
-	public void setAttribute(String key, Object value);
-	public VisibilityCondition getAttributeVisibility(String key);
-	
-	/**
-	 * {@inheritDoc}
-	 * <p>Implementations must generate iterators that preserve the order in which 
-	 * <code>attributes</code> were added.
-	 * 
-	 * @return an iterator of <code>AbstractAttribute&lt;?></code> elements..
-	 */
-	@Override
-	public Iterator<AbstractAttribute<?>> iterator();
+  /**
+   * Add an <code>AbstractAttribute<code> to the list.
+   * @param attribute the <code>Attribute</code> to be appended
+   */
+  public void addAttribute (AbstractAttribute<?> attribute);
+  
+  /**
+   * 
+   * @param key the name of the attribute for which the (typed) value is desired.
+   * @return a typed reference to the attribute (boxed if necessary). 
+   */
+  public AbstractAttribute<?> attribute(String key);
+  
+  /**
+   * Returns an array of the <b>Types</b> by which the <code>Attribute</code>s in the List wish to be 
+   * known as by <code>Configurer</code> & kin. As with the other array-returning methods,
+   * the order in which attributes were added to the list must be preserved.   
+   * @return an <b>array</b> of Class<?>.
+   */
+  public Class<?>[] getAttributeTypes();
+  public String[] getAttributeDescriptions();
+  public String[] getAttributeNames();
+  public <T> T getAttributeValue(Class<T> clazz, String key);
+  public String getAttributeValueString(String key);
+  public void setAttribute(String key, Object value);
+  public VisibilityCondition getAttributeVisibility(String key);
+  
+  /**
+   * {@inheritDoc}
+   * <p>Implementations must generate iterators that preserve the order in which 
+   * <code>attributes</code> were added.
+   * 
+   * @return an iterator of <code>AbstractAttribute&lt;?></code> elements..
+   */
+  @Override
+  public Iterator<AbstractAttribute<?>> iterator();
 }

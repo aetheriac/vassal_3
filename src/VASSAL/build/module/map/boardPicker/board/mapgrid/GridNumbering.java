@@ -36,25 +36,25 @@ import VASSAL.build.module.map.boardPicker.board.MapGrid.BadCoords;
  * Provides methods for assigning names to locations on a MapGrid, and drawing those locations when drawing a grid
  */
 public interface GridNumbering {
-	public static final String FIRST = "first";
-	public static final String SEP = "sep";
-	public static final String H_TYPE = "hType";
-	public static final String V_TYPE = "vType";
-	public static final String H_LEADING = "hLeading";
-	public static final String V_LEADING = "vLeading";
-	public static final String H_OFF = "hOff";
-	public static final String V_OFF = "vOff";
-	public static final String V_DESCEND = "vDescend";
-	public static final String H_DESCEND = "hDescend";
-	public static final String FONT_SIZE = "fontSize";
-	public static final String COLOR = "color";
-	public static final String VISIBLE = "visible";
-	public static final String ROTATE_TEXT = "rotateText";
-	public static final String H_DRAW_OFF = "hDrawOff";
-	public static final String V_DRAW_OFF = "vDrawOff";
-	public static final String LOCATION_FORMAT = "locationFormat";
+  public static final String FIRST = "first";
+  public static final String SEP = "sep";
+  public static final String H_TYPE = "hType";
+  public static final String V_TYPE = "vType";
+  public static final String H_LEADING = "hLeading";
+  public static final String V_LEADING = "vLeading";
+  public static final String H_OFF = "hOff";
+  public static final String V_OFF = "vOff";
+  public static final String V_DESCEND = "vDescend";
+  public static final String H_DESCEND = "hDescend";
+  public static final String FONT_SIZE = "fontSize";
+  public static final String COLOR = "color";
+  public static final String VISIBLE = "visible";
+  public static final String ROTATE_TEXT = "rotateText";
+  public static final String H_DRAW_OFF = "hDrawOff";
+  public static final String V_DRAW_OFF = "vDrawOff";
+  public static final String LOCATION_FORMAT = "locationFormat";
 
-	public String locationName(Point pt);
+  public String locationName(Point pt);
    public String localizedLocationName(Point pt);
 
    public void draw(Graphics g, Rectangle bounds, Rectangle visibleRect, double scale, boolean reversed);

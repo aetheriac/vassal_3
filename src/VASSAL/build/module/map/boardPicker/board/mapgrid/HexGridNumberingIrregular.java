@@ -44,30 +44,30 @@ import VASSAL.configure.VisibilityCondition;
  */
 public class HexGridNumberingIrregular extends AbstractUIHexGridNumberingIrregular {
 
-	public HexGridNumberingIrregular() 
-			throws NumberFormatException, IllegalArgumentException, SecurityException {
-		super();
-		setConfigureName(this.getClass().getSimpleName());
-	}
+  public HexGridNumberingIrregular() 
+      throws NumberFormatException, IllegalArgumentException, SecurityException {
+    super();
+    setConfigureName(this.getClass().getSimpleName());
+  }
 
-	/** Identify self to AbstractConfigurable implementation 	 */
-	@Override
-	public void addTo(Buildable parent) {
-		super.addTo(parent);
-		whif = new WorldHexIndicesFactory(this);
-		this.addPropertyChangeListener(pclNumbering);
-		grid.addPropertyChangeListener(pclNumbering);
-		if (GameModule.getGameModule() != null)
-			GameModule.getGameModule().getGameState().addGameComponent(this);
-	}
-	//-------------------- EnumerableHexGrid implementation -------------------
-	@Override
-	public void setAffineTransform() {
-		whif.setAffineTransform(m00, m10, m01, m11, m02, m12);
-	}
+  /** Identify self to AbstractConfigurable implementation    */
+  @Override
+  public void addTo(Buildable parent) {
+    super.addTo(parent);
+    whif = new WorldHexIndicesFactory(this);
+    this.addPropertyChangeListener(pclNumbering);
+    grid.addPropertyChangeListener(pclNumbering);
+    if (GameModule.getGameModule() != null)
+      GameModule.getGameModule().getGameState().addGameComponent(this);
+  }
+  //-------------------- EnumerableHexGrid implementation -------------------
+  @Override
+  public void setAffineTransform() {
+    whif.setAffineTransform(m00, m10, m01, m11, m02, m12);
+  }
    //-------------------------------------------------------------------------
-	public static String getConfigureTypeName() { return "HexGridNumbering - Irregular"; }
-	
-	protected VisibilityCondition visibilityHDescend = AbstractAttribute.invisible;
-	protected VisibilityCondition visibilityVDescend = AbstractAttribute.invisible;
+  public static String getConfigureTypeName() { return "HexGridNumbering - Irregular"; }
+  
+  protected VisibilityCondition visibilityHDescend = AbstractAttribute.invisible;
+  protected VisibilityCondition visibilityVDescend = AbstractAttribute.invisible;
 }

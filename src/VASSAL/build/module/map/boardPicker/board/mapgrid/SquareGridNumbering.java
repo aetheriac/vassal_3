@@ -43,7 +43,7 @@ import VASSAL.build.module.map.boardPicker.board.SquareGrid;
 import VASSAL.counters.Labeler;
 
 public class SquareGridNumbering extends RegularGridNumbering {
-	private static final long	serialVersionUID	= 1L;
+  private static final long  serialVersionUID  = 1L;
  
 private SquareGrid grid;
 
@@ -144,7 +144,7 @@ private SquareGrid grid;
             break;
           case   0:
           case 360:
-         	newX = (int) x;
+           newX = (int) x;
             newY = (int) (y - deltaY / 2);
             break;
           default : break; // behaviour for new values undetermined

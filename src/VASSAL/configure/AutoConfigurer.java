@@ -64,7 +64,7 @@ public class AutoConfigurer extends Configurer
     target = c;
     setValue(target);
     target.addPropertyChangeListener(new PropertyChangeListener() {
-		public void propertyChange(final PropertyChangeEvent evt) {
+    public void propertyChange(final PropertyChangeEvent evt) {
         if (Configurable.NAME_PROPERTY.equals(evt.getPropertyName())) {
           setName((String) evt.getNewValue());
         }
@@ -173,17 +173,17 @@ public class AutoConfigurer extends Configurer
 
     // 
     else if (AttributeList.class.isAssignableFrom(target.getClass())) {
-   	 AttributeList alist            = (AttributeList) target;
-   	 AbstractAttribute<?> attribute = alist.attribute(key);
-   	 if (FormattedStringAttribute.class.isAssignableFrom(attribute.getClass())) {
-   		 config = ((FormattedStringAttribute)attribute).getConfigurer(target);
-   	 }
-   	 else if (EnumAttribute.class.isAssignableFrom(attribute.getClass())) {
-   		 final String[] validValues = ((EnumAttribute<?, ?>)attribute).getValidValues(target);
+      AttributeList alist            = (AttributeList) target;
+      AbstractAttribute<?> attribute = alist.attribute(key);
+      if (FormattedStringAttribute.class.isAssignableFrom(attribute.getClass())) {
+        config = ((FormattedStringAttribute)attribute).getConfigurer(target);
+      }
+      else if (EnumAttribute.class.isAssignableFrom(attribute.getClass())) {
+        final String[] validValues = ((EnumAttribute<?, ?>)attribute).getValidValues(target);
           config = new StringEnumConfigurer(key, prompt, validValues);
-   	 } else {
+      } else {
           config = new StringConfigurer(key, prompt);
-   	 }
+      }
     }
     else {
       throw new IllegalArgumentException("Invalid class " + type.getName());
@@ -191,13 +191,13 @@ public class AutoConfigurer extends Configurer
     return config;
   }
 
-	public static String[] getValidValues(Enum<?> [] av) {
-		String[] as = new String[av.length];
-		for (int i = 0; i < as.length; i++) {
-			as[i] = av[i].toString();
-		}
-		return as;
-	}
+  public static String[] getValidValues(Enum<?> [] av) {
+    String[] as = new String[av.length];
+    for (int i = 0; i < as.length; i++) {
+      as[i] = av[i].toString();
+    }
+    return as;
+  }
 
   public void reset() {
     String[] s = target.getAttributeNames();

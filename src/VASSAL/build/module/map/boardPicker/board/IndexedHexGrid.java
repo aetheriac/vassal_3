@@ -27,32 +27,32 @@ import VASSAL.build.module.map.boardPicker.board.CanonHexIndices.IntegerCHI;
 import VASSAL.build.module.map.boardPicker.board.mapgrid.GridContainer;
 
 public interface IndexedHexGrid {
-	public double getDx();
-	public double getDy();
-	public boolean isSideways();
-	public Point getOrigin();
-	public GridContainer getContainer();
-	public void addPropertyChangeListener(PropertyChangeListener l);
-	/** 
-	 * @return The number of <b>straight</b> hex-rows in the grid.
-	 */
-	public int maxStraight();
-	/** 
-	 * @return The number of <b>oblique</b> hex-rows in the grid. 
-	 */
-	public int maxOblique();
-	/** 
-	 * @return The number of <b>wobble</b> hex-rows in the grid.
-	 */
-	public int maxWobble();
-	/* maybe these also */
-	public IntegerCHI canonHexIndices(Point2D p);	
-	public CanonHexIndices canonHexIndices();
-	
-	public int range(Point p1, Point p2);
-	public Point snapTo(Point p);
-//	public Point snapToHex(Point p);
-//	public Point snapToHexVertex(Point p);
-//	public Point snapToHexSide(Point p) ;
-	public Point2D toOrigin(CanonHexIndices chiSrc, Point2D pDst);
+  public double getDx();
+  public double getDy();
+  public boolean isSideways();
+  public Point getOrigin();
+  public GridContainer getContainer();
+  public void addPropertyChangeListener(PropertyChangeListener l);
+  /** 
+   * @return The number of <b>straight</b> hex-rows in the grid.
+   */
+  public int maxStraight();
+  /** 
+   * @return The number of <b>oblique</b> hex-rows in the grid. 
+   */
+  public int maxOblique();
+  /** 
+   * @return The number of <b>wobble</b> hex-rows in the grid.
+   */
+  public int maxWobble();
+  /* maybe these also */
+  public IntegerCHI canonHexIndices(Point2D p);  
+  public CanonHexIndices canonHexIndices();
+  
+  public int range(Point p1, Point p2);
+  public Point snapTo(Point p);
+//  public Point snapToHex(Point p);
+//  public Point snapToHexVertex(Point p);
+//  public Point snapToHexSide(Point p) ;
+  public Point2D toOrigin(CanonHexIndices chiSrc, Point2D pDst);
 }

@@ -51,28 +51,28 @@ import VASSAL.build.module.map.boardPicker.board.mapgrid.WorldHexIndices.*;
 public class HexGridNumberingX extends AbstractUIHexGridNumberingX 
 /* implements EnumerableHexGrid, GameComponent */ {
 
-	public HexGridNumberingX() 
-			throws NumberFormatException, IllegalArgumentException, SecurityException{
-		super();
-		setConfigureName(this.getClass().getSimpleName());
-	}
+  public HexGridNumberingX() 
+      throws NumberFormatException, IllegalArgumentException, SecurityException{
+    super();
+    setConfigureName(this.getClass().getSimpleName());
+  }
 
-	/** Identify self to AbstractConfigurable implementation */
-	@Override
-	public void addTo(Buildable parent) {
-		super.addTo(parent);
-		whif = new WorldHexIndicesFactory(this);
-		this.addPropertyChangeListener(pclNumbering);
-		grid.addPropertyChangeListener(pclNumbering);
-		if (GameModule.getGameModule() != null)
-			GameModule.getGameModule().getGameState().addGameComponent(this);
-	}
-	//-------------------- EnumerableHexGrid implementation -------------------
-	@Override
+  /** Identify self to AbstractConfigurable implementation */
+  @Override
+  public void addTo(Buildable parent) {
+    super.addTo(parent);
+    whif = new WorldHexIndicesFactory(this);
+    this.addPropertyChangeListener(pclNumbering);
+    grid.addPropertyChangeListener(pclNumbering);
+    if (GameModule.getGameModule() != null)
+      GameModule.getGameModule().getGameState().addGameComponent(this);
+  }
+  //-------------------- EnumerableHexGrid implementation -------------------
+  @Override
    public void setAffineTransform() {
-   	whif.setAffineTransform(grid, oblique, nw_se, stagger,
-   			vDescend, hDescend);
+     whif.setAffineTransform(grid, oblique, nw_se, stagger,
+         vDescend, hDescend);
    }
-	//-------------------------------------------------------------------------
-	public static String getConfigureTypeName() { return "HexGridNumbering - Oblique/Rectangular"; }
+  //-------------------------------------------------------------------------
+  public static String getConfigureTypeName() { return "HexGridNumbering - Oblique/Rectangular"; }
 }

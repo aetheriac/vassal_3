@@ -53,92 +53,92 @@ import VASSAL.tools.SequenceEncoder;
  */
 public abstract class RegularGridNumbering extends AbstractAttributeListConfigurable 
 implements GridNumbering {
-	transient protected PropertyChangeSupport propSupport = new PropertyChangeSupport(this);
-	protected FirstCoord first = FirstCoord.HORIZONTAL_FIRST;
-	protected String sep = "";
-	protected CoordType hType = CoordType.NUMERIC;
-	protected CoordType vType = CoordType.NUMERIC;
-	protected int hLeading = 1;
-	protected int vLeading = 1;
-	protected int hOff = 1;
-	protected int vOff = 1;
-	protected Boolean hDescend = false;
-	protected Boolean vDescend = false;
-	protected Boolean visible = false;
-	protected int fontSize = 9;
-	protected Color color = Color.black;
-	protected AngleEnum rotateText = AngleEnum.___0;
-	protected int hDrawOff = 0;
-	protected int vDrawOff = 0;
-	protected String locationFormat = "$" + GRID_LOCATION + "$";
-	transient protected JComponent visualizer;
-	transient protected FormattedString format = new FormattedString();
+  transient protected PropertyChangeSupport propSupport = new PropertyChangeSupport(this);
+  protected FirstCoord first = FirstCoord.HORIZONTAL_FIRST;
+  protected String sep = "";
+  protected CoordType hType = CoordType.NUMERIC;
+  protected CoordType vType = CoordType.NUMERIC;
+  protected int hLeading = 1;
+  protected int vLeading = 1;
+  protected int hOff = 1;
+  protected int vOff = 1;
+  protected Boolean hDescend = false;
+  protected Boolean vDescend = false;
+  protected Boolean visible = false;
+  protected int fontSize = 9;
+  protected Color color = Color.black;
+  protected AngleEnum rotateText = AngleEnum.___0;
+  protected int hDrawOff = 0;
+  protected int vDrawOff = 0;
+  protected String locationFormat = "$" + GRID_LOCATION + "$";
+  transient protected JComponent visualizer;
+  transient protected FormattedString format = new FormattedString();
 
-	transient public static final String GRID_LOCATION = "gridLocation";
-	transient public static final String ROW = "row";
-	transient public static final String COLUMN = "column";
+  transient public static final String GRID_LOCATION = "gridLocation";
+  transient public static final String ROW = "row";
+  transient public static final String COLUMN = "column";
 
-	public enum FirstCoord { HORIZONTAL_FIRST, VERTICAL_FIRST; }
-	public enum CoordType { ALPHABETIC, NUMERIC; }
-	public enum AngleEnum { 
-		___0, __30, __45, __60, __90, _120, _135, _150,
-		_180, _210, _225, _240, _270, _300, _315, _330, _360;
-		private AngleEnum() { 
-			valueDegrees = toInt(this.toString()); 
-			valueRadians = Math.toRadians(valueDegrees);
-		}
-		public final int valueDegrees;
-		public final double valueRadians;
+  public enum FirstCoord { HORIZONTAL_FIRST, VERTICAL_FIRST; }
+  public enum CoordType { ALPHABETIC, NUMERIC; }
+  public enum AngleEnum { 
+    ___0, __30, __45, __60, __90, _120, _135, _150,
+    _180, _210, _225, _240, _270, _300, _315, _330, _360;
+    private AngleEnum() { 
+      valueDegrees = toInt(this.toString()); 
+      valueRadians = Math.toRadians(valueDegrees);
+    }
+    public final int valueDegrees;
+    public final double valueRadians;
 
-		protected static Integer toInt(String string) {
-			return Integer.valueOf(string.replace('_', ' ').trim());
-		}
-	}
-	
-	/**
-	 * The use of EnumCharAttribute and EnumIntAttribute is only required to support
-	 * the deprecated paradigm of serializing to a single Character value or an 
-	 * unadorned integer, respectively, rather than an to enumeration identifier. 
-	 * This practice is discouraged, as these classes may be removed in a 
-	 * future release. 
-	 * @throws NoSuchFieldException 
-	 */
-	@SuppressWarnings("deprecation")
-	public RegularGridNumbering() {
-		super(17);
-		addAttribute(new EnumCharAttribute<FirstCoord>(FirstCoord.class, FIRST,	"Order:  ") {});
-		addAttribute(SEP, "Separator:  ");
-		addAttribute(new EnumCharAttribute<CoordType>(CoordType.class, H_TYPE,"Horizontal numbering:  ") {});
-		addAttribute(H_LEADING, "Leading zeros in horizontal:  ",
-				new VisibilityCondition() {
-				  @Override
-				  public boolean shouldBeVisible() { return hType == CoordType.NUMERIC; } });
-		addAttribute(H_OFF, "Starting number in horizontal:  ");
-		addAttribute(H_DESCEND, "Horizontal numbering descending?");
-		addAttribute(new EnumCharAttribute<CoordType>(CoordType.class, V_TYPE,"Vertical numbering:  ") {});
-		addAttribute(V_LEADING, "Leading zeros in vertical:  ",
-				new VisibilityCondition() {
-				  @Override
-				  public boolean shouldBeVisible() { return vType == CoordType.NUMERIC; } });
-		addAttribute(V_OFF, "Starting number in vertical:  ");
-		addAttribute(V_DESCEND, "Vertical numbering descending?");
-  		addAttribute(new FormattedStringAttribute(LOCATION_FORMAT,"Location format:  ",
-  				new String[]{GRID_LOCATION, ROW, COLUMN}){
-  		});
-		addAttribute(VISIBLE, "Draw Numbering?");
-		addAttribute(FONT_SIZE, "Font size:  ",numberingVisiblity);
-		addAttribute(new ColorAttribute(COLOR, "Color:  ",numberingVisiblity){});
-		addAttribute(new EnumIntAttribute<AngleEnum>(AngleEnum.class, ROTATE_TEXT, 
-				"Rotate text (Degrees):  ") {
-		});
-		addAttribute(H_DRAW_OFF, "Text X offset:  ");
-		addAttribute(V_DRAW_OFF, "Text Y offset:  ");
-  	}  
-	
-	VisibilityCondition numberingVisiblity = new VisibilityCondition() {
-		  @Override
-		  public boolean shouldBeVisible() { return isVisible(); }
-	  };
+    protected static Integer toInt(String string) {
+      return Integer.valueOf(string.replace('_', ' ').trim());
+    }
+  }
+  
+  /**
+   * The use of EnumCharAttribute and EnumIntAttribute is only required to support
+   * the deprecated paradigm of serializing to a single Character value or an 
+   * unadorned integer, respectively, rather than an to enumeration identifier. 
+   * This practice is discouraged, as these classes may be removed in a 
+   * future release. 
+   * @throws NoSuchFieldException 
+   */
+  @SuppressWarnings("deprecation")
+  public RegularGridNumbering() {
+    super(17);
+    addAttribute(new EnumCharAttribute<FirstCoord>(FirstCoord.class, FIRST,  "Order:  ") {});
+    addAttribute(SEP, "Separator:  ");
+    addAttribute(new EnumCharAttribute<CoordType>(CoordType.class, H_TYPE,"Horizontal numbering:  ") {});
+    addAttribute(H_LEADING, "Leading zeros in horizontal:  ",
+        new VisibilityCondition() {
+          @Override
+          public boolean shouldBeVisible() { return hType == CoordType.NUMERIC; } });
+    addAttribute(H_OFF, "Starting number in horizontal:  ");
+    addAttribute(H_DESCEND, "Horizontal numbering descending?");
+    addAttribute(new EnumCharAttribute<CoordType>(CoordType.class, V_TYPE,"Vertical numbering:  ") {});
+    addAttribute(V_LEADING, "Leading zeros in vertical:  ",
+        new VisibilityCondition() {
+          @Override
+          public boolean shouldBeVisible() { return vType == CoordType.NUMERIC; } });
+    addAttribute(V_OFF, "Starting number in vertical:  ");
+    addAttribute(V_DESCEND, "Vertical numbering descending?");
+      addAttribute(new FormattedStringAttribute(LOCATION_FORMAT,"Location format:  ",
+          new String[]{GRID_LOCATION, ROW, COLUMN}){
+      });
+    addAttribute(VISIBLE, "Draw Numbering?");
+    addAttribute(FONT_SIZE, "Font size:  ",numberingVisiblity);
+    addAttribute(new ColorAttribute(COLOR, "Color:  ",numberingVisiblity){});
+    addAttribute(new EnumIntAttribute<AngleEnum>(AngleEnum.class, ROTATE_TEXT, 
+        "Rotate text (Degrees):  ") {
+    });
+    addAttribute(H_DRAW_OFF, "Text X offset:  ");
+    addAttribute(V_DRAW_OFF, "Text Y offset:  ");
+    }  
+  
+  VisibilityCondition numberingVisiblity = new VisibilityCondition() {
+      @Override
+      public boolean shouldBeVisible() { return isVisible(); }
+    };
 
   public abstract int getRow(Point p);
   public abstract int getColumn(Point p);
@@ -169,7 +169,7 @@ implements GridNumbering {
     for (int i = 0; i < s.length; ++i) {
       c.getConfigurer(s[i]).addPropertyChangeListener(new PropertyChangeListener() {
         @Override
-		public void propertyChange(PropertyChangeEvent evt) {
+    public void propertyChange(PropertyChangeEvent evt) {
           visualizer.repaint();
         }
       });
@@ -179,7 +179,7 @@ implements GridNumbering {
   }
 
   public static String getConfigureTypeName() {
-	  return "Grid Numbering";
+    return "Grid Numbering";
   }
 
   @Override
@@ -294,27 +294,27 @@ implements GridNumbering {
 
    @SuppressWarnings("hiding")
    protected int parseName(String name, CoordType type) {
-   	int value = 0;
-   	if (type == CoordType.ALPHABETIC) {
-   		int index = 0;
-   		boolean negative = false;
-   		if (name.startsWith("-")) {
-   			negative = true;
-   			++index;    
-   		}    
-   		while (index < name.length() && Character.isUpperCase(name.charAt(index))) {
-   			if (index < name.length()-1)
-   				value += 26;
-   			else
-   				value += ALPHABET.indexOf(name.charAt(index));
-   			++index;
-   		}
-   		if (negative)
-   			value *= -1;
-   	} else { // Numeric
-   		value = Integer.parseInt(name);
-   	}
-   	return value;
+     int value = 0;
+     if (type == CoordType.ALPHABETIC) {
+       int index = 0;
+       boolean negative = false;
+       if (name.startsWith("-")) {
+         negative = true;
+         ++index;    
+       }    
+       while (index < name.length() && Character.isUpperCase(name.charAt(index))) {
+         if (index < name.length()-1)
+           value += 26;
+         else
+           value += ALPHABET.indexOf(name.charAt(index));
+         ++index;
+       }
+       if (negative)
+         value *= -1;
+     } else { // Numeric
+       value = Integer.parseInt(name);
+     }
+     return value;
    }
   
   protected String getNamePart(int rowOrColumn, CoordType type, int leading) {

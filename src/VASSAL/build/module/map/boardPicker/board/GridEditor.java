@@ -102,7 +102,7 @@ public abstract class GridEditor extends JDialog implements MouseListener, KeyLi
     setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
     addWindowListener(new WindowAdapter() {
       @Override
-		public void windowClosing(WindowEvent we) {
+    public void windowClosing(WindowEvent we) {
          cancel();
       }
     });
@@ -131,7 +131,7 @@ public abstract class GridEditor extends JDialog implements MouseListener, KeyLi
     okButton = new JButton(OK);
     okButton.addActionListener(new ActionListener() {
       @Override
-		public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(ActionEvent e) {
         cancelSetMode();
         setVisible(false);
 /*
@@ -145,7 +145,7 @@ public abstract class GridEditor extends JDialog implements MouseListener, KeyLi
     JButton canButton = new JButton(CANCEL);
     canButton.addActionListener(new ActionListener() {
       @Override
-		public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(ActionEvent e) {
         cancel();
       }
     });
@@ -154,7 +154,7 @@ public abstract class GridEditor extends JDialog implements MouseListener, KeyLi
     setButton = new JButton(SET);
     setButton.addActionListener(new ActionListener() {
       @Override
-		public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(ActionEvent e) {
         startSetMode();
       }
     });
@@ -164,7 +164,7 @@ public abstract class GridEditor extends JDialog implements MouseListener, KeyLi
     canSetButton = new JButton(CANCEL_SET);
     canSetButton.addActionListener(new ActionListener() {
       @Override
-		public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(ActionEvent e) {
         cancelSetMode();
       }
     });
@@ -176,7 +176,7 @@ public abstract class GridEditor extends JDialog implements MouseListener, KeyLi
     numberingButton = new JButton(NUMBERING);
     numberingButton.addActionListener(new ActionListener() {
       @Override
-		public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(ActionEvent e) {
         grid.getGridNumbering().setVisible(!grid.getGridNumbering().isVisible());
         repaint();
       }
@@ -486,7 +486,7 @@ public void mouseReleased(MouseEvent e) {
     }
 
     @Override
-	public void paint(Graphics g) {
+  public void paint(Graphics g) {
       if (board != null) {
         Rectangle b = getVisibleRect();
         g.clearRect(b.x, b.y, b.width, b.height);
@@ -514,7 +514,7 @@ public void mouseReleased(MouseEvent e) {
     }
 
     @Override
-	public boolean isFocusable() {
+  public boolean isFocusable() {
       return true;
     }
   }
@@ -523,52 +523,52 @@ public void mouseReleased(MouseEvent e) {
   /**
    * Interface to be implemented by a class that wants to be edited
    * by RegularGridEditor
-	 * <p>
-	 * The interface EditableGrid defines the grid size and shape with each hex having
-	 * height <b>dY</b> (the separation of horizontal edges in standard orientation, 
-	 * with hex flat-sides left and right and the pointy sides top and bottom)
-	 * and a narrow width (horizontal separation of adjacent hex columns in
-	 * standard orientation) of <b>dX</b>. The <i> full width </i> of the HexGrid 
-	 * (ie the horizontal diameter of the HexGrid hexes in standard orientation) is
-	 * identically equal to 4.0 / 3.0 * <b>dX</b>.
+   * <p>
+   * The interface EditableGrid defines the grid size and shape with each hex having
+   * height <b>dY</b> (the separation of horizontal edges in standard orientation, 
+   * with hex flat-sides left and right and the pointy sides top and bottom)
+   * and a narrow width (horizontal separation of adjacent hex columns in
+   * standard orientation) of <b>dX</b>. The <i> full width </i> of the HexGrid 
+   * (ie the horizontal diameter of the HexGrid hexes in standard orientation) is
+   * identically equal to 4.0 / 3.0 * <b>dX</b>.
    */
-	public interface EditableGrid {
+  public interface EditableGrid {
  
-		/** @return the narrow width of the grid (ie the horizontal separation of 
-		 * adjacent hex columns in standard orientation)
-		 */
-		public double getDx();
-		/** @return the height of the grid (ie the separation of horizontal edges 
-		 * in standard orientation)
-		 */
-		public double getDy();
-		public Point getOrigin();
+    /** @return the narrow width of the grid (ie the horizontal separation of 
+     * adjacent hex columns in standard orientation)
+     */
+    public double getDx();
+    /** @return the height of the grid (ie the separation of horizontal edges 
+     * in standard orientation)
+     */
+    public double getDy();
+    public Point getOrigin();
 
-		public void setDx(double dx);
-		public void setDy(double dy);
-		public void setOrigin(Point p);
+    public void setDx(double dx);
+    public void setDy(double dy);
+    public void setOrigin(Point p);
 
-		/**
-		 * @return true if the grid is in sideways orientation (with hex 
-		 * flat-sides left and right and the pointy sides top and bottom), and 
-		 * false if the grid is in standard orientation with hex 
-		 * flat-sides top and bottom and the pointy sides left and right).
-		 */
-		public boolean isSideways();
-		public void setSideways(boolean sideways);
+    /**
+     * @return true if the grid is in sideways orientation (with hex 
+     * flat-sides left and right and the pointy sides top and bottom), and 
+     * false if the grid is in standard orientation with hex 
+     * flat-sides top and bottom and the pointy sides left and right).
+     */
+    public boolean isSideways();
+    public void setSideways(boolean sideways);
 
-		public GridContainer getContainer();
-		public GridNumbering getGridNumbering();
+    public GridContainer getContainer();
+    public GridNumbering getGridNumbering();
 
-		/** 
-		 * @return whether the grid is to be drawn (true) or not(false).
-		 */
-		public boolean isVisible();
-		/**
-		 * @param b whether the grid is to be drawn (true) or not (false).
-		 */
-		public void setVisible(boolean b);
+    /** 
+     * @return whether the grid is to be drawn (true) or not(false).
+     */
+    public boolean isVisible();
+    /**
+     * @param b whether the grid is to be drawn (true) or not (false).
+     */
+    public void setVisible(boolean b);
 
-		public String getGridName();
+    public String getGridName();
   }
 }

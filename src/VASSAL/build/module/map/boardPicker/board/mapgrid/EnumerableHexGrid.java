@@ -23,7 +23,7 @@ import java.awt.geom.Point2D;
 import VASSAL.build.module.map.boardPicker.board.CanonHexIndices;
 
 public interface EnumerableHexGrid {
-	CanonHexIndices.IntegerCHI canonHexIndices(Point2D p);
-	Point2D toOrigin(CanonHexIndices chi);
-	CanonHexIndices canonHexIndices();
+  CanonHexIndices.IntegerCHI canonHexIndices(Point2D p);
+  Point2D toOrigin(CanonHexIndices chi);
+  CanonHexIndices canonHexIndices();
 }

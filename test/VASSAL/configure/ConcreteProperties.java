@@ -32,69 +32,69 @@ import VASSAL.configure.Attribute.EnumCharAttribute;
 import VASSAL.configure.Attribute.EnumIntAttribute;
 
 public class ConcreteProperties extends AbstractAttributeListConfigurable {
-		
-	// Attributes of class
-	static final public String BOOLEAN01 = "boolean01";
-	static final public String BYTE02 = "byte02";
-	static final public String SHORT03 = "short03";
-	static final public String CHAR04 = "char04";
-	static final public String INT05 = "int05";
-	static final public String LONG06 = "long06";
-	static final public String FLOAT07 = "float07";
-	static final public String DOUBLE08 = "double08";
-	static final public String STRING09 = "string09";
-	static final public String FIRST10 = "first10";
-	static final public String TEXTANGLE11 = "textAngle11";
-	static final public String COORDTYPE12 = "coordType12";
-	static final public String COLOR13 = "color13";
-		
-	// allocation of storage and type for attributes
-	Boolean 		boolean01	= true;
-	byte 			byte02		= -1;
-	short 		short03		= 32677;
-	char 			char04		= 'N';
-	int 			int05			= 0x7FFFFFFF;
-	long 			long06		= 0x80000000L;
-	float 		float07		= 2.71828F;
-	double 		double08		= 3.141592653589793D;
-	String		string09		= "1st string value";
-	FirstCoord	first10		= FirstCoord.HORIZONTAL_FIRST;
-	AngleEnum	textAngle11	= AngleEnum.__90;
-	CoordType	coordType12	= CoordType.NUMERIC;
-	Color 		color13		= Color.MAGENTA;
-	
+    
+  // Attributes of class
+  static final public String BOOLEAN01 = "boolean01";
+  static final public String BYTE02 = "byte02";
+  static final public String SHORT03 = "short03";
+  static final public String CHAR04 = "char04";
+  static final public String INT05 = "int05";
+  static final public String LONG06 = "long06";
+  static final public String FLOAT07 = "float07";
+  static final public String DOUBLE08 = "double08";
+  static final public String STRING09 = "string09";
+  static final public String FIRST10 = "first10";
+  static final public String TEXTANGLE11 = "textAngle11";
+  static final public String COORDTYPE12 = "coordType12";
+  static final public String COLOR13 = "color13";
+    
+  // allocation of storage and type for attributes
+  Boolean     boolean01  = true;
+  byte       byte02    = -1;
+  short     short03    = 32677;
+  char       char04    = 'N';
+  int       int05      = 0x7FFFFFFF;
+  long       long06    = 0x80000000L;
+  float     float07    = 2.71828F;
+  double     double08    = 3.141592653589793D;
+  String    string09    = "1st string value";
+  FirstCoord  first10    = FirstCoord.HORIZONTAL_FIRST;
+  AngleEnum  textAngle11  = AngleEnum.__90;
+  CoordType  coordType12  = CoordType.NUMERIC;
+  Color     color13    = Color.MAGENTA;
+  
 
-	// set capacity low to verify ordering on successive re-sizes.
-	ConcreteProperties() { this(2); }
-	@SuppressWarnings("deprecation")
-	ConcreteProperties(int capacity)  { 
-		super(capacity); 
-			
-		addAttribute(BOOLEAN01, "Boolean property (true)");
-		addAttribute(BYTE02, "Byte property (-1)");
-		addAttribute(SHORT03, "Short property (32677)");
-		addAttribute(CHAR04, "Char property ('N')") ;			
-		addAttribute(INT05, "Int property (2,147,483,647)") ;	
-		addAttribute(LONG06, "Long property (2,147,483,648)") ;
-		addAttribute(FLOAT07,"Float Attribute (2.71828)");			
-		addAttribute( DOUBLE08,	"Double attribute (pi)") ;			
-		addAttribute("string09","Color (Initially magenta)");
-		
-		addAttribute( new EnumCharAttribute<FirstCoord>
-			(FirstCoord.class, FIRST10, "StringEnum FirstCoordinate (H)") {});		
-		addAttribute(new EnumIntAttribute<AngleEnum>
-			(AngleEnum.class, TEXTANGLE11, "StringEnum TextAngle (90)") {});			
-		addAttribute(new EnumCharAttribute<CoordType>
-			(CoordType.class,COORDTYPE12,"Enum CoordType (Numeric)") {});
-		addAttribute(new ColorAttribute
-				("color13","Color (Initially magenta)"){});
-	}
-	@Override
-	public void removeFrom(Buildable parent) {}
-	@Override
-	public HelpFile getHelpFile()  { return null; }
-	@Override
-	public Class<?>[] getAllowableConfigureComponents() { return null; }
-	@Override
-	public void addTo(Buildable parent) {}
+  // set capacity low to verify ordering on successive re-sizes.
+  ConcreteProperties() { this(2); }
+  @SuppressWarnings("deprecation")
+  ConcreteProperties(int capacity)  { 
+    super(capacity); 
+      
+    addAttribute(BOOLEAN01, "Boolean property (true)");
+    addAttribute(BYTE02, "Byte property (-1)");
+    addAttribute(SHORT03, "Short property (32677)");
+    addAttribute(CHAR04, "Char property ('N')") ;      
+    addAttribute(INT05, "Int property (2,147,483,647)") ;  
+    addAttribute(LONG06, "Long property (2,147,483,648)") ;
+    addAttribute(FLOAT07,"Float Attribute (2.71828)");      
+    addAttribute( DOUBLE08,  "Double attribute (pi)") ;      
+    addAttribute("string09","Color (Initially magenta)");
+    
+    addAttribute( new EnumCharAttribute<FirstCoord>
+      (FirstCoord.class, FIRST10, "StringEnum FirstCoordinate (H)") {});    
+    addAttribute(new EnumIntAttribute<AngleEnum>
+      (AngleEnum.class, TEXTANGLE11, "StringEnum TextAngle (90)") {});      
+    addAttribute(new EnumCharAttribute<CoordType>
+      (CoordType.class,COORDTYPE12,"Enum CoordType (Numeric)") {});
+    addAttribute(new ColorAttribute
+        ("color13","Color (Initially magenta)"){});
+  }
+  @Override
+  public void removeFrom(Buildable parent) {}
+  @Override
+  public HelpFile getHelpFile()  { return null; }
+  @Override
+  public Class<?>[] getAllowableConfigureComponents() { return null; }
+  @Override
+  public void addTo(Buildable parent) {}
 }
