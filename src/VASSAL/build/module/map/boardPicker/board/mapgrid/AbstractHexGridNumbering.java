@@ -273,6 +273,7 @@ implements EnumerableHexGrid, GameComponent {
    * @deprecated Use getWorldIndices(p).row instead. 
    * @see getWorldIndices
    */  
+  @Deprecated
   @Override
   public int getRow(Point p) {
     return getWorldIndices(new Point(p)).Row();
@@ -282,6 +283,7 @@ implements EnumerableHexGrid, GameComponent {
    * @deprecated Use getWorldIndices(p).col instead.  
    * @see getWorldIndices
    */  
+  @Deprecated
   @Override
   public int getColumn(Point p) {
     return getWorldIndices(new Point(p)).Col();
