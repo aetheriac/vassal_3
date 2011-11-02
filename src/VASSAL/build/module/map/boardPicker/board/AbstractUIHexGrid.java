@@ -67,14 +67,14 @@ public abstract class AbstractUIHexGrid extends AbstractAttributeListConfigurabl
   protected static final double sqrt3_2 = sqrt(3D) / 2D;
   
   // Property storage
-  Boolean sideways = false;
+  boolean sideways = false;
   int x0 = 0, y0 = 32;
   double dx; // the 'HexWidth'
   double dy; // the 'HexSize'
-  Boolean edgesLegal = false;
-  Boolean cornersLegal = false;
-  Boolean visible = false;
-  Boolean dotsVisible = false;
+  boolean edgesLegal = false;
+  boolean cornersLegal = false;
+  boolean visible = false;
+  boolean dotsVisible = false;
   Color color = Color.black;
   double m00=1D, m01=0D, m02=0D, m10=0D, m11=1D, m12=0D;
   @Deprecated
@@ -233,32 +233,32 @@ public abstract class AbstractUIHexGrid extends AbstractAttributeListConfigurabl
       return (Point) shear.transform(numbering.getLocation(location),new Point());
   }
 
-   @Override
-   public Point snapTo(Point p) {
-     Point p0 =  (Point) unshear.transform(p, new Point());
-     Point p1;
-     if (edgesLegal && cornersLegal) {
-       Point edge   = snapToHexSide(p0);
-       Point vertex = snapToHexVertex(p0);
+  @Override
+  public Point snapTo(Point p) {
+    Point p0 = (Point) unshear.transform(p, new Point());
+    Point p1;
+    if (edgesLegal && cornersLegal) {
+      Point edge   = snapToHexSide(p0);
+      Point vertex = snapToHexVertex(p0);
 
-       if( p0.distanceSq(edge) < p0.distanceSq(vertex) ) {
-         p1 = edge;
-       }
-       else {
-         p1 = vertex;
-       }
-     }
-     else if (edgesLegal) {
-       p1 = snapToHexSide(p0);
-     }
-     else if (cornersLegal) {
-       p1 = snapToHexVertex(p0);
-     }
-     else {
-       p1 = snapToHex(p0);
-     }
-     return (Point) shear.transform(p1,p1);
-   }
+      if( p0.distanceSq(edge) < p0.distanceSq(vertex) ) {
+        p1 = edge;
+      }
+      else {
+        p1 = vertex;
+      }
+    }
+    else if (edgesLegal) {
+      p1 = snapToHexSide(p0);
+    }
+    else if (cornersLegal) {
+      p1 = snapToHexVertex(p0);
+    }
+    else {
+      p1 = snapToHex(p0);
+    }
+    return (Point) shear.transform(p1,p1);
+  }
   
   @Override
   public boolean isLocationRestricted(Point p) {
@@ -323,12 +323,13 @@ public abstract class AbstractUIHexGrid extends AbstractAttributeListConfigurabl
   * Own implementation
   /* --------------------------------------------------------- */
   // TODO this should be private 
-    public void rotateIfSideways(Point p) {  if (sideways) { rotate(p); } }
-   private void rotate(Point p) {
-      int swap = p.x;
-      p.x = p.y;
-      p.y = swap;
-    }
+  public void rotateIfSideways(Point p) {  if (sideways) { rotate(p); } }
+
+  private void rotate(Point p) {
+    int swap = p.x;
+    p.x = p.y;
+    p.y = swap;
+  }
 
   /**
    * Return the Shape of a single hex
@@ -378,26 +379,26 @@ public abstract class AbstractUIHexGrid extends AbstractAttributeListConfigurabl
 
     x6 = x2;
     y6 = y5;
-      p6.setLocation(round(x6), round(y6) + 1);
+    p6.setLocation(round(x6), round(y6) + 1);
 
-      if (sideways) {
-        rotate(p1);
-        rotate(p2);
-        rotate(p3);
-        rotate(p4);
-        rotate(p5);
-        rotate(p6);
-      }
+    if (sideways) {
+      rotate(p1);
+      rotate(p2);
+      rotate(p3);
+      rotate(p4);
+      rotate(p5);
+      rotate(p6);
+    }
 
-      poly.addPoint(p1.x, p1.y);
-      poly.addPoint(p2.x, p2.y);
-      poly.addPoint(p3.x, p3.y);
-      poly.addPoint(p4.x, p4.y);
-      poly.addPoint(p5.x, p5.y);
-      poly.addPoint(p6.x, p6.y);
-      poly.addPoint(p1.x, p1.y);
+    poly.addPoint(p1.x, p1.y);
+    poly.addPoint(p2.x, p2.y);
+    poly.addPoint(p3.x, p3.y);
+    poly.addPoint(p4.x, p4.y);
+    poly.addPoint(p5.x, p5.y);
+    poly.addPoint(p6.x, p6.y);
+    poly.addPoint(p1.x, p1.y);
 
-      return new Area(poly);
+    return new Area(poly);
   }
 
   protected Rectangle transformRectangle(Rectangle rIn, AffineTransform t) {
@@ -428,6 +429,7 @@ public abstract class AbstractUIHexGrid extends AbstractAttributeListConfigurabl
     }
     g2d.setTransform(transform);
   }
+
   public void forceDraw(Graphics g, Rectangle bounds, Rectangle visibleRect, double zoom, boolean reversed) {
     Graphics2D g2d = (Graphics2D) g;
     AffineTransform transform = g2d.getTransform();
@@ -438,12 +440,13 @@ public abstract class AbstractUIHexGrid extends AbstractAttributeListConfigurabl
     
     g2d.setTransform(transform);
   }
+
   protected abstract void drawCatchBuckets(Graphics g, Rectangle bounds, 
       Rectangle visibleRect, double zoom, boolean reversed);
 
   /** Draw the grid even if set to be not visible */
   private void forceDrawX(Graphics g, Rectangle bounds, Rectangle visibleRect, double zoom, boolean reversed) {
-   Point origin = new Point(x0,y0);
+    Point origin = new Point(x0,y0);
     if (!bounds.intersects(visibleRect)) {   return;   }
    
     Graphics2D g2d = (Graphics2D) g;
@@ -468,21 +471,21 @@ public abstract class AbstractUIHexGrid extends AbstractAttributeListConfigurabl
     final float deltaX = (float) (dx * zoom);
     final float deltaY = (float) (dy * zoom);
 
-   float xmin = bounds.x + (float)zoom*origin.x + 2*deltaX*(float)floor((region.x - zoom*origin.x - bounds.x)/(2*deltaX));
-   float xmax = region.x + region.width + 2 * deltaX;
-   float ymin = bounds.y + (float)zoom*origin.y + deltaY*(float)floor((region.y - zoom*origin.y - bounds.y)/deltaY);
-   float ymax = region.y + region.height + deltaY;
-   if (reversed) {
+    float xmin = bounds.x + (float)zoom*origin.x + 2*deltaX*(float)floor((region.x - zoom*origin.x - bounds.x)/(2*deltaX));
+    float xmax = region.x + region.width + 2 * deltaX;
+    float ymin = bounds.y + (float)zoom*origin.y + deltaY*(float)floor((region.y - zoom*origin.y - bounds.y)/deltaY);
+    float ymax = region.y + region.height + deltaY;
+    if (reversed) {
       xmin += bounds.width  - 2*deltaX*(float)floor(bounds.width/(2*deltaX)); 
       ymin += bounds.height -   deltaY*(float)floor(bounds.height/deltaY);
-   }
+    }
     
     if (sideways) g2d.transform(sidewaysTransform);
     
     Dimension2D size = new Dimension((int)(2.F / 3.F * deltaX), (int)(-deltaY));
     Point2D center = new Point2D.Double();
 
-  // x,y is the center of a hex
+    // x,y is the center of a hex
     for (float x = xmin - 2*deltaX; x < xmax; x += 2*deltaX) {
       for (float y = ymin; y < ymax; y += deltaY) {
         center.setLocation(x, y);
@@ -508,13 +511,15 @@ public abstract class AbstractUIHexGrid extends AbstractAttributeListConfigurabl
     final int[] ax = new int[4];
     final int[] ay = new int[4];
     
-     ax[0] = (int) (center.getX() - size.getWidth());     ay[0] = (int) center.getY();
-     ax[1] = (int) (center.getX() - size.getWidth()/2D);  ay[1] = (int) (center.getY() + size.getHeight()/2D);
-     ax[2] = (int) (center.getX() + size.getWidth()/2D);  ay[2] = ay[1];
-     ax[3] = (int) (center.getX() + size.getWidth());      ay[3] = ay[0];
-     g2d.drawPolyline(ax, ay, 4);
+    ax[0] = (int) (center.getX() - size.getWidth());     ay[0] = (int) center.getY();
+    ax[1] = (int) (center.getX() - size.getWidth()/2D);  ay[1] = (int) (center.getY() + size.getHeight()/2D);
+    ax[2] = (int) (center.getX() + size.getWidth()/2D);  ay[2] = ay[1];
+    ax[3] = (int) (center.getX() + size.getWidth());      ay[3] = ay[0];
+    g2d.drawPolyline(ax, ay, 4);
 
-     if (dotsVisible) { g2d.fillOval((int)center.getX(), (int)center.getY(), 2, 2); }
+    if (dotsVisible) {
+       g2d.fillOval((int)center.getX(), (int)center.getY(), 2, 2);
+    }
   }
   
   public void setGridNumbering(GridNumbering numbering) {
@@ -695,36 +700,43 @@ public abstract class AbstractUIHexGrid extends AbstractAttributeListConfigurabl
   // EditableGrid implementation
   @Override
   public double getDx() { return dx; }
+
   @Override
   public double getDy() { return dy; }
+
   @Override
   public Point getOrigin() { return new Point(x0,y0); }
+
   @Override
   public boolean isSideways() {  return sideways; }
     
   @Override
   public void setDx(double d) {
     dx = d;
-    changeSupport.firePropertyChange(DX,null,null);
+    changeSupport.firePropertyChange(DX, null, null);
   }
+
   @Override
   public void setDy(double d) {
     dy = d; // DO NOT call setHexSize() so that dx is not reset
-    changeSupport.firePropertyChange(DY,null,dy);
+    changeSupport.firePropertyChange(DY, null, dy);
   }
+
   @Override
   public void setOrigin(Point p) {
     x0 = p.x; y0 = p.y;
-    changeSupport.firePropertyChange(null,null,null);
+    changeSupport.firePropertyChange(null, null, null);
   }
+
   @Override
   public void setSideways(boolean b) { 
     sideways = b;
-    changeSupport.firePropertyChange(SIDEWAYS,null,sideways);
+    changeSupport.firePropertyChange(SIDEWAYS, null, sideways);
    }
 
   @Override
   public GridContainer getContainer() { return container; }
+
   @Override
   public GridNumbering getGridNumbering() {
     return numbering;
@@ -732,10 +744,11 @@ public abstract class AbstractUIHexGrid extends AbstractAttributeListConfigurabl
 
   @Override
   public boolean isVisible() { return visible; }
+
   @Override
   public void setVisible(boolean legal) {
     visible = legal;
-    changeSupport.firePropertyChange(VISIBLE,null,visible);
+    changeSupport.firePropertyChange(VISIBLE, null, visible);
   }
 
   @Override
