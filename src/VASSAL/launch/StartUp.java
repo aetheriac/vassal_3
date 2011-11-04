@@ -68,6 +68,9 @@ public class StartUp {
     // NB: This must be after Mac-specific properties
     try {
       UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+      // Ensure consistent behavior in NOT consuming "mousePressed" events upon a JPopupMenu closing
+      // especially for UIManager.getLookAndFeel().getName().equals("Windows")
+      UIManager.put("PopupMenu.consumeEventOnClose", Boolean.FALSE);
     }
     catch (ClassNotFoundException e) {
       ErrorDialog.bug(e);
