@@ -67,14 +67,14 @@ public abstract class AbstractUIHexGrid extends AbstractAttributeListConfigurabl
   protected static final double sqrt3_2 = sqrt(3D) / 2D;
   
   // Property storage
-  boolean sideways = false;
+  Boolean sideways = false;
   int x0 = 0, y0 = 32;
   double dx; // the 'HexWidth'
   double dy; // the 'HexSize'
-  boolean edgesLegal = false;
-  boolean cornersLegal = false;
-  boolean visible = false;
-  boolean dotsVisible = false;
+  Boolean edgesLegal = false;
+  Boolean cornersLegal = false;
+  Boolean visible = false;
+  Boolean dotsVisible = false;
   Color color = Color.black;
   double m00=1D, m01=0D, m02=0D, m10=0D, m11=1D, m12=0D;
   @Deprecated
