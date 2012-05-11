@@ -794,7 +794,7 @@ public class PieceMover extends AbstractBuildable
     implements DragGestureListener,       DragSourceListener,
                DragSourceMotionListener,  DropTargetListener
   {
-	  final static private AbstractDragHandler theDragHandler =
+	  static private AbstractDragHandler theDragHandler =
 	    DragSource.isDragImageSupported() ?
         (SystemUtils.IS_OS_MAC_OSX ?
           new DragHandlerMacOSX() : new DragHandler()) :
@@ -803,6 +803,10 @@ public class PieceMover extends AbstractBuildable
     /** returns the singleton DragHandler instance */
     static public AbstractDragHandler getTheDragHandler() {
       return theDragHandler;
+    }
+    
+    static public void setTheDragHandler(AbstractDragHandler myHandler) {
+        theDragHandler = myHandler;
     }
 
     final static int CURSOR_ALPHA = 127; // psuedo cursor is 50% transparent
