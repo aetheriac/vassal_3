@@ -1248,7 +1248,7 @@ public class PieceMover extends AbstractBuildable
     // Used to check for real mouse movement.
     // Warning: dragMouseMoved fires 8 times for each point on development
     // system (Win2k)
-    Point lastDragLocation = new Point();
+    protected Point lastDragLocation = new Point();
 
     /** Moves cursor after mouse */
     abstract public void dragMouseMoved(DragSourceDragEvent e);
