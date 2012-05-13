@@ -169,16 +169,16 @@ public abstract class AbstractUIHexGrid extends AbstractAttributeListConfigurabl
     
     AutoConfigurer c = (AutoConfigurer) super.getConfigurer();
     final Configurer dxConfig = c.getConfigurer(DX);
-    c.getConfigurer(DY).addPropertyChangeListener(new java.beans.PropertyChangeListener() {
-      @Override
-        public void propertyChange(java.beans.PropertyChangeEvent evt) {
-        if (evt.getNewValue() != null) {
-          double hgt = ((Double) evt.getNewValue()).doubleValue();
-          dxConfig.setValue(new Double(sqrt3_2 * hgt).toString());
-        }
-      }
-    });
-
+//    c.getConfigurer(DY).addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+//      @Override
+//        public void propertyChange(java.beans.PropertyChangeEvent evt) {
+//        if (evt.getNewValue() != null) {
+//          double hgt = ((Double) evt.getNewValue()).doubleValue();
+//          dxConfig.setValue(new Double(sqrt3_2 * hgt).toString());
+//        }
+//      }
+//    });
+//
     if (!buttonExists) {
       JButton b = new JButton("Edit Grid");
       b.addActionListener(new ActionListener() {
