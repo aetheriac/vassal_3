@@ -181,31 +181,13 @@ public class TriggerAction extends Decorator implements TranslatablePiece,
    * @return
    */
   public Command keyEvent(KeyStroke stroke) {
-    boolean loggingPaused = false;
-    
-    if (!compatibilityMode) {
-      loggingPaused = GameModule.getGameModule().pauseLogging();
-    }
-    
-    final Command c = piece.keyEvent(stroke);
-    
-    if (!compatibilityMode) {
-      sendCommand(c);
-    }
-    
-    final Command tc = myKeyEvent(stroke);
-    
-    if (! compatibilityMode) {
-      if (loggingPaused) {
-        Command sc = GameModule.getGameModule().resumeLogging();
-        return sc;
-      }
-    }
-    
-    return c == null ? tc : c.append(tc);
+    Command c = piece.keyEvent(stroke);
+    return c == null ? myKeyEvent(stroke) : c.append(myKeyEvent(stroke));
   }
 
   public Command myKeyEvent(KeyStroke stroke) {
+    boolean loggingPaused = false;
+    
     /*
      * 1. Are we interested in this key command? Is it our command key? Does it
      * match one of our watching keystrokes?
@@ -233,6 +215,11 @@ public class TriggerAction extends Decorator implements TranslatablePiece,
     // 3. Initialise
     outer = Decorator.getOutermost(this);
     Command c = new NullCommand();
+    
+    
+    if (!compatibilityMode) {
+      loggingPaused = GameModule.getGameModule().pauseLogging();
+    }
 
     // 4. Handle non-looping case
     if (!loop) {
@@ -241,6 +228,12 @@ public class TriggerAction extends Decorator implements TranslatablePiece,
       }
       catch (RecursionLimitException e) {
         RecursionLimiter.infiniteLoop(e);
+      }
+      if (! compatibilityMode) {
+        if (loggingPaused) {
+          Command sc = GameModule.getGameModule().resumeLogging();
+          return sc;
+        }
       }
       return c;
     }
@@ -318,6 +311,12 @@ public class TriggerAction extends Decorator implements TranslatablePiece,
       RecursionLimiter.infiniteLoop(loopException);
     }
 
+    if (! compatibilityMode) {
+      if (loggingPaused) {
+        Command sc = GameModule.getGameModule().resumeLogging();
+        return sc;
+      }
+    }
     return c;
   }
 
